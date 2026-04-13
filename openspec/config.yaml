@@ -1,20 +1,83 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  # D&D Solo Adventure App
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  A single-player D&D 5e game where Claude acts as the Dungeon Master. LLM handles narrative, NPC roleplay, and game mechanics via tool calling. The world is alive — NPCs pursue agendas, factions shift power, and events unfold independently.
+
+  ## Monorepo Structure
+  ```
+  /
+  ├── api/        NestJS + GraphQL Yoga + MikroORM
+  └── web/        Nuxt 3 + Nuxt UI + urql
+  ```
+
+  ## Tech Stack
+
+  ### API
+  - NestJS with GraphQL Yoga (code-first schema, SSE-based subscriptions)
+  - MikroORM with PostgreSQL (entities, migrations, seeders)
+  - pgvector extension for semantic memory search
+  - Redis + BullMQ (@nestjs/bullmq) for world tick job queue
+  - Anthropic SDK for Claude integration (Sonnet for DM session, Haiku for world tick/diary)
+  - Voyage AI SDK for text embeddings (pgvector storage)
+  - @nestjs/jwt + passport for JWT auth
+  - @nestjs/config for environment variables
+  - @juuso.piikkila/eslint-config-typescript for ESLint
+  - Prettier for formatting
+
+  ### Web
+  - Nuxt 3 with Nuxt UI v4 components
+  - urql as GraphQL client (queries, mutations, SSE subscriptions)
+  - @juuso.piikkila/eslint-config-typescript (Vue configuration) for ESLint
+  - Prettier for formatting
+
+  ## API Modules (9)
+  - AuthModule — JWT auth, user registration/login
+  - CharacterModule — character creation, sheet, leveling
+  - CampaignModule — campaign metadata, in-game date, lore document
+  - SessionModule — active game sessions, player input, GameEvent log
+  - GameEngineModule — D&D 5e mechanics via LLM tool calls (dice, combat, rests, skills, quests, items)
+  - MemoryModule — diary entries + memory facts with pgvector embeddings, 7-day rolling context
+  - WorldModule — locations, factions, world events, NPC agendas, world tick, NPC conversations
+  - LLMModule — Claude orchestration, SSE streaming, context assembly, prompt caching, dynamic modules
+  - QueueModule — BullMQ world tick queue, Redis-backed SRD cache
+
+  ## Key Design Decisions
+  - GraphQL subscriptions over SSE (not WebSocket) for LLM streaming
+  - Prompt caching: 4 breakpoints (system+modules / campaign state / world+diary / session history)
+  - World tick runs via BullMQ after take_long_rest; Redis lock prevents race conditions
+  - LLM calls advance_antagonist_stage, record_lore, set_scene_type — server never infers these
+  - Quest objectives auto-complete via indexed QuestObjective queries after each tool call
+  - Location discovery derived from LocationDiscovery table (map items, NPC dialogue, exploration)
+  - NPC agendas processed in batched Haiku calls with lazy evaluation (nextTickInGameDate)
+  - Dynamic prompt modules per scene type (COMBAT/SOCIAL/EXPLORATION/SETTLEMENT/REST)
+  - Sonnet for DM session stream; Haiku for all background processing
+  - MikroORM seeders populate SRD data (spells, monsters, classes, races, equipment, conditions) on first migration
+
+  ## Data Models (summary)
+  ### Core
+  User, Character, Campaign, GameSession, GameEvent, DiaryEntry, Memory
+
+  ### World
+  Location, LocationDiscovery, Map, MapLocation, Faction, WorldEvent
+
+  ### NPCs
+  Npc, NpcRelationship, NpcItem
+
+  ### Items & Inventory
+  Item, CharacterItem
+
+  ### Quests
+  Quest, QuestObjective, QuestEntity
+
+  ### SRD Reference (seeded, read-only)
+  SrdClass, SrdRace, SrdSpell, SrdMonster, SrdEquipment, SrdCondition
+
+  ## Conventions
+  - Conventional commits
+  - TDD — write failing tests first, then implementation
+  - Single responsibility per file/module
+  - All LLM tool calls return structured results the LLM can recover from gracefully
+  - No hardcoded model names — config values only
+  - ESLint + Prettier enforced across monorepo
