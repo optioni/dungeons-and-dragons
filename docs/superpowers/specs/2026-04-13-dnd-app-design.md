@@ -73,6 +73,9 @@ D&D 5e mechanical resolution. Exposes functions that the LLM calls as tools:
 - `advance_initiative(sessionId)`
 - `take_short_rest(characterId)` — partial HP recovery via hit dice, certain ability recharges, no day advance
 - `take_long_rest(characterId)` — full HP and spell slot recovery, increments `inGameDate`, triggers diary write + world tick
+- `set_scene_type(sessionId, sceneType)` — switches active prompt module
+- `advance_antagonist_stage(campaignId)` — marks current antagonist plan stage complete, advances to next
+- `record_lore(campaignId, fact)` — appends an established fact to the campaign lore document
 
 Reads SRD data for spell effects, monster stat blocks, condition rules.
 
@@ -152,9 +155,9 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), inventory (JSON), xp, proficiencyBonus
 
-**Campaign** — id, userId, characterId, name, inGameDate, currentLocationId, createdAt
+**Campaign** — id, userId, characterId, name, inGameDate, currentLocationId, loreDocument (text), createdAt
 
-**GameSession** — id, campaignId, startedAt, endedAt
+**GameSession** — id, campaignId, startedAt, endedAt, sceneType (EXPLORATION | COMBAT | SOCIAL | SETTLEMENT | REST)
 
 **GameEvent** — id, sessionId, type (PLAYER_INPUT | DM_NARRATIVE | TOOL_CALL | COMBAT_EVENT | SYSTEM), content, timestamp
 
@@ -162,7 +165,7 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **Memory** — id, campaignId, subjectType (CHARACTER | NPC), subjectId, content, embedding (vector), createdAt
 
-**Npc** — id, campaignId, name, description, disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
+**Npc** — id, campaignId, name, description, coreMotivation, personalityTraits (array), speechStyle, relationships (JSON), disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
 
 ### World entities
 
@@ -208,15 +211,43 @@ Every campaign has a main antagonist whose plan drives the overarching narrative
 
 The main antagonist is an NPC with an agenda like any other, but their `nextTickInGameDate` resets frequently — they are always active, always making moves.
 
+### Narrative Consistency
+
+Several redundant anchors keep the story consistent across sessions as context scrolls away:
+
+**Structured NPC profiles** — key NPCs have structured fields beyond free text: `coreMotivation`, `personalityTraits` (array), `speechStyle`, `relationships` (JSON). When a known NPC appears in a scene, these fields are injected into context explicitly so characterisation cannot drift.
+
+**Antagonist plan stages** — the antagonist's overarching plan is broken into named stages (`PENDING`, `IN_PROGRESS`, `COMPLETED`, `FOILED`). The current stage is always in the system prompt. The LLM advances stages via an `advance_antagonist_stage` tool call, making the villain's arc a structured progression rather than a free-form invention.
+
+**Campaign lore document** — a living text document created at world seed time and appended to as the campaign progresses. Captures immutable facts: geography, established world rules, major faction dynamics, key plot points. Stored on Campaign, injected into the system prompt. The LLM appends new established facts via a `record_lore(fact)` tool.
+
+**Established facts as Memory** — when the LLM establishes a significant detail mid-session ("the innkeeper has a sister in the capital", "the eastern bridge collapsed"), it writes a Memory fact immediately via the existing memory system. Searchable in future sessions.
+
+**Proactive memory search** — before narrating a scene involving a known NPC, the LLM searches their memory facts to recall past interactions and established characterisation.
+
+### Dynamic Prompt Modules
+
+Rather than one monolithic system prompt, the LLMModule assembles context from a base plus scene-appropriate modules loaded dynamically. Modules are stable text files — good prompt cache candidates.
+
+**Available modules:**
+- **Combat** — loaded when `scene_type = COMBAT`. Combat narration style, action economy reminders, how to describe dice outcomes dramatically.
+- **Social/NPC** — loaded for `SOCIAL` scenes. NPC roleplay guidance, persuasion/deception/insight check handling.
+- **Exploration** — loaded for `EXPLORATION`. Dungeon/wilderness pacing, environment description, trap and discovery handling.
+- **Settlement** — loaded for `SETTLEMENT`. Urban encounters, shops, taverns, political intrigue.
+- **Rest & Downtime** — loaded for `REST`. Recovery narration, time passing, rumour delivery.
+- **Rules reference snippets** — specific SRD sections (spellcasting, conditions, grappling) loaded on demand when those mechanics are active, rather than always present.
+
+`scene_type` is a field on GameSession (`EXPLORATION`, `COMBAT`, `SOCIAL`, `SETTLEMENT`, `REST`), set via a `set_scene_type` tool call when the scene changes. Cache breakpoint 1 covers: system prompt base + active modules for the current scene.
+
 ### DM System Prompt Composition
 
-Assembled once per campaign and cached (prompt cache breakpoint 1):
+Assembled per scene from layers, with prompt caching applied:
 
-- DM persona and narration style (derived from tone selection)
-- World setting: name, geography summary, factions, tone
-- Main antagonist summary and current plan stage
-- D&D 5e rules summary relevant to play
-- Full tool definitions
+- **Base** (cache breakpoint 1): DM persona and narration style, world name and geography summary, campaign tone, tool definitions, active scene module(s)
+- **Campaign state** (cache breakpoint 2): lore document, antagonist current plan stage, faction dispositions
+- **Character + world** (cache breakpoint 3): character state, current location, active world events, last 7 diary entries
+- **Session history** (cache breakpoint 4): current session GameEvents up to previous turn
+- **Current input** (uncached): latest player input
 
 ---
 
