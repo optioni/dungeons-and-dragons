@@ -26,6 +26,7 @@ Designed for multi-user from the start, but built for personal use initially.
 - pgvector extension for semantic memory search
 - Anthropic SDK for Claude integration
 - Voyage AI SDK for text embeddings (pgvector storage)
+- Redis + BullMQ (`@nestjs/bullmq`) for the world tick job queue
 
 **Web:**
 - Nuxt 3 with Nuxt UI components
@@ -40,7 +41,7 @@ Designed for multi-user from the start, but built for personal use initially.
 
 ## API — Module Structure
 
-Eight NestJS modules, each owning its domain:
+Nine NestJS modules, each owning its domain:
 
 ### AuthModule
 User registration, login, JWT access tokens. Standard guards applied across all protected resolvers.
@@ -101,6 +102,11 @@ The living world. Owns locations, factions, and ongoing events. Processes autono
 - `trigger_world_event(description, locationId, deadlineInDays, source)`
 - `resolve_world_event(eventId, outcome)`
 - `update_npc(npcId, fields)` — disposition, location, alive, agenda
+
+### QueueModule
+BullMQ + Redis job queue. Currently owns one queue: `world-tick`. When `advance_day` fires, SessionModule enqueues a world tick job and returns immediately — the DM stream continues without blocking. The world tick worker processes the job: diary write → NPC agenda calls → NPC conversations → apply outcomes. Failed jobs are retried up to 3 times with exponential backoff before being moved to the dead-letter queue.
+
+Since Redis is already running, it also serves as the store for NestJS `CacheModule` — used to cache SRD reference data (spells, monsters, classes) in-process so repeated game engine lookups don't hit PostgreSQL.
 
 ### LLMModule
 Owns all Claude integration. Two operating modes:
