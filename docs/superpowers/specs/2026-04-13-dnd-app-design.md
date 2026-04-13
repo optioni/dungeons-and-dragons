@@ -185,6 +185,41 @@ Read-only. Seeded from `dnd5eapi.co` JSON on first migration run.
 
 ---
 
+## Narrative Design
+
+### Campaign Setup Flow
+
+Before the first session, the player goes through a guided setup:
+
+1. **Character creation** — race, class, ability score assignment, character name and backstory (optional)
+2. **Tone selection** — player picks the campaign tone: Dark & Gritty, Epic Fantasy, Balanced, or provides a custom brief. Tone shapes the DM system prompt and the flavour of generated content throughout the campaign.
+3. **Story concept selection** — LLM generates 3-4 story concepts tailored to the character and chosen tone. Player picks one. Concepts include a premise, a central conflict, and a hint at the antagonist.
+4. **World seed generation** — based on the chosen concept, the LLM generates and persists the initial world:
+   - 3-5 named locations with descriptions and initial states
+   - 2-3 factions with goals and dispositions toward each other
+   - A handful of key NPCs, some with active agendas
+   - A main antagonist with a plan already in motion (persisted as an NPC with an agenda and as an active WorldEvent)
+   - An opening scene description for the first DM message
+5. **First session begins** — the player steps into a world with threads already in motion
+
+### Story Arc
+
+Every campaign has a main antagonist whose plan drives the overarching narrative. The LLM weaves this throughout sessions — clues surface naturally, consequences accumulate, faction dynamics shift as the antagonist advances their agenda via the world tick. The campaign builds toward a climax and a meaningful conclusion when the antagonist is confronted or defeated.
+
+The main antagonist is an NPC with an agenda like any other, but their `nextTickInGameDate` resets frequently — they are always active, always making moves.
+
+### DM System Prompt Composition
+
+Assembled once per campaign and cached (prompt cache breakpoint 1):
+
+- DM persona and narration style (derived from tone selection)
+- World setting: name, geography summary, factions, tone
+- Main antagonist summary and current plan stage
+- D&D 5e rules summary relevant to play
+- Full tool definitions
+
+---
+
 ## Frontend
 
 ### Pages
