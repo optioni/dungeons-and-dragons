@@ -17088,6 +17088,7 @@ __metadata:
     graphql: "npm:^16.13.2"
     graphql-sse: "npm:^2.6.0"
     nuxt: "npm:^4.4.0"
+    tailwindcss: "npm:^4.2.2"
     typescript: "npm:^5.8.3"
     vitest: "npm:^4.1.4"
     vue: "npm:^3.5.13"
