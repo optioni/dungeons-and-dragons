@@ -6074,9 +6074,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"api@workspace:app/api":
+"api@workspace:apps/api":
   version: 0.0.0-use.local
-  resolution: "api@workspace:app/api"
+  resolution: "api@workspace:apps/api"
   dependencies:
     "@anthropic-ai/sdk": "npm:^0.88.0"
     "@graphql-yoga/nestjs": "npm:^3.19.0"
@@ -17077,9 +17077,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web@workspace:app/web":
+"web@workspace:apps/web":
   version: 0.0.0-use.local
-  resolution: "web@workspace:app/web"
+  resolution: "web@workspace:apps/web"
   dependencies:
     "@juuso.piikkila/eslint-config-typescript": "npm:^4.5.0"
     "@nuxt/ui": "npm:^4.6.1"

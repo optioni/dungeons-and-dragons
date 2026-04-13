@@ -2,8 +2,8 @@
   "name": "dungeons-and-dragons",
   "private": true,
   "workspaces": [
-    "app/api",
-    "app/web"
+    "apps/api",
+    "apps/web"
   ],
   "packageManager": "yarn@4.13.0",
   "scripts": {
