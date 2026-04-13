@@ -168,7 +168,7 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **Memory** — id, campaignId, subjectType (CHARACTER | NPC), subjectId, content, embedding (vector), createdAt
 
-**Npc** — id, campaignId, name, description, coreMotivation, personalityTraits (array), speechStyle, disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
+**Npc** — id, campaignId, name, description, profession (string — e.g. "blacksmith", "city guard captain"), coreMotivation, personalityTraits (array), speechStyle, disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
 
 **NpcRelationship** — id, sourceNpcId, targetNpcId, type (ALLY | RIVAL | EMPLOYER | FAMILY | INFORMANT | ENEMY), description, disposition. Used by WorldModule to identify NPC pairs with reason to interact during world tick.
 
