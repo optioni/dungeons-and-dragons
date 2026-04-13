@@ -34,8 +34,8 @@
 - [x] 3.13 Configure Vitest in `api/vitest.config.ts` and add a placeholder test file
 - [x] 3.14 Run `yarn workspace api test` — verify suite passes
 - [x] 3.15 Run `yarn workspace api lint` — verify no lint errors
-- [ ] 3.16 Copy `.env.example` to `.env`, fill in local values, run `yarn mikro-orm migration:up` — verify pgvector extension enabled
-- [ ] 3.17 Run `yarn workspace api dev` — verify app starts and `/graphql` responds
+- [x] 3.16 Copy `.env.example` to `.env`, fill in local values, run `yarn mikro-orm migration:up` — verify pgvector extension enabled
+- [x] 3.17 Run `yarn workspace api dev` — verify app starts and `/graphql` responds
 
 ## 4. Web Scaffold
 
@@ -50,7 +50,7 @@
 - [x] 4.9 Configure test runner (Vitest via `@nuxt/test-utils` or standalone) and add a placeholder test
 - [x] 4.10 Run `yarn workspace web test` — verify suite passes
 - [x] 4.11 Run `yarn workspace web lint` — verify no lint errors
-- [ ] 4.12 Run `yarn workspace web dev` — verify Nuxt app starts without console errors
+- [x] 4.12 Run `yarn workspace web dev` — verify Nuxt app starts without console errors
 
 ## 5. Dockerfiles
 
@@ -59,15 +59,15 @@
 - [x] 5.3 Ensure `api/Dockerfile` copies `package.json`, `yarn.lock`, `.yarnrc.yml` before `yarn install` to maximise layer caching
 - [x] 5.4 Create `web/Dockerfile` with multi-stage build: `builder` stage installs deps and runs `nuxi build`; `runner` stage copies `.output/`, runs as `node` user
 - [x] 5.5 Ensure `web/Dockerfile` copies dependency files before `yarn install` for layer caching
-- [ ] 5.6 Run `docker build -t dnd-api ./api` — verify build succeeds
-- [ ] 5.7 Run `docker build -t dnd-web ./web` — verify build succeeds
-- [ ] 5.8 Run API image with env vars injected — verify `/graphql` responds and process runs as `node` user
-- [ ] 5.9 Run web image with env vars injected — verify Nuxt server starts as `node` user
+- [x] 5.6 Run `docker build -t dnd-api ./api` — verify build succeeds
+- [x] 5.7 Run `docker build -t dnd-web ./web` — verify build succeeds
+- [x] 5.8 Run API image with env vars injected — verify `/graphql` responds and process runs as `node` user
+- [x] 5.9 Run web image with env vars injected — verify Nuxt server starts as `node` user
 
 ## 6. Final Verification
 
 - [x] 6.1 Run `yarn install` from repo root on a clean node_modules — verify all workspaces install cleanly
 - [x] 6.2 Run root `yarn test` — verify all workspace test suites pass
 - [x] 6.3 Run root `yarn lint` — verify lint passes across all workspaces
-- [ ] 6.4 Run root `yarn dev` — verify both api and web dev servers start concurrently without errors
-- [ ] 6.5 Commit all files with `feat: bootstrap monorepo skeleton`
+- [x] 6.4 Run root `yarn dev` — verify both api and web dev servers start concurrently without errors
+- [x] 6.5 Commit all files with `feat: bootstrap monorepo skeleton`
