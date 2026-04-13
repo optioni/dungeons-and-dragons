@@ -79,6 +79,14 @@ D&D 5e mechanical resolution. Exposes functions that the LLM calls as tools:
 - `set_scene_type(sessionId, sceneType)` — switches active prompt module
 - `advance_antagonist_stage(campaignId)` — marks current antagonist plan stage complete, advances to next
 - `record_lore(campaignId, fact)` — appends an established fact to the campaign lore document
+- `create_item(campaignId, fields)` — creates a custom item (e.g. magic loot found during play)
+- `give_item(itemId, quantity, toCharacterId?, toNpcId?)` — transfers item to character or NPC inventory
+- `equip_item(characterItemId, slot)` / `unequip_item(characterItemId)` — manages equipped state
+- `buy_item(characterId, npcId, itemId, quantity)` — transfers item, deducts gold from character
+- `sell_item(characterId, npcId, itemId, quantity)` — transfers item, adds gold to character
+- `restock_merchant(npcId, items[])` — refreshes merchant stock (used by world tick)
+- `add_to_party(npcId)` — NPC joins the player as companion; suspends their world tick agenda
+- `remove_from_party(npcId)` — NPC leaves the party (voluntarily or forced by story events)
 
 Reads SRD data for spell effects, monster stat blocks, condition rules.
 
@@ -156,7 +164,7 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **User** — id, email, passwordHash, createdAt
 
-**Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), inventory (JSON), xp, proficiencyBonus, deathSaveSuccesses (0-3), deathSaveFailures (0-3), isDead
+**Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), goldPieces, silverPieces, copperPieces, xp, proficiencyBonus, deathSaveSuccesses (0-3), deathSaveFailures (0-3), isDead
 
 **Campaign** — id, userId, characterId, name, inGameDate, currentLocationId, loreDocument (text), deathMode (PERMADEATH | STORY), createdAt
 
@@ -168,9 +176,15 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **Memory** — id, campaignId, subjectType (CHARACTER | NPC), subjectId, content, embedding (vector), createdAt
 
-**Npc** — id, campaignId, name, description, profession (string — e.g. "blacksmith", "city guard captain"), coreMotivation, personalityTraits (array), speechStyle, disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
+**Npc** — id, campaignId, name, description, profession (string — e.g. "blacksmith", "city guard captain"), coreMotivation, personalityTraits (array), speechStyle, disposition, currentLocationId, alive, hp (nullable — tracked for companions and combat-capable NPCs), maxHp (nullable), partyStatus (NONE | COMPANION | TEMPORARY_ALLY), agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
 
 **NpcRelationship** — id, sourceNpcId, targetNpcId, type (ALLY | RIVAL | EMPLOYER | FAMILY | INFORMANT | ENEMY), description, disposition. Used by WorldModule to identify NPC pairs with reason to interact during world tick.
+
+**Item** — id, campaignId (nullable for SRD items), name, type (WEAPON | ARMOR | GEAR | CONSUMABLE | MAGIC | QUEST), description, damageDice (nullable), damageType (nullable), acBonus (nullable), properties (JSON — magic effects, special rules), weight, goldValue, srdEquipmentId (nullable)
+
+**CharacterItem** — id, characterId, itemId, quantity, equipped, equippedSlot (MAIN_HAND | OFF_HAND | ARMOR | ACCESSORY, nullable), condition (NORMAL | DAMAGED | BROKEN), notes (nullable)
+
+**NpcItem** — id, npcId, itemId, quantity, priceInGold. Used for merchant stock and lootable NPC inventories.
 
 ### World entities
 
@@ -215,6 +229,16 @@ Before the first session, the player goes through a guided setup:
 Every campaign has a main antagonist whose plan drives the overarching narrative. The LLM weaves this throughout sessions — clues surface naturally, consequences accumulate, faction dynamics shift as the antagonist advances their agenda via the world tick. The campaign builds toward a climax and a meaningful conclusion when the antagonist is confronted or defeated.
 
 The main antagonist is an NPC with an agenda like any other, but their `nextTickInGameDate` resets frequently — they are always active, always making moves.
+
+### Companions
+
+NPCs with `partyStatus = COMPANION` or `TEMPORARY_ALLY` travel with the player. While in the party:
+- Their `currentLocationId` stays in sync with the campaign's `currentLocationId`
+- The LLM voices them in-session: reactions, opinions, banter — shaped by `personalityTraits`, `coreMotivation`, and `relationships`
+- In combat they appear in the initiative tracker and act on their turn (LLM-controlled); the player can direct them via natural language
+- Their world tick agenda is suspended — they observe events alongside the player rather than acting independently
+- They are subject to death saves and the campaign death mode like the player
+- They can leave the party if the player's actions consistently conflict with their `coreMotivation` — the LLM judges when this threshold is crossed
 
 ### Player Death
 
