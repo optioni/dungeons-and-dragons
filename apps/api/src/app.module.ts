@@ -1,5 +1,6 @@
 import { YogaDriver, YogaDriverConfig } from '@graphql-yoga/nestjs';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { defineConfig } from '@mikro-orm/postgresql';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -19,15 +20,17 @@ import { validate } from './config/environment.validation';
             autoSchemaFile: true,
         }),
         MikroOrmModule.forRootAsync({
-            useFactory: (configService: ConfigService) => ({
-                clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
-                entities: ['./dist/src/**/*.entity.js'],
-                entitiesTs: ['./src/**/*.entity.ts'],
-                migrations: {
-                    path: './migrations',
-                    pathTs: './src/migrations',
-                },
-            }),
+            // @ts-expect-error: @mikro-orm/nestjs@7.0.1 types lag behind @mikro-orm/core@7.0.10 (ISchemaGenerator interface mismatch)
+            useFactory: (configService: ConfigService) =>
+                defineConfig({
+                    clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
+                    entities: ['./dist/src/**/*.entity.js'],
+                    entitiesTs: ['./src/**/*.entity.ts'],
+                    migrations: {
+                        path: './migrations',
+                        pathTs: './src/migrations',
+                    },
+                }),
             inject: [ConfigService],
         }),
         BullModule.forRootAsync({
