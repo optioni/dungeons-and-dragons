@@ -33,9 +33,9 @@ Designed for multi-user from the start, but built for personal use initially.
 - urql as the GraphQL client (queries, mutations, SSE subscriptions)
 
 **Tooling (monorepo-wide):**
-- ESLint with `@typescript-eslint` for both `api/` and `web/`; `@nuxt/eslint` flat config preset for the web app
+- ESLint with `@juuso.piikkila/eslint-config-typescript` for both `api/` and `web/` — uses its Vue configuration for the web app
 - Prettier for formatting; `eslint-config-prettier` to disable conflicting ESLint rules
-- Single `prettier.config.js` and shared ESLint base config at the monorepo root, extended per package
+- Single `prettier.config.js` at the monorepo root; each package extends the shared ESLint config as needed
 
 **LLM models:**
 - Claude Sonnet — main DM session stream (narrative quality matters)
