@@ -71,6 +71,9 @@ D&D 5e mechanical resolution. Exposes functions that the LLM calls as tools:
 - `check_ability(characterId, ability, dc)` — returns pass/fail
 - `start_combat(participants)` / `end_combat(sessionId)`
 - `advance_initiative(sessionId)`
+- `roll_death_save(characterId)` — rolls d20, applies success or failure, returns stabilised/dead/ongoing
+- `instant_death(characterId)` — triggered when damage in one hit exceeds maxHp (e.g. massive environmental event); bypasses death saves
+- `stabilise(characterId)` — sets hp to 1, resets death save counters
 - `take_short_rest(characterId)` — partial HP recovery via hit dice, certain ability recharges, no day advance
 - `take_long_rest(characterId)` — full HP and spell slot recovery, increments `inGameDate`, triggers diary write + world tick
 - `set_scene_type(sessionId, sceneType)` — switches active prompt module
@@ -153,9 +156,9 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **User** — id, email, passwordHash, createdAt
 
-**Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), inventory (JSON), xp, proficiencyBonus
+**Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), inventory (JSON), xp, proficiencyBonus, deathSaveSuccesses (0-3), deathSaveFailures (0-3), isDead
 
-**Campaign** — id, userId, characterId, name, inGameDate, currentLocationId, loreDocument (text), createdAt
+**Campaign** — id, userId, characterId, name, inGameDate, currentLocationId, loreDocument (text), deathMode (PERMADEATH | STORY), createdAt
 
 **GameSession** — id, campaignId, startedAt, endedAt, sceneType (EXPLORATION | COMBAT | SOCIAL | SETTLEMENT | REST)
 
@@ -165,7 +168,9 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **Memory** — id, campaignId, subjectType (CHARACTER | NPC), subjectId, content, embedding (vector), createdAt
 
-**Npc** — id, campaignId, name, description, coreMotivation, personalityTraits (array), speechStyle, relationships (JSON), disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
+**Npc** — id, campaignId, name, description, coreMotivation, personalityTraits (array), speechStyle, disposition, currentLocationId, alive, agenda (nullable), nextTickInGameDate (nullable — in-game date, not real-time timestamp)
+
+**NpcRelationship** — id, sourceNpcId, targetNpcId, type (ALLY | RIVAL | EMPLOYER | FAMILY | INFORMANT | ENEMY), description, disposition. Used by WorldModule to identify NPC pairs with reason to interact during world tick.
 
 ### World entities
 
@@ -210,6 +215,20 @@ Before the first session, the player goes through a guided setup:
 Every campaign has a main antagonist whose plan drives the overarching narrative. The LLM weaves this throughout sessions — clues surface naturally, consequences accumulate, faction dynamics shift as the antagonist advances their agenda via the world tick. The campaign builds toward a climax and a meaningful conclusion when the antagonist is confronted or defeated.
 
 The main antagonist is an NPC with an agenda like any other, but their `nextTickInGameDate` resets frequently — they are always active, always making moves.
+
+### Player Death
+
+Death is real and can happen at any moment — a villain's ambush, a burning building, a catastrophic dice roll. The world does not protect the player.
+
+**Dying (0 HP):** Character falls unconscious. Each subsequent turn the LLM calls `roll_death_save`. Three successes → `stabilise`. Three failures → dead. Other characters or NPCs can intervene with a Medicine check or healing spell.
+
+**Instant death:** If a single hit exceeds the character's maximum HP (massive rock, town collapsing), `instant_death` is called — no death saves.
+
+**On death — determined by campaign `deathMode`:**
+- **PERMADEATH** — campaign ends. The world remembers what the player did. A memorial entry is written to the diary. A new campaign can be started.
+- **STORY** — resurrection is available but costs something significant narratively: a debt to a deity, a favour owed to a powerful NPC, a permanent consequence. The LLM determines the cost in context. The campaign continues.
+
+**Death mode** is chosen during campaign setup alongside tone and story concept.
 
 ### Narrative Consistency
 
