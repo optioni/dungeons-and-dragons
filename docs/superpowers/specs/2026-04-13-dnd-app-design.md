@@ -87,6 +87,15 @@ D&D 5e mechanical resolution. Exposes functions that the LLM calls as tools:
 - `restock_merchant(npcId, items[])` — refreshes merchant stock (used by world tick)
 - `add_to_party(npcId)` — NPC joins the player as companion; suspends their world tick agenda
 - `remove_from_party(npcId)` — NPC leaves the party (voluntarily or forced by story events)
+- `travel_to(campaignId, locationId)` — moves player to connected location, advances in-game time, may trigger random encounter
+- `check_skill(characterId, skill, dc)` — rolls d20 + ability modifier + proficiency bonus (if proficient), returns pass/fail
+- `trigger_level_up(characterId)` — fired when XP threshold reached; pauses session for player to choose new abilities
+- `apply_level_up(characterId, choices)` — commits level-up choices, updates stats and abilities
+- `prepare_spells(characterId, spellIds[])` — sets prepared spells for Wizard/Cleric/Druid after long rest
+- `create_quest(campaignId, fields)` — creates a new quest
+- `update_quest_objective(questId, objectiveIndex, completed)` — marks an objective done
+- `complete_quest(questId)` / `fail_quest(questId)` — resolves a quest, applies rewards
+- `trigger_catastrophe(campaignId, description, locationId?)` — fires a random world catastrophe; used by world tick on low-probability random roll
 
 Reads SRD data for spell effects, monster stat blocks, condition rules.
 
@@ -164,7 +173,7 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **User** — id, email, passwordHash, createdAt
 
-**Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), goldPieces, silverPieces, copperPieces, xp, proficiencyBonus, deathSaveSuccesses (0-3), deathSaveFailures (0-3), isDead
+**Character** — id, userId, name, race (ref SrdRace), class (ref SrdClass), level, abilityScores (JSON), hp, maxHp, ac, conditions (array), spellSlots (JSON by level), preparedSpells (array of SrdSpell ids, nullable — Wizard/Cleric/Druid only), skillProficiencies (array of skill names), goldPieces, silverPieces, copperPieces, xp, proficiencyBonus, deathSaveSuccesses (0-3), deathSaveFailures (0-3), isDead
 
 **Campaign** — id, userId, characterId, name, inGameDate, currentLocationId, loreDocument (text), deathMode (PERMADEATH | STORY), createdAt
 
@@ -192,7 +201,9 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **Faction** — id, campaignId, name, goals, powerLevel, playerDisposition (ALLY | NEUTRAL | WARY | HOSTILE), territory (locationIds array)
 
-**WorldEvent** — id, campaignId, description, locationId (nullable), deadlineInGameDate (nullable), source (PLAYER_ACTION | WORLD_TICK), status (ACTIVE | RESOLVED | EXPIRED), outcome (nullable), createdAt
+**WorldEvent** — id, campaignId, description, locationId (nullable), deadlineInGameDate (nullable), source (PLAYER_ACTION | WORLD_TICK | CATASTROPHE), status (ACTIVE | RESOLVED | EXPIRED), outcome (nullable), createdAt
+
+**Quest** — id, campaignId, title, description, type (MAIN | SIDE), status (ACTIVE | COMPLETED | FAILED | ABANDONED), objectives (JSON array — each with description and completed flag), rewardGold (nullable), rewardXp (nullable), rewardItemId (nullable), sourceNpcId (nullable), createdAt
 
 ### SRD reference entities (seeded on first migration)
 
@@ -306,6 +317,7 @@ Assembled per scene from layers, with prompt caching applied:
 | `/campaign/[id]/play` | Main game view |
 | `/campaign/[id]/character` | Full character sheet, inventory, spell list |
 | `/campaign/[id]/world` | World overview — locations, factions, NPCs, diary |
+| `/campaign/[id]/quests` | Active and completed quests, objectives |
 
 ### Game View Layout
 
