@@ -230,6 +230,7 @@ subscription {
 - LLM tool call failures (invalid arguments, entity not found): return structured error to LLM so it can recover gracefully in narrative ("the magic fizzles unexpectedly")
 - SSE stream interruptions: client reconnects and re-subscribes; session state is server-side so no loss
 - World tick failures: log and skip the failing NPC; don't block the day transition
+- World tick race condition: while the world tick job is running, a `campaignLocked` flag is set in Redis. If a player action touches an entity that may be affected, the resolver waits briefly for the lock to clear before querying. Lock is released when the job completes or fails.
 - SRD seed failures on migration: migration fails loudly — seeding is required for the game to function
 
 ---
