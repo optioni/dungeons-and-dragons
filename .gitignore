@@ -17,3 +17,29 @@ node_modules
 .pnp.*
 
 .superpowers
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build output
+dist
+.output
+
+# Nuxt
+.nuxt
+.nuxt-*
+
+# NestJS
+apps/api/dist
+
+# MikroORM
+apps/api/migrations/*.js
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
