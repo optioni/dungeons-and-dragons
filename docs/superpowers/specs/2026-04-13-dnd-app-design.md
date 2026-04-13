@@ -117,6 +117,19 @@ Owns all Claude integration. Two operating modes:
 5. Current session GameEvents — everything that's happened this sitting
 6. Player input
 
+**Prompt caching strategy (4 cache breakpoints, ordered most → least stable):**
+
+| Breakpoint | Content | Invalidates when |
+|---|---|---|
+| 1 | System prompt + tool definitions | Never (within a campaign) |
+| 2 | Character state | Any tool call modifies character |
+| 3 | World state + last 7 diary entries | `advance_day` fires |
+| 4 | Historical session GameEvents (all but current turn) | Each new player turn |
+
+In a typical turn only the latest player input and the new DM response are processed fresh — everything above breakpoint 4 is a cache hit. This keeps per-turn token costs minimal despite the large context window.
+
+For Haiku world tick calls: cache the shared world state block that is passed identically to all NPC agenda calls in the same batch.
+
 ---
 
 ## Data Models
