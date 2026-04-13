@@ -71,7 +71,8 @@ D&D 5e mechanical resolution. Exposes functions that the LLM calls as tools:
 - `check_ability(characterId, ability, dc)` — returns pass/fail
 - `start_combat(participants)` / `end_combat(sessionId)`
 - `advance_initiative(sessionId)`
-- `advance_day(campaignId)` — triggers diary write + world tick
+- `take_short_rest(characterId)` — partial HP recovery via hit dice, certain ability recharges, no day advance
+- `take_long_rest(characterId)` — full HP and spell slot recovery, increments `inGameDate`, triggers diary write + world tick
 
 Reads SRD data for spell effects, monster stat blocks, condition rules.
 
@@ -85,7 +86,7 @@ The campaign's long-term memory system.
 **Prompt injection:** Last 7 diary entries are automatically included in every DM prompt. Older entries are retrievable via LLM tool:
 - `search_memories(query, subjectId?)` — semantic similarity search via pgvector across both diary entries and memory facts
 
-**Day transition:** When the LLM calls the `advance_day` tool (signalling narrative time has passed), SessionModule triggers MemoryModule to write the diary entry (Haiku call) before the WorldModule world tick runs. The `advance_day` tool is the only mechanism for day transitions — the server never infers it automatically.
+**Day transition:** When the LLM calls `take_long_rest`, SessionModule enqueues a world tick job and triggers MemoryModule to write the diary entry (Haiku call). `take_long_rest` is the only mechanism for day transitions — the server never infers it automatically. Time of day within a day (morning, afternoon, evening, night) is tracked narratively by the LLM, not as a database field.
 
 ### WorldModule
 The living world. Owns locations, factions, and ongoing events. Processes autonomous world change at the end of each in-game day.
