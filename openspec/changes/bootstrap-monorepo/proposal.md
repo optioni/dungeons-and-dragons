@@ -22,6 +22,7 @@ The project is a fresh repository with no application code. Before any features 
 - `api-scaffold`: NestJS app skeleton with all dependencies wired, GraphQL Yoga endpoint at `/graphql`, health check endpoint, MikroORM connected, BullMQ connected, environment config loading
 - `web-scaffold`: Nuxt 3 app skeleton with Nuxt UI, urql GraphQL client configured pointing at API
 - `local-infrastructure`: Docker Compose for PostgreSQL (pgvector enabled) and Redis with documented setup instructions
+- `dockerfiles`: Production Dockerfiles for `api/` and `web/`, suitable for Kubernetes deployment
 
 ### Modified Capabilities
 
@@ -29,5 +30,6 @@ The project is a fresh repository with no application code. Before any features 
 
 - Creates `api/` and `web/` workspaces from scratch
 - Adds `docker-compose.yml`, `prettier.config.js`, root `package.json`, root `eslint.config.js`
+- Adds `api/Dockerfile` and `web/Dockerfile`
 - No existing code modified
 - All subsequent changes depend on this one

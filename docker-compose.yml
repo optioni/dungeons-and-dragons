@@ -1,0 +1,34 @@
+# One-command local setup: docker compose up -d
+#
+# pgvector upgrade path:
+#   1. Update the image tag below (e.g. pg17 -> pg18)
+#   2. Run: docker compose pull && docker compose up -d
+#   3. Data is preserved in the postgres_data named volume
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: dnd
+      POSTGRES_PASSWORD: dnd
+      POSTGRES_DB: dnd
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dnd"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
