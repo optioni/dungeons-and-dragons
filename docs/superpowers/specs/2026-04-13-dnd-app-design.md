@@ -87,7 +87,9 @@ D&D 5e mechanical resolution. Exposes functions that the LLM calls as tools:
 - `restock_merchant(npcId, items[])` — refreshes merchant stock (used by world tick)
 - `add_to_party(npcId)` — NPC joins the player as companion; suspends their world tick agenda
 - `remove_from_party(npcId)` — NPC leaves the party (voluntarily or forced by story events)
-- `travel_to(campaignId, locationId)` — moves player to connected location, advances in-game time, may trigger random encounter
+- `travel_to(campaignId, locationId)` — validates location is discovered, moves player, advances in-game time, may trigger random encounter
+- `discover_location(campaignId, locationId, source, sourceId?)` — creates a LocationDiscovery record; called automatically when a map item is obtained, an NPC reveals a place, or exploration generates a new location
+- `create_location(campaignId, fields)` — procedurally generates a new location during exploration; auto-calls discover_location after creation
 - `check_skill(characterId, skill, dc)` — rolls d20 + ability modifier + proficiency bonus (if proficient), returns pass/fail
 - `trigger_level_up(characterId)` — fired when XP threshold reached; pauses session for player to choose new abilities
 - `apply_level_up(characterId, choices)` — commits level-up choices, updates stats and abilities
@@ -189,7 +191,7 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **NpcRelationship** — id, sourceNpcId, targetNpcId, type (ALLY | RIVAL | EMPLOYER | FAMILY | INFORMANT | ENEMY), description, disposition. Used by WorldModule to identify NPC pairs with reason to interact during world tick.
 
-**Item** — id, campaignId (nullable for SRD items), name, type (WEAPON | ARMOR | GEAR | CONSUMABLE | MAGIC | QUEST), description, damageDice (nullable), damageType (nullable), acBonus (nullable), properties (JSON — magic effects, special rules), weight, goldValue, srdEquipmentId (nullable)
+**Item** — id, campaignId (nullable for SRD items), name, type (WEAPON | ARMOR | GEAR | CONSUMABLE | MAGIC | QUEST | DOCUMENT), description, damageDice (nullable), damageType (nullable), acBonus (nullable), properties (JSON — magic effects, special rules), weight, goldValue, srdEquipmentId (nullable), mapId (nullable — if set, obtaining this item auto-discovers all locations on the referenced map)
 
 **CharacterItem** — id, characterId, itemId, quantity, equipped, equippedSlot (MAIN_HAND | OFF_HAND | ARMOR | ACCESSORY, nullable), condition (NORMAL | DAMAGED | BROKEN), notes (nullable)
 
@@ -197,7 +199,13 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 ### World entities
 
-**Location** — id, campaignId, name, description, currentState (SAFE | TENSE | THREATENED | HOSTILE | RUINED), connectedLocationIds (array), recentEvents (JSON)
+**Location** — id, campaignId, name, description, currentState (SAFE | TENSE | THREATENED | HOSTILE | RUINED), connectedLocationIds (array), recentEvents (JSON), x (float — map coordinate), y (float — map coordinate)
+
+**Map** — id, campaignId, name, description, scale (WORLD | REGIONAL | LOCAL | DUNGEON)
+
+**MapLocation** — mapId, locationId — which locations appear on which map. When a map Item enters the character's inventory, the system auto-creates LocationDiscovery records for all locations on it.
+
+**LocationDiscovery** — id, campaignId, locationId, discoveredAt, source (MAP | NPC | EXPLORATION | QUEST), sourceId (nullable — mapId, npcId, or questId that revealed it). Location discovery is fully derived from this table — no `discovered` flag on Location itself.
 
 **Faction** — id, campaignId, name, goals, powerLevel, playerDisposition (ALLY | NEUTRAL | WARY | HOSTILE), territory (locationIds array)
 
@@ -324,7 +332,7 @@ Assembled per scene from layers, with prompt caching applied:
 | `/campaign/[id]/setup` | Character creation wizard (before first session) |
 | `/campaign/[id]/play` | Main game view |
 | `/campaign/[id]/character` | Full character sheet, inventory, spell list |
-| `/campaign/[id]/world` | World overview — locations, factions, NPCs, diary |
+| `/campaign/[id]/world` | World overview — interactive location map (node graph with fog of war), factions, NPCs, diary |
 | `/campaign/[id]/quests` | Active and completed quests, objectives |
 
 ### Game View Layout
