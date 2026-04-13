@@ -9,11 +9,13 @@ The app is designed for multiple users. Before any game features can be built, u
 - Password hashing with bcrypt
 - `JwtAuthGuard` applied globally across all protected resolvers
 - `CurrentUser` decorator for extracting user from request context
+- `/auth` page in web — login and registration forms, stores JWT in cookie/localStorage, redirects to dashboard on success
 
 ## Capabilities
 
 ### New Capabilities
 - `user-auth`: User registration, login, JWT issuance, and guard infrastructure used by all protected resolvers
+- `auth-ui`: `/auth` web page with login and registration forms, JWT storage, redirect flow
 
 ### Modified Capabilities
 
@@ -21,4 +23,4 @@ The app is designed for multiple users. Before any game features can be built, u
 
 - New `AuthModule` in `api/`
 - All subsequent modules depend on `JwtAuthGuard` and `CurrentUser` decorator from this change
-- No web UI — auth tokens are used directly by the Nuxt app via urql headers
+- urql client configured with auth exchange to attach JWT to all requests

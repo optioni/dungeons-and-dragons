@@ -8,7 +8,7 @@ The LLM resolves game mechanics by calling server-side tools. Without a game eng
   - Dice: `roll_dice`
   - Combat: `start_combat`, `end_combat`, `advance_initiative`, `apply_damage`, `heal`, `apply_condition`, `remove_condition`
   - Death: `roll_death_save`, `instant_death`, `stabilise`
-  - Skills: `check_skill`
+  - Skills: `check_skill` (skill + proficiency bonus), `check_ability` (raw ability check, no proficiency)
   - Rests: `take_short_rest`, `take_long_rest` (triggers diary + world tick)
   - Items: `create_item`, `give_item`, `equip_item`, `unequip_item`, `buy_item`, `sell_item`, `restock_merchant`
   - Spells: `use_spell_slot`, `prepare_spells`
@@ -23,7 +23,7 @@ The LLM resolves game mechanics by calling server-side tools. Without a game eng
 ## Capabilities
 
 ### New Capabilities
-- `dice-and-checks`: `roll_dice`, `check_skill` — randomness and ability resolution
+- `dice-and-checks`: `roll_dice`, `check_skill`, `check_ability` — randomness, skill resolution, and raw ability checks
 - `combat-mechanics`: Initiative, action economy, damage, healing, conditions, death saves
 - `rest-mechanics`: Short and long rest, resource recovery, day advancement trigger
 - `item-mechanics`: Item creation, transfer, equipping, merchant transactions
