@@ -203,7 +203,9 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **WorldEvent** — id, campaignId, description, locationId (nullable), deadlineInGameDate (nullable), source (PLAYER_ACTION | WORLD_TICK | CATASTROPHE), status (ACTIVE | RESOLVED | EXPIRED), outcome (nullable), createdAt
 
-**Quest** — id, campaignId, title, description, type (MAIN | SIDE), status (ACTIVE | COMPLETED | FAILED | ABANDONED), objectives (JSON array — each with description and completed flag), rewardGold (nullable), rewardXp (nullable), rewardItemId (nullable), sourceNpcId (nullable), createdAt
+**Quest** — id, campaignId, title, description, type (MAIN | SIDE), status (ACTIVE | COMPLETED | FAILED | ABANDONED), objectives (JSON array — each with description and completed flag), rewardGold (nullable), rewardXp (nullable), rewardItemId (nullable), sourceNpcId (nullable), agendaImpact (text — how completion or failure affects the source NPC's agenda; used by the LLM when resolving the quest to determine what update_npc call to make), createdAt
+
+Quests are expressions of the giver NPC's agenda — generated in the context of their `coreMotivation` and `agenda`. Resolving a quest always feeds back into the source NPC's agenda via `update_npc`. The antagonist's plan stages are the villain's equivalent — their objectives from their own perspective, which the player can discover and disrupt.
 
 ### SRD reference entities (seeded on first migration)
 
