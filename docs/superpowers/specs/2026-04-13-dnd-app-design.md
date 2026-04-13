@@ -203,9 +203,15 @@ For Haiku world tick calls: cache the shared world state block that is passed id
 
 **WorldEvent** — id, campaignId, description, locationId (nullable), deadlineInGameDate (nullable), source (PLAYER_ACTION | WORLD_TICK | CATASTROPHE), status (ACTIVE | RESOLVED | EXPIRED), outcome (nullable), createdAt
 
-**Quest** — id, campaignId, title, description, type (MAIN | SIDE), status (ACTIVE | COMPLETED | FAILED | ABANDONED), objectives (JSON array — each with description and completed flag), rewardGold (nullable), rewardXp (nullable), rewardItemId (nullable), sourceNpcId (nullable), agendaImpact (text — how completion or failure affects the source NPC's agenda; used by the LLM when resolving the quest to determine what update_npc call to make), createdAt
+**Quest** — id, campaignId, title, description, type (MAIN | SIDE), status (ACTIVE | COMPLETED | FAILED | ABANDONED), rewardGold (nullable), rewardXp (nullable), rewardItemId (nullable), sourceNpcId (nullable), agendaImpact (text — how completion or failure affects the source NPC's agenda; used by the LLM when resolving the quest to determine what update_npc call to make), createdAt
+
+**QuestObjective** — id, questId, description, type (REACH_LOCATION | NPC_DEAD | NPC_ALIVE | HAVE_ITEM | TALK_TO_NPC | MANUAL), entityId (nullable — references the NPC / Location / Item the condition checks), completed, completedAt. Indexed on (type, entityId, completed) for fast auto-completion lookups after tool calls.
+
+**QuestEntity** — id, questId, entityType (NPC | LOCATION | ITEM | WORLD_EVENT), entityId. Tracks all entities scaffolded when the quest was created — locations, NPCs, items, and world events spawned specifically for this quest.
 
 Quests are expressions of the giver NPC's agenda — generated in the context of their `coreMotivation` and `agenda`. Resolving a quest always feeds back into the source NPC's agenda via `update_npc`. The antagonist's plan stages are the villain's equivalent — their objectives from their own perspective, which the player can discover and disrupt.
+
+After every state-changing tool call (travel_to, apply_damage, give_item, etc.) the game engine runs an auto-checker: query `QuestObjective WHERE type = <relevant type> AND entityId = <affected entity> AND completed = false` and marks any matching objectives complete. If all objectives for a quest are complete, the LLM is notified to narrate the resolution and call `complete_quest`.
 
 ### SRD reference entities (seeded on first migration)
 
