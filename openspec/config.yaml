@@ -3,13 +3,19 @@ schema: spec-driven
 context: |
   # D&D Solo Adventure App
 
+  > **Status:** Active development — not deployed anywhere. Breaking changes (schema, API, data model) are safe to make freely.
+
   A single-player D&D 5e game where Claude acts as the Dungeon Master. LLM handles narrative, NPC roleplay, and game mechanics via tool calling. The world is alive — NPCs pursue agendas, factions shift power, and events unfold independently.
 
   ## Monorepo Structure
   ```
   /
-  ├── api/        NestJS + GraphQL Yoga + MikroORM
-  └── web/        Nuxt 3 + Nuxt UI + urql
+  ├── apps/
+  │   ├── api/    NestJS + GraphQL Yoga + MikroORM
+  │   └── web/    Nuxt 3 + Nuxt UI + urql
+  ├── docs/
+  │   └── superpowers/specs/   Design specs
+  └── openspec/   OpenSpec change proposals
   ```
 
   ## Tech Stack
@@ -22,15 +28,10 @@ context: |
   - Anthropic SDK for Claude integration (Sonnet for DM session, Haiku for world tick/diary)
   - Voyage AI SDK for text embeddings (pgvector storage)
   - @nestjs/jwt + passport for JWT auth
-  - @nestjs/config for environment variables
-  - @juuso.piikkila/eslint-config-typescript for ESLint
-  - Prettier for formatting
 
   ### Web
   - Nuxt 3 with Nuxt UI v4 components
   - urql as GraphQL client (queries, mutations, SSE subscriptions)
-  - @juuso.piikkila/eslint-config-typescript (Vue configuration) for ESLint
-  - Prettier for formatting
 
   ## API Modules (9)
   - AuthModule — JWT auth, user registration/login
@@ -45,6 +46,8 @@ context: |
 
   ## Key Design Decisions
   - GraphQL subscriptions over SSE (not WebSocket) for LLM streaming
+  - GraphQL relay pagination with cursors for all list queries (Connection/Edge/PageInfo pattern); shared helpers live in `apps/api/src/graphql/relay/` (connection args, page info, order-by input, validators)
+  - Shared GraphQL infrastructure in `apps/api/src/graphql/`: relay pagination, auth guard, `@CurrentUser`/`@Public` decorators, JSON scalar, `WhereService` for filter inputs
   - Prompt caching: 4 breakpoints (system+modules / campaign state / world+diary / session history)
   - World tick runs via BullMQ after take_long_rest; Redis lock prevents race conditions
   - LLM calls advance_antagonist_stage, record_lore, set_scene_type — server never infers these
@@ -74,10 +77,14 @@ context: |
   ### SRD Reference (seeded, read-only)
   SrdClass, SrdRace, SrdSpell, SrdMonster, SrdEquipment, SrdCondition
 
-  ## Conventions
-  - Conventional commits
-  - TDD — write failing tests first, then implementation
-  - Single responsibility per file/module
+  ## Constraints
   - All LLM tool calls return structured results the LLM can recover from gracefully
   - No hardcoded model names — config values only
-  - ESLint + Prettier enforced across monorepo
+
+rules:
+  tasks:
+    - Use conventional commits (feat:, fix:, chore:, test:, docs:)
+    - Follow TDD — write the failing test before the implementation
+    - One clear responsibility per file/module
+    - Document all public classes, methods, and non-obvious logic with JSDoc comments
+    - Always add these as the final tasks in every change: run lint, run typecheck, run tests
