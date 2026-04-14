@@ -1,4 +1,4 @@
-import { YogaDriver, YogaDriverConfig } from '@graphql-yoga/nestjs';
+import { YogaDriver, type YogaDriverConfig } from '@graphql-yoga/nestjs';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { BullModule } from '@nestjs/bullmq';
@@ -7,7 +7,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 
 import { AppResolver } from './app.resolver';
+import { AuthModule } from './auth/auth.module';
 import { validate } from './config/environment.validation';
+import { GraphqlModule } from './graphql/graphql.module';
+import { SrdModule } from './srd/srd.module';
 
 @Module({
     imports: [
@@ -18,9 +21,9 @@ import { validate } from './config/environment.validation';
         GraphQLModule.forRoot<YogaDriverConfig>({
             driver: YogaDriver,
             autoSchemaFile: true,
+            context: ({ req, res }: { req: Request; res: Response }) => ({ req, res }),
         }),
         MikroOrmModule.forRootAsync({
-            // @ts-expect-error: @mikro-orm/nestjs@7.0.1 types lag behind @mikro-orm/core@7.0.10 (ISchemaGenerator interface mismatch)
             useFactory: (configService: ConfigService) =>
                 defineConfig({
                     clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
@@ -41,6 +44,9 @@ import { validate } from './config/environment.validation';
             }),
             inject: [ConfigService],
         }),
+        GraphqlModule,
+        AuthModule,
+        SrdModule,
     ],
     providers: [AppResolver],
 })
