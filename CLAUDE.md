@@ -38,6 +38,7 @@ A single-player D&D 5e game where Claude acts as the Dungeon Master. LLMs handle
 ## Key Architecture Decisions
 
 - **GraphQL subscriptions over SSE** (not WebSocket) for LLM streaming
+- **GraphQL relay pagination** with cursors for all list queries (Connection/Edge/PageInfo pattern)
 - **Prompt caching** with 4 breakpoints: system prompt + active modules / campaign state / world state + diary / session history. Only the latest player input is ever uncached.
 - **Claude Sonnet** for DM session stream; **Claude Haiku** for world tick, diary writing, NPC agenda processing
 - **Model names are config values** — never hardcoded
@@ -47,6 +48,20 @@ A single-player D&D 5e game where Claude acts as the Dungeon Master. LLMs handle
 - **Location discovery** derived from `LocationDiscovery` table — no `discovered` flag on Location
 - **NPC agendas** processed in batched Haiku calls with lazy evaluation (`nextTickInGameDate` is an in-game date, not a real-time timestamp)
 - **SRD data** (spells, monsters, classes, races, equipment, conditions) seeded from `dnd5eapi.co` on first migration — read-only, never modified at runtime
+
+## Shared GraphQL Infrastructure (`apps/api/src/graphql/`)
+
+Before implementing GraphQL types, resolvers, or guards, check this directory for existing utilities:
+
+| Path | Contents |
+|---|---|
+| `relay/` | Relay pagination helpers — `ConnectionArgs`, `PageInfo`, `OrderByInput`, cursor validators |
+| `decorators/` | `@CurrentUser()`, `@CurrentConnectionId()`, `@Public()` |
+| `guards/` | `AuthGuard` — JWT authentication for resolvers |
+| `scalars/` | `JsonScalar` — GraphQL JSON scalar |
+| `where.service.ts` | `WhereService` — builds MikroORM `where` clauses from GraphQL filter inputs |
+
+All list queries must use relay pagination types from `relay/`.
 
 ## NestJS Modules
 
@@ -75,6 +90,7 @@ The full tool list lives in the design spec: `docs/superpowers/specs/2026-04-13-
 - **Single responsibility** — one clear purpose per file/module
 - **YAGNI** — no speculative features or abstractions
 - **No `any` types** — TypeScript strict mode
+- **JSDoc required** — document all public classes, methods, and non-obvious logic
 
 ## Database
 
