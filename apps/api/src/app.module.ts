@@ -4,13 +4,21 @@ import { defineConfig } from '@mikro-orm/postgresql';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 
 import { AppResolver } from './app.resolver';
 import { AuthModule } from './auth/auth.module';
+import { CampaignModule } from './campaign/campaign.module';
+import { CharacterModule } from './character/character.module';
 import { validate } from './config/environment.validation';
+import { GameEngineModule } from './game-engine/game-engine.module';
 import { GraphqlModule } from './graphql/graphql.module';
+import { LlmModule } from './llm/llm.module';
+import { MemoryModule } from './memory/memory.module';
+import { SessionModule } from './session/session.module';
 import { SrdModule } from './srd/srd.module';
+import { WorldModule } from './world/world.module';
 
 @Module({
     imports: [
@@ -24,16 +32,15 @@ import { SrdModule } from './srd/srd.module';
             context: ({ req, res }: { req: Request; res: Response }) => ({ req, res }),
         }),
         MikroOrmModule.forRootAsync({
-            useFactory: (configService: ConfigService) =>
-                defineConfig({
-                    clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
-                    entities: ['./dist/src/**/*.entity.js'],
-                    entitiesTs: ['./src/**/*.entity.ts'],
-                    migrations: {
-                        path: './migrations',
-                        pathTs: './src/migrations',
-                    },
-                }),
+            useFactory: (configService: ConfigService) => defineConfig({
+                clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
+                entities: ['./dist/src/**/*.entity.js'],
+                entitiesTs: ['./src/**/*.entity.ts'],
+                migrations: {
+                    path: './migrations',
+                    pathTs: './src/migrations',
+                },
+            }),
             inject: [ConfigService],
         }),
         BullModule.forRootAsync({
@@ -44,9 +51,17 @@ import { SrdModule } from './srd/srd.module';
             }),
             inject: [ConfigService],
         }),
+        EventEmitterModule.forRoot(),
         GraphqlModule,
         AuthModule,
         SrdModule,
+        CharacterModule,
+        CampaignModule,
+        WorldModule,
+        SessionModule,
+        LlmModule,
+        MemoryModule,
+        GameEngineModule,
     ],
     providers: [AppResolver],
 })
