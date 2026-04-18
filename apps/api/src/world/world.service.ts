@@ -15,6 +15,7 @@ import { Npc } from './entities/npc.entity.js';
 import { NpcItem } from './entities/npc-item.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { WorldEvent } from './entities/world-event.entity.js';
+import { NpcRelationshipType } from './world.enums.js';
 
 /**
  * Service for reading world and NPC data. All list queries are owner-scoped:
@@ -197,6 +198,88 @@ export class WorldService {
         }
 
         return location;
+    }
+
+    /**
+     * Returns NPCs whose `nextTickInGameDate` is non-null and lexicographically ≤ `inGameDate`,
+     * ordered by earliest date first, capped at `limit`. Used by the world tick worker.
+     */
+    async getDueNpcs(campaignId: number, inGameDate: string, limit: number): Promise<Npc[]> {
+        const em = this.npcRepo.getEntityManager();
+        return em.find(
+            Npc,
+            {
+                campaignId,
+                nextTickInGameDate: { $lte: inGameDate, $ne: null } as never,
+            },
+            { orderBy: { nextTickInGameDate: 'ASC' }, limit },
+        );
+    }
+
+    /**
+     * Returns NpcRelationship rows where both source and target NPCs share the same
+     * `currentLocationId` within the campaign. Pairs are sorted by relationship priority
+     * (ENEMY/RIVAL > ALLY/MENTOR/STUDENT/FAMILY > NEUTRAL), tiebroken by least-recently-conversed.
+     */
+    async getConversationPairs(campaignId: number): Promise<NpcRelationship[]> {
+        const em = this.npcRelationshipRepo.getEntityManager();
+        const allNpcs = await em.find(Npc, { campaignId });
+
+        const npcByLocation: Record<number, Npc[]> = {};
+        for (const npc of allNpcs) {
+            if (npc.currentLocationId == null) continue;
+            npcByLocation[npc.currentLocationId] ??= [];
+            npcByLocation[npc.currentLocationId]!.push(npc);
+        }
+
+        const coLocatedNpcIds: number[] = [];
+        for (const group of Object.values(npcByLocation)) {
+            if (group.length >= 2) {
+                for (const npc of group) coLocatedNpcIds.push(npc.id);
+            }
+        }
+
+        if (coLocatedNpcIds.length === 0) return [];
+
+        const relationships = await em.find(NpcRelationship, {
+            $or: [
+                { sourceNpcId: { $in: coLocatedNpcIds } },
+                { targetNpcId: { $in: coLocatedNpcIds } },
+            ],
+        } as never);
+
+        const npcById: Record<number, Npc> = Object.fromEntries(allNpcs.map((n) => [n.id, n]));
+        const qualifyingPairs = relationships.filter((rel) => {
+            const sourceNpc = npcById[rel.sourceNpcId];
+            const targetNpc = npcById[rel.targetNpcId];
+            return (
+                sourceNpc?.currentLocationId != null &&
+                targetNpc?.currentLocationId != null &&
+                sourceNpc.currentLocationId === targetNpc.currentLocationId
+            );
+        });
+
+        return qualifyingPairs.sort((a, b) => {
+            const priority = (type: NpcRelationshipType): number => {
+                if (type === NpcRelationshipType.ENEMY || type === NpcRelationshipType.RIVAL) return 0;
+                if (
+                    type === NpcRelationshipType.ALLY ||
+                    type === NpcRelationshipType.MENTOR ||
+                    type === NpcRelationshipType.STUDENT ||
+                    type === NpcRelationshipType.FAMILY
+                ) return 1;
+                return 2; // NEUTRAL
+            };
+            const priorityDiff = priority(a.type) - priority(b.type);
+            if (priorityDiff !== 0) return priorityDiff;
+
+            // Tiebreak: least-recently-conversed first
+            const sourceA = npcById[a.sourceNpcId];
+            const sourceB = npcById[b.sourceNpcId];
+            const timeA = sourceA?.lastConversedAt?.getTime() ?? 0;
+            const timeB = sourceB?.lastConversedAt?.getTime() ?? 0;
+            return timeA - timeB;
+        });
     }
 
     /**
