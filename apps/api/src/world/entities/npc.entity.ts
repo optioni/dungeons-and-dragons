@@ -88,4 +88,9 @@ export class Npc extends BaseEntity {
     @Field({ nullable: true })
     @Property({ type: 'text', nullable: true })
     nextTickInGameDate: string | null = null;
+
+    /** Timestamp of the last world-tick conversation this NPC participated in. */
+    @Field({ nullable: true })
+    @Property({ type: 'datetime', nullable: true })
+    lastConversedAt: Date | null = null;
 }
