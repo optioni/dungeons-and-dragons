@@ -16,6 +16,7 @@ import { GameEngineModule } from './game-engine/game-engine.module';
 import { GraphqlModule } from './graphql/graphql.module';
 import { LlmModule } from './llm/llm.module';
 import { MemoryModule } from './memory/memory.module';
+import { QueueModule } from './queue/queue.module';
 import { SessionModule } from './session/session.module';
 import { SrdModule } from './srd/srd.module';
 import { WorldModule } from './world/world.module';
@@ -62,6 +63,7 @@ import { WorldModule } from './world/world.module';
         LlmModule,
         MemoryModule,
         GameEngineModule,
+        QueueModule,
     ],
     providers: [AppResolver],
 })
