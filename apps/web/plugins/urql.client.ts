@@ -18,7 +18,7 @@ export default defineNuxtPlugin(() => {
             mapExchange({
                 onError(error) {
                     const isUnauthorized = error.graphQLErrors.some(
-                        (e) => e.extensions?.['code'] === 'UNAUTHORIZED',
+                        (graphqlError) => graphqlError.extensions?.['code'] === 'UNAUTHORIZED',
                     );
                     if (isUnauthorized) {
                         router.push('/auth');
