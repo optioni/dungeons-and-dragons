@@ -2,6 +2,7 @@ import { Field, InputType } from '@nestjs/graphql';
 
 import { type RelayWhere } from '../../graphql/where.service.js';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 @InputType()
 export class SrdEquipmentWhereInput implements RelayWhere {
     @Field(() => String, { nullable: true })
@@ -16,3 +17,4 @@ export class SrdEquipmentWhereInput implements RelayWhere {
     @Field(() => [SrdEquipmentWhereInput], { nullable: true })
     OR?: SrdEquipmentWhereInput[];
 }
+/* eslint-enable @typescript-eslint/naming-convention */

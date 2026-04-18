@@ -1,18 +1,19 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, expect, it } from 'vitest';
 
 import {
     type ClassApiResponse,
     type ConditionApiResponse,
     type EquipmentApiResponse,
-    type MonsterApiResponse,
-    type RaceApiResponse,
-    type SpellApiResponse,
     mapClass,
     mapCondition,
     mapEquipment,
     mapMonster,
     mapRace,
     mapSpell,
+    type MonsterApiResponse,
+    type RaceApiResponse,
+    type SpellApiResponse,
 } from './srd.seeder.js';
 
 describe('mapClass', () => {
@@ -145,7 +146,9 @@ describe('mapMonster', () => {
             hitPoints: 7,
             challengeRating: 0.25,
             speed: { walk: '30 ft.' },
-            abilityScores: { STR: 8, DEX: 14, CON: 10, INT: 10, WIS: 8, CHA: 8 },
+            abilityScores: {
+                STR: 8, DEX: 14, CON: 10, INT: 10, WIS: 8, CHA: 8,
+            },
             actions: [{ name: 'Scimitar', desc: 'Melee weapon attack.' }],
         });
     });
@@ -243,7 +246,8 @@ describe('mapCondition', () => {
             index: 'blinded',
             name: 'Blinded',
             description:
-                "A blinded creature can't see and automatically fails any ability check that requires sight.\nAttack rolls against the creature have advantage.",
+                'A blinded creature can\'t see and automatically fails any ability check that requires sight.\nAttack rolls against the creature have advantage.',
         });
     });
 });
+/* eslint-enable @typescript-eslint/naming-convention */

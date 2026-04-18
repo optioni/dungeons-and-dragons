@@ -1,6 +1,6 @@
 import { ArgsType, Field } from '@nestjs/graphql';
 
-import { ConnectionArgs } from '../../graphql/relay/index.js';
+import { ConnectionArgs } from '../../graphql/relay';
 import { SrdMonsterWhereInput } from '../inputs/srd-monster-where.input.js';
 
 @ArgsType()

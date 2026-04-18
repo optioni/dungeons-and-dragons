@@ -23,6 +23,7 @@ export class SrdRace extends BaseEntity {
 
     @Field(() => [Object])
     @Property({ type: 'jsonb' })
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     abilityBonuses!: Array<{ ability_score: { name: string }; bonus: number }>;
 
     @Field(() => [String])

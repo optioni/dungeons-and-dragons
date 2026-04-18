@@ -1,13 +1,13 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { type Connection } from 'graphql-relay';
 
-import { createRelayConnection } from '../graphql/relay/index.js';
+import { createRelayConnection } from '../graphql/relay';
 import { SrdSpellsConnectionArgs } from './args/srd-spells-connection.args.js';
 import { SrdSpell } from './entities/srd-spell.entity.js';
 import { SrdService } from './srd.service.js';
 
 export const SrdSpellConnection = createRelayConnection(SrdSpell);
-export type SrdSpellConnection = Connection<SrdSpell>;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type SrdSpellConnection = InstanceType<typeof SrdSpellConnection>;
 
 @Resolver(() => SrdSpell)
 export class SrdSpellResolver {

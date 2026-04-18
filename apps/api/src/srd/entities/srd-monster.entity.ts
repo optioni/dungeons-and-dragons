@@ -1,6 +1,8 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
-import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
+import {
+    Field, Float, ID, Int, ObjectType,
+} from '@nestjs/graphql';
 
 @ObjectType()
 @Entity()

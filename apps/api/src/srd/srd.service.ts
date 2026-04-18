@@ -3,8 +3,8 @@ import { type EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { type Connection } from 'graphql-relay';
 
-import { type ConnectionArgs } from '../graphql/relay/index.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
+import { type ConnectionArgs } from '../graphql/relay';
 import { SrdClass } from './entities/srd-class.entity.js';
 import { SrdCondition } from './entities/srd-condition.entity.js';
 import { SrdEquipment } from './entities/srd-equipment.entity.js';

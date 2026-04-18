@@ -1,12 +1,12 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
-import { type Connection } from 'graphql-relay';
 
-import { ConnectionArgs, createRelayConnection } from '../graphql/relay/index.js';
+import { ConnectionArgs, createRelayConnection } from '../graphql/relay';
 import { SrdCondition } from './entities/srd-condition.entity.js';
 import { SrdService } from './srd.service.js';
 
 export const SrdConditionConnection = createRelayConnection(SrdCondition);
-export type SrdConditionConnection = Connection<SrdCondition>;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type SrdConditionConnection = InstanceType<typeof SrdConditionConnection>;
 
 @Resolver(() => SrdCondition)
 export class SrdConditionResolver {

@@ -1,6 +1,6 @@
 import { ArgsType, Field } from '@nestjs/graphql';
 
-import { ConnectionArgs } from '../../graphql/relay/index.js';
+import { ConnectionArgs } from '../../graphql/relay';
 import { SrdSpellWhereInput } from '../inputs/srd-spell-where.input.js';
 
 @ArgsType()

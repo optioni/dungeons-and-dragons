@@ -1,4 +1,4 @@
-import type { EntityManager } from '@mikro-orm/core';
+import { type EntityManager } from '@mikro-orm/core';
 
 import { SrdClass } from './entities/srd-class.entity.js';
 import { SrdCondition } from './entities/srd-condition.entity.js';
@@ -11,85 +11,87 @@ const API_BASE = 'https://www.dnd5eapi.co/api';
 const CONCURRENCY_LIMIT = 10;
 
 export interface SrdLogger {
-    log(message: string): void;
-    warn(message: string): void;
-    error(message: string): void;
+    log: (message: string) => void
+    warn: (message: string) => void
+    error: (message: string) => void
 }
 
 interface ApiListItem {
-    index: string;
+    index: string
 }
 
 interface ApiListResponse {
-    count: number;
-    results: ApiListItem[];
+    count: number
+    results: ApiListItem[]
 }
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export interface ClassApiResponse {
-    index: string;
-    name: string;
-    hit_die: number;
-    proficiencies: Array<{ name: string }>;
-    saving_throws: Array<{ name: string }>;
-    spellcasting?: { spellcasting_ability: { name: string } };
+    index: string
+    name: string
+    hit_die: number
+    proficiencies: Array<{ name: string }>
+    saving_throws: Array<{ name: string }>
+    spellcasting?: { spellcasting_ability: { name: string } }
 }
 
 export interface RaceApiResponse {
-    index: string;
-    name: string;
-    speed: number;
-    ability_bonuses: Array<{ ability_score: { name: string }; bonus: number }>;
-    traits: Array<{ name: string }>;
-    size: string;
+    index: string
+    name: string
+    speed: number
+    ability_bonuses: Array<{ ability_score: { name: string }; bonus: number }>
+    traits: Array<{ name: string }>
+    size: string
 }
 
 export interface SpellApiResponse {
-    index: string;
-    name: string;
-    level: number;
-    school: { name: string };
-    casting_time: string;
-    range: string;
-    components: string[];
-    duration: string;
-    desc: string[];
-    higher_level?: string[];
-    classes: Array<{ name: string }>;
+    index: string
+    name: string
+    level: number
+    school: { name: string }
+    casting_time: string
+    range: string
+    components: string[]
+    duration: string
+    desc: string[]
+    higher_level?: string[]
+    classes: Array<{ name: string }>
 }
 
 export interface MonsterApiResponse {
-    index: string;
-    name: string;
-    size: string;
-    type: string;
-    alignment: string;
-    armor_class: Array<{ value: number }>;
-    hit_points: number;
-    challenge_rating: number;
-    speed: Record<string, string>;
-    strength: number;
-    dexterity: number;
-    constitution: number;
-    intelligence: number;
-    wisdom: number;
-    charisma: number;
-    actions?: Array<Record<string, unknown>>;
+    index: string
+    name: string
+    size: string
+    type: string
+    alignment: string
+    armor_class: Array<{ value: number }>
+    hit_points: number
+    challenge_rating: number
+    speed: Record<string, string>
+    strength: number
+    dexterity: number
+    constitution: number
+    intelligence: number
+    wisdom: number
+    charisma: number
+    actions?: Array<Record<string, unknown>>
 }
 
 export interface EquipmentApiResponse {
-    index: string;
-    name: string;
-    equipment_category: { name: string };
-    cost: { quantity: number; unit: string };
-    weight?: number;
-    properties?: Array<{ name: string }>;
-    damage?: Record<string, unknown>;
+    index: string
+    name: string
+    equipment_category: { name: string }
+    cost: { quantity: number; unit: string }
+    weight?: number
+    properties?: Array<{ name: string }>
+    damage?: Record<string, unknown>
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export interface ConditionApiResponse {
-    index: string;
-    name: string;
-    desc: string[];
+    index: string
+    name: string
+    desc: string[]
 }
 
 export function mapClass(raw: ClassApiResponse): Partial<SrdClass> {
@@ -97,8 +99,8 @@ export function mapClass(raw: ClassApiResponse): Partial<SrdClass> {
         index: raw.index,
         name: raw.name,
         hitDie: raw.hit_die,
-        proficiencies: raw.proficiencies.map((p) => p.name),
-        savingThrows: raw.saving_throws.map((s) => s.name),
+        proficiencies: raw.proficiencies.map((prof) => prof.name),
+        savingThrows: raw.saving_throws.map((savingThrow) => savingThrow.name),
         spellcastingAbility: raw.spellcasting?.spellcasting_ability?.name ?? null,
     };
 }
@@ -109,7 +111,7 @@ export function mapRace(raw: RaceApiResponse): Partial<SrdRace> {
         name: raw.name,
         speed: raw.speed,
         abilityBonuses: raw.ability_bonuses,
-        traits: raw.traits.map((t) => t.name),
+        traits: raw.traits.map((trait) => trait.name),
         size: raw.size,
     };
 }
@@ -126,7 +128,7 @@ export function mapSpell(raw: SpellApiResponse): Partial<SrdSpell> {
         duration: raw.duration,
         description: raw.desc.join('\n'),
         higherLevel: raw.higher_level?.join('\n') ?? null,
-        classes: raw.classes.map((c) => c.name),
+        classes: raw.classes.map((cls) => cls.name),
     };
 }
 
@@ -141,6 +143,7 @@ export function mapMonster(raw: MonsterApiResponse): Partial<SrdMonster> {
         hitPoints: raw.hit_points,
         challengeRating: raw.challenge_rating,
         speed: raw.speed,
+        /* eslint-disable @typescript-eslint/naming-convention */
         abilityScores: {
             STR: raw.strength,
             DEX: raw.dexterity,
@@ -149,6 +152,7 @@ export function mapMonster(raw: MonsterApiResponse): Partial<SrdMonster> {
             WIS: raw.wisdom,
             CHA: raw.charisma,
         },
+        /* eslint-enable @typescript-eslint/naming-convention */
         actions: raw.actions ?? [],
     };
 }
@@ -160,7 +164,7 @@ export function mapEquipment(raw: EquipmentApiResponse): Partial<SrdEquipment> {
         category: raw.equipment_category.name,
         cost: raw.cost,
         weight: raw.weight ?? null,
-        properties: raw.properties?.map((p) => p.name) ?? [],
+        properties: raw.properties?.map((property) => property.name) ?? [],
         damage: raw.damage ?? null,
     };
 }
@@ -175,13 +179,16 @@ export function mapCondition(raw: ConditionApiResponse): Partial<SrdCondition> {
 
 async function fetchBatch<T>(urls: string[], limit: number, logger: SrdLogger): Promise<T[]> {
     const results: T[] = [];
-    for (let i = 0; i < urls.length; i += limit) {
-        const batch = urls.slice(i, i + limit);
+    for (let index = 0; index < urls.length; index += limit) {
+        const batch = urls.slice(index, index + limit);
         const settled = await Promise.allSettled(
             batch.map(async (url) => {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status.toString()} fetching ${url}`);
-                return res.json() as Promise<T>;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status.toString()} fetching ${url}`);
+                }
+
+                return response.json() as Promise<T>;
             }),
         );
         for (const result of settled) {
@@ -193,6 +200,7 @@ async function fetchBatch<T>(urls: string[], limit: number, logger: SrdLogger): 
             }
         }
     }
+
     return results;
 }
 
@@ -201,7 +209,7 @@ async function seedEntityType<TEntity extends object, TApiResponse>(
     logger: SrdLogger,
     entityClass: new () => TEntity,
     resourcePath: string,
-    mapFn: (raw: TApiResponse) => Partial<TEntity>,
+    mapFunction: (raw: TApiResponse) => Partial<TEntity>,
 ): Promise<void> {
     const label = entityClass.name;
 
@@ -211,16 +219,17 @@ async function seedEntityType<TEntity extends object, TApiResponse>(
         return;
     }
 
-    const listRes = await fetch(`${API_BASE}/${resourcePath}`);
-    if (!listRes.ok) {
-        throw new Error(`Failed to fetch ${resourcePath} list: HTTP ${listRes.status.toString()}`);
+    const listResponse = await fetch(`${API_BASE}/${resourcePath}`);
+    if (!listResponse.ok) {
+        throw new Error(`Failed to fetch ${resourcePath} list: HTTP ${listResponse.status.toString()}`);
     }
-    const list = (await listRes.json()) as ApiListResponse;
+
+    const list = (await listResponse.json()) as ApiListResponse;
 
     const urls = list.results.map((item) => `${API_BASE}/${resourcePath}/${item.index}`);
     const details = await fetchBatch<TApiResponse>(urls, CONCURRENCY_LIMIT, logger);
 
-    const rows = details.map((raw) => mapFn(raw));
+    const rows = details.map((raw) => mapFunction(raw));
     await em.insertMany(entityClass, rows as TEntity[]);
 
     logger.log(`${label}: inserted ${rows.length.toString()} rows`);
@@ -252,15 +261,15 @@ export class SrdSeeder {
         em: EntityManager,
         entityClass: new () => TEntity,
         resourcePath: string,
-        mapFn: (raw: TApiResponse) => Partial<TEntity>,
+        mapFunction: (raw: TApiResponse) => Partial<TEntity>,
     ): Promise<void> {
         try {
-            await seedEntityType(em, this.logger, entityClass, resourcePath, mapFn);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
+            await seedEntityType(em, this.logger, entityClass, resourcePath, mapFunction);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
             this.logger.error(
-                `${entityClass.name}: seed failed — ${message}. ` +
-                'Re-run `mikro-orm migration:up` after restoring connectivity.',
+                `${entityClass.name}: seed failed — ${message}. `
+                + 'Re-run `mikro-orm migration:up` after restoring connectivity.',
             );
         }
     }

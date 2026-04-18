@@ -13,8 +13,8 @@ import { SrdConditionResolver } from './srd-condition.resolver.js';
 import { SrdEquipmentResolver } from './srd-equipment.resolver.js';
 import { SrdMonsterResolver } from './srd-monster.resolver.js';
 import { SrdRaceResolver } from './srd-race.resolver.js';
-import { SrdService } from './srd.service.js';
 import { SrdSpellResolver } from './srd-spell.resolver.js';
+import { SrdService } from './srd.service.js';
 
 @Module({
     imports: [

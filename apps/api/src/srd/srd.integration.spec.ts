@@ -1,7 +1,9 @@
+// eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
-
-import { MikroORM, defineConfig } from '@mikro-orm/postgresql';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { defineConfig, MikroORM } from '@mikro-orm/postgresql';
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 
 import { SrdClass } from './entities/srd-class.entity.js';
 import { SrdCondition } from './entities/srd-condition.entity.js';
@@ -23,7 +25,11 @@ beforeAll(async () => {
             entities: SRD_ENTITIES,
         }),
     );
+
+    // Drop and recreate only the SRD tables so the seeder starts from an empty slate.
+    // drop() uses DROP TABLE IF EXISTS so it is safe whether or not tables exist.
     const generator = sharedOrm.schema;
+    await generator.drop({ wrap: false });
     await generator.create({ wrap: false });
 
     // Seed data so all tests in this file can rely on it being present
@@ -33,9 +39,10 @@ beforeAll(async () => {
 }, 120_000);
 
 afterAll(async () => {
+    // Do not drop the SRD tables — other integration spec files (e.g. character) rely
+    // on the seeded SRD data being present. The next test run will call refreshDatabase
+    // which drops and recreates cleanly.
     if (sharedOrm) {
-        const generator = sharedOrm.schema;
-        await generator.drop({ wrap: false });
         await sharedOrm.close();
     }
 });
