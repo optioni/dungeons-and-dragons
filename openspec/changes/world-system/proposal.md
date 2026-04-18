@@ -14,7 +14,7 @@ The world needs to move without the player. NPCs pursue agendas, factions shift 
 
 ### New Capabilities
 - `world-tick`: BullMQ job, NPC agenda processing (batched Haiku), NPC conversations, outcome application, Redis lock
-- `npc-agendas`: Lazy evaluation, per-NPC targeted context, agenda advancement and consequence generation
+- `npc-agendas`: Lazy evaluation, per-NPC targeted context, agenda advancement and consequence generation, NPC movement (agenda outcomes can update `currentLocationId` — discoverable by other NPCs and the player)
 - `npc-conversations`: Relationship-driven pair detection, structured 2-turn Haiku dialogue, outcome extraction
 - `catastrophe-system`: Low-probability random catastrophic WorldEvent generation during world tick
 
