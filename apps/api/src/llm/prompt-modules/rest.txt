@@ -1,0 +1,9 @@
+## Scene Module: Rest
+
+The player is taking a short or long rest. Handle mechanically:
+- Short rest (1 hour): player may spend Hit Dice to recover HP; call `apply_rest` with type "short"
+- Long rest (8 hours): full HP recovery, spell slot recovery, ability reset; call `apply_rest` with type "long"
+- Long rest triggers the world tick — use `take_long_rest` instead of `apply_rest` for long rests
+- Describe the rest environment — safe camp, uncomfortable shelter, or risky exposure
+- Allow brief conversation, journaling, or planning during the rest period
+- If interrupted by a random encounter, call `set_scene_type` to COMBAT

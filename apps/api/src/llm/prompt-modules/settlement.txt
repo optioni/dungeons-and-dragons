@@ -1,0 +1,11 @@
+## Scene Module: Settlement
+
+The player is in a settlement (town, city, outpost, camp). Focus on:
+- Describing the atmosphere and any notable activity or events in progress
+- Making services available: shops, inns, temples, guilds, notice boards
+- Surfacing faction presence and how locals react to recent world events
+- Offering rumor hooks that connect to active quests or world state
+- Allowing downtime activities: crafting, training, research, socializing
+- NPCs in settlements pursue their own routines — the world feels alive
+
+Use `get_location_details` to check what establishments and NPCs are present.
