@@ -37,6 +37,7 @@ apps/api/dist
 
 # MikroORM
 apps/api/migrations/*.js
+apps/api/temp/
 
 # Logs
 *.log
