@@ -1,0 +1,511 @@
+import { EntityManager } from '@mikro-orm/postgresql';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Inject, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type Anthropic from '@anthropic-ai/sdk';
+import { type Job } from 'bullmq';
+import type Redis from 'ioredis';
+
+import { Campaign } from '../campaign/entities/campaign.entity.js';
+import { ANTHROPIC_CLIENT, BACKGROUND_MODEL, MemoryService } from '../memory/memory.service.js';
+import { REDIS_CLIENT } from '../queue/queue.module.js';
+import { Npc } from './entities/npc.entity.js';
+import { NpcRelationship } from './entities/npc-relationship.entity.js';
+import { NpcItem } from './entities/npc-item.entity.js';
+import { WorldEvent } from './entities/world-event.entity.js';
+import { WorldService } from './world.service.js';
+import { NpcRelationshipType, WorldEventSource, WorldEventStatus } from './world.enums.js';
+
+interface WorldTickJobPayload {
+    campaignId: number;
+}
+
+interface AgendaOutcome {
+    npcId: number;
+    agenda: string;
+    nextTickInGameDate: string;
+    newLocationId?: number | null;
+    departureDescription?: string | null;
+}
+
+interface ConversationOutcome {
+    sourceNpcId: number;
+    targetNpcId: number;
+    relationshipChange?: {
+        type: NpcRelationshipType;
+        description: string;
+    } | null;
+    itemExchanged?: {
+        npcItemId: number;
+        toNpcId: number;
+    } | null;
+    newAgendaSource?: string | null;
+    newAgendaTarget?: string | null;
+}
+
+interface TickOutcomeBatch {
+    agendaOutcomes: AgendaOutcome[];
+    conversationOutcomes: ConversationOutcome[];
+    departureEvents: Array<{
+        campaignId: number;
+        locationId: number;
+        description: string;
+    }>;
+    catastropheEvent?: {
+        campaignId: number;
+        locationId?: number | null;
+        description: string;
+    } | null;
+}
+
+const LOCK_TTL_SECONDS = 600; // 10 minutes
+
+/**
+ * BullMQ worker for the world-tick queue. Processes NPC agendas, conversations,
+ * and catastrophe rolls in strict sequence for a given campaign.
+ */
+@Processor('world-tick')
+export class WorldTickWorker extends WorkerHost {
+    private readonly logger = new Logger(WorldTickWorker.name);
+
+    constructor(
+        private readonly em: EntityManager,
+        private readonly worldService: WorldService,
+        private readonly memoryService: MemoryService,
+        @Inject(REDIS_CLIENT) private readonly redis: Redis,
+        @Inject(ANTHROPIC_CLIENT) private readonly anthropic: Pick<Anthropic, 'messages'>,
+        @Inject(BACKGROUND_MODEL) private readonly backgroundModel: string,
+        private readonly config: ConfigService,
+    ) {
+        super();
+    }
+
+    /**
+     * Main entry point for the world-tick job. Acquires a Redis lock to prevent
+     * overlapping ticks, then runs the sequenced world tick pipeline.
+     */
+    async process(job: Job<WorldTickJobPayload>): Promise<{ status: string }> {
+        const { campaignId } = job.data;
+        const lockKey = `campaignLocked:${campaignId}`;
+
+        const acquired = await this.redis.set(lockKey, '1', 'EX', LOCK_TTL_SECONDS, 'NX');
+        if (acquired === null) {
+            this.logger.log(`World tick skipped for campaign ${campaignId} — lock already held`);
+            return { status: 'skipped' };
+        }
+
+        try {
+            return await this.runTick(campaignId);
+        } finally {
+            await this.redis.del(lockKey);
+        }
+    }
+
+    /**
+     * Executes the full world tick pipeline: agendas → conversations → outcomes → catastrophe → diary.
+     */
+    private async runTick(campaignId: number): Promise<{ status: string }> {
+        const campaign = await this.em.findOne(Campaign, { id: campaignId });
+        if (!campaign) {
+            this.logger.error(`Campaign ${campaignId} not found during world tick`);
+            return { status: 'campaign_not_found' };
+        }
+
+        const inGameDate = campaign.inGameDate ?? 'Day 1';
+        const maxNpcs = this.config.get<number>('MAX_NPCS_PER_TICK', 10);
+
+        const batch: TickOutcomeBatch = {
+            agendaOutcomes: [],
+            conversationOutcomes: [],
+            departureEvents: [],
+        };
+
+        // Step 1: NPC agenda evaluation
+        const dueNpcs = await this.worldService.getDueNpcs(campaignId, inGameDate, maxNpcs);
+        if (dueNpcs.length > 0) {
+            const agendaOutcomes = await this.evaluateAgendas(dueNpcs, inGameDate, campaignId);
+            batch.agendaOutcomes = agendaOutcomes;
+
+            for (const outcome of agendaOutcomes) {
+                if (outcome.newLocationId != null && outcome.departureDescription) {
+                    const npc = dueNpcs.find((n) => n.id === outcome.npcId);
+                    if (npc?.currentLocationId != null) {
+                        batch.departureEvents.push({
+                            campaignId,
+                            locationId: npc.currentLocationId,
+                            description: outcome.departureDescription,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Step 2: NPC conversations
+        const conversationPairs = await this.worldService.getConversationPairs(campaignId);
+        if (conversationPairs.length > 0) {
+            batch.conversationOutcomes = await this.runConversations(conversationPairs);
+        }
+
+        // Step 3: Apply all outcomes atomically
+        await this.applyOutcomes(batch, dueNpcs);
+
+        // Step 4: Catastrophe roll
+        await this.rollCatastrophe(campaignId, inGameDate);
+
+        // Step 5: Diary entry (fire-and-forget)
+        this.memoryService.writeDiaryEntry(campaignId, inGameDate, []).catch((err: unknown) => {
+            this.logger.error(`Diary write failed for campaign ${campaignId}`, err);
+        });
+
+        return { status: 'ok' };
+    }
+
+    /**
+     * Groups NPCs by location, then evaluates agendas in parallel for independent NPCs
+     * and sequentially for co-located NPCs.
+     */
+    async evaluateAgendas(npcs: Npc[], inGameDate: string, campaignId: number): Promise<AgendaOutcome[]> {
+        const byLocation = groupByLocation(npcs);
+        const outcomes: AgendaOutcome[] = [];
+
+        const independentGroups: Npc[][] = [];
+        const coLocatedGroups: Npc[][] = [];
+
+        for (const [, group] of byLocation) {
+            if (group.length === 1) {
+                independentGroups.push(group);
+            } else {
+                coLocatedGroups.push(group);
+            }
+        }
+
+        // Parallel for independent NPCs
+        const parallelResults = await Promise.all(
+            independentGroups.flat().map((npc) => this.evaluateSingleNpcAgenda(npc, inGameDate, campaignId)),
+        );
+        outcomes.push(...parallelResults.filter((r): r is AgendaOutcome => r !== null));
+
+        // Sequential for co-located NPCs
+        for (const group of coLocatedGroups) {
+            for (const npc of group) {
+                const result = await this.evaluateSingleNpcAgenda(npc, inGameDate, campaignId);
+                if (result !== null) {
+                    outcomes.push(result);
+                }
+            }
+        }
+
+        return outcomes;
+    }
+
+    /** Calls Haiku to evaluate a single NPC's agenda and returns a structured outcome. */
+    private async evaluateSingleNpcAgenda(
+        npc: Npc,
+        inGameDate: string,
+        campaignId: number,
+    ): Promise<AgendaOutcome | null> {
+        try {
+            const locations = await this.em.find(
+                (await import('./entities/location.entity.js')).Location,
+                { campaignId },
+                { fields: ['id', 'name'] as never },
+            );
+            const locationList = locations
+                .map((l: { id: number; name: string }) => `${l.id}: ${l.name}`)
+                .join(', ');
+
+            const response = await this.anthropic.messages.create({
+                model: this.backgroundModel,
+                max_tokens: 400,
+                system: 'You are a world simulation engine for a D&D campaign. Respond only with valid JSON.',
+                messages: [
+                    {
+                        role: 'user',
+                        content: `Evaluate this NPC's agenda. Current in-game date: ${inGameDate}.
+
+NPC: ${npc.name}
+Profession: ${npc.profession ?? 'unknown'}
+Personality: ${(npc.personalityTraits as string[]).join(', ')}
+Current agenda: ${npc.agenda ?? 'none'}
+Current location ID: ${npc.currentLocationId ?? 'unknown'}
+
+Available locations: ${locationList}
+
+Respond with JSON:
+{
+  "agenda": "updated agenda text",
+  "nextTickInGameDate": "narrative in-game date for next evaluation",
+  "newLocationId": <number or null>,
+  "departureDescription": "<narrative of departure, or null if not moving>"
+}`,
+                    },
+                ],
+            });
+
+            const text = response.content.find((b) => b.type === 'text');
+            if (!text || text.type !== 'text') return null;
+
+            const parsed = JSON.parse(text.text) as {
+                agenda: string;
+                nextTickInGameDate: string;
+                newLocationId?: number | null;
+                departureDescription?: string | null;
+            };
+
+            return {
+                npcId: npc.id,
+                agenda: parsed.agenda,
+                nextTickInGameDate: parsed.nextTickInGameDate,
+                newLocationId: parsed.newLocationId ?? null,
+                departureDescription: parsed.departureDescription ?? null,
+            };
+        } catch (error) {
+            this.logger.error(`Agenda evaluation failed for NPC ${npc.id}`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Runs structured 2-turn Haiku conversations for co-located NPC pairs with relationships.
+     */
+    async runConversations(pairs: NpcRelationship[]): Promise<ConversationOutcome[]> {
+        const outcomes: ConversationOutcome[] = [];
+        const usedNpcIds = new Set<number>();
+
+        for (const rel of pairs) {
+            if (usedNpcIds.has(rel.sourceNpcId) || usedNpcIds.has(rel.targetNpcId)) {
+                continue;
+            }
+
+            const outcome = await this.runSingleConversation(rel);
+            if (outcome !== null) {
+                outcomes.push(outcome);
+                usedNpcIds.add(rel.sourceNpcId);
+                usedNpcIds.add(rel.targetNpcId);
+            }
+        }
+
+        return outcomes;
+    }
+
+    /** Calls Haiku to simulate a 2-turn dialogue between two NPCs. */
+    private async runSingleConversation(rel: NpcRelationship): Promise<ConversationOutcome | null> {
+        try {
+            const [sourceNpc, targetNpc] = await Promise.all([
+                this.em.findOne(Npc, { id: rel.sourceNpcId }),
+                this.em.findOne(Npc, { id: rel.targetNpcId }),
+            ]);
+
+            if (!sourceNpc || !targetNpc) return null;
+
+            const response = await this.anthropic.messages.create({
+                model: this.backgroundModel,
+                max_tokens: 600,
+                system: 'You are a world simulation engine for a D&D campaign. Respond only with valid JSON.',
+                messages: [
+                    {
+                        role: 'user',
+                        content: `Simulate a 2-turn conversation between these NPCs. They are co-located.
+
+NPC A (${sourceNpc.name}): ${sourceNpc.profession ?? 'unknown'}, personality: ${(sourceNpc.personalityTraits as string[]).join(', ')}, speech style: ${sourceNpc.speechStyle ?? 'normal'}
+NPC B (${targetNpc.name}): ${targetNpc.profession ?? 'unknown'}, personality: ${(targetNpc.personalityTraits as string[]).join(', ')}, speech style: ${targetNpc.speechStyle ?? 'normal'}
+Relationship: ${rel.type} — ${rel.description ?? 'no description'}
+
+Respond with JSON:
+{
+  "dialogue": [{"speaker": "A", "line": "..."}, {"speaker": "B", "line": "..."}],
+  "relationshipChange": {"type": "<NpcRelationshipType or null>", "description": "..."} | null,
+  "itemExchanged": {"npcItemId": <number>, "toNpcId": <number>} | null,
+  "newAgendaSource": "<new agenda for ${sourceNpc.name} or null>",
+  "newAgendaTarget": "<new agenda for ${targetNpc.name} or null>"
+}`,
+                    },
+                ],
+            });
+
+            const text = response.content.find((b) => b.type === 'text');
+            if (!text || text.type !== 'text') return null;
+
+            const parsed = JSON.parse(text.text) as {
+                relationshipChange?: { type: NpcRelationshipType; description: string } | null;
+                itemExchanged?: { npcItemId: number; toNpcId: number } | null;
+                newAgendaSource?: string | null;
+                newAgendaTarget?: string | null;
+            };
+
+            return {
+                sourceNpcId: rel.sourceNpcId,
+                targetNpcId: rel.targetNpcId,
+                relationshipChange: parsed.relationshipChange ?? null,
+                itemExchanged: parsed.itemExchanged ?? null,
+                newAgendaSource: parsed.newAgendaSource ?? null,
+                newAgendaTarget: parsed.newAgendaTarget ?? null,
+            };
+        } catch (error) {
+            this.logger.error(`Conversation failed for NPCs ${rel.sourceNpcId}/${rel.targetNpcId}`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Applies all tick outcomes atomically in a single EntityManager flush.
+     * Includes NPC field updates, WorldEvent rows, and NpcRelationship changes.
+     */
+    async applyOutcomes(batch: TickOutcomeBatch, dueNpcs: Npc[]): Promise<void> {
+        const npcMap = new Map(dueNpcs.map((n) => [n.id, n]));
+
+        // Apply agenda outcomes
+        for (const outcome of batch.agendaOutcomes) {
+            const npc = npcMap.get(outcome.npcId);
+            if (!npc) continue;
+
+            npc.agenda = outcome.agenda;
+            npc.nextTickInGameDate = outcome.nextTickInGameDate;
+
+            if (outcome.newLocationId != null) {
+                npc.currentLocationId = outcome.newLocationId;
+            }
+        }
+
+        // Create departure WorldEvent rows
+        for (const evt of batch.departureEvents) {
+            this.em.create(WorldEvent, {
+                campaignId: evt.campaignId,
+                locationId: evt.locationId,
+                description: evt.description,
+                source: WorldEventSource.WORLD_TICK,
+                status: WorldEventStatus.ACTIVE,
+            });
+        }
+
+        // Apply conversation outcomes
+        const conversedAt = new Date();
+        for (const conv of batch.conversationOutcomes) {
+            const [sourceNpc, targetNpc] = await Promise.all([
+                this.em.findOne(Npc, { id: conv.sourceNpcId }),
+                this.em.findOne(Npc, { id: conv.targetNpcId }),
+            ]);
+
+            if (sourceNpc) {
+                sourceNpc.lastConversedAt = conversedAt;
+                if (conv.newAgendaSource) sourceNpc.agenda = conv.newAgendaSource;
+            }
+            if (targetNpc) {
+                targetNpc.lastConversedAt = conversedAt;
+                if (conv.newAgendaTarget) targetNpc.agenda = conv.newAgendaTarget;
+            }
+
+            if (conv.relationshipChange) {
+                const rel = await this.em.findOne(NpcRelationship, {
+                    sourceNpcId: conv.sourceNpcId,
+                    targetNpcId: conv.targetNpcId,
+                });
+                if (rel) {
+                    rel.type = conv.relationshipChange.type;
+                    rel.description = conv.relationshipChange.description;
+                }
+            }
+            if (conv.itemExchanged) {
+                const item = await this.em.findOne(NpcItem, { id: conv.itemExchanged.npcItemId });
+                if (item) item.npcId = conv.itemExchanged.toNpcId;
+            }
+        }
+
+        // Catastrophe event (already created in rollCatastrophe, added to batch for atomicity)
+        if (batch.catastropheEvent) {
+            this.em.create(WorldEvent, {
+                campaignId: batch.catastropheEvent.campaignId,
+                locationId: batch.catastropheEvent.locationId ?? null,
+                description: batch.catastropheEvent.description,
+                source: WorldEventSource.CATASTROPHE,
+                status: WorldEventStatus.ACTIVE,
+            });
+        }
+
+        await this.em.flush();
+    }
+
+    /**
+     * Calls Haiku with recent campaign state and ~5% probability framing to decide
+     * whether a catastrophic world event should occur. If triggered, creates a WorldEvent
+     * with source CATASTROPHE.
+     */
+    async rollCatastrophe(campaignId: number, inGameDate: string): Promise<void> {
+        try {
+            const recentEvents = await this.em.find(
+                WorldEvent,
+                { campaignId, status: WorldEventStatus.ACTIVE },
+                { orderBy: { createdAt: 'DESC' } as never, limit: 5 },
+            );
+
+            const recentSummary = recentEvents
+                .map((e) => `- ${e.description}`)
+                .join('\n') || 'No recent events.';
+
+            const response = await this.anthropic.messages.create({
+                model: this.backgroundModel,
+                max_tokens: 300,
+                tools: [
+                    {
+                        name: 'trigger_catastrophe',
+                        description: 'Triggers a catastrophic world event. Use with ~5% probability.',
+                        input_schema: {
+                            type: 'object' as const,
+                            properties: {
+                                description: {
+                                    type: 'string',
+                                    description: 'Narrative description of the catastrophe',
+                                },
+                                location_id: {
+                                    type: 'number',
+                                    description: 'Optional location ID where the catastrophe occurs',
+                                },
+                            },
+                            required: ['description'],
+                        },
+                    },
+                ],
+                messages: [
+                    {
+                        role: 'user',
+                        content: `You are the world simulation engine for a D&D campaign. Current in-game date: ${inGameDate}.
+
+Recent world events:
+${recentSummary}
+
+With approximately 5% probability, trigger a catastrophic world event using the trigger_catastrophe tool. Most of the time, do nothing. Only trigger if it feels dramatically appropriate.`,
+                    },
+                ],
+            });
+
+            const toolUse = response.content.find((b) => b.type === 'tool_use');
+            if (!toolUse || toolUse.type !== 'tool_use' || toolUse.name !== 'trigger_catastrophe') {
+                return;
+            }
+
+            const input = toolUse.input as { description: string; location_id?: number };
+            this.em.create(WorldEvent, {
+                campaignId,
+                locationId: input.location_id ?? null,
+                description: input.description,
+                source: WorldEventSource.CATASTROPHE,
+                status: WorldEventStatus.ACTIVE,
+            });
+            await this.em.flush();
+        } catch (error) {
+            this.logger.error(`Catastrophe roll failed for campaign ${campaignId}`, error);
+        }
+    }
+}
+
+/** Groups NPCs by their currentLocationId. NPCs without a location are each their own group. */
+function groupByLocation(npcs: Npc[]): Map<string, Npc[]> {
+    const map = new Map<string, Npc[]>();
+    for (const npc of npcs) {
+        const key = npc.currentLocationId != null ? String(npc.currentLocationId) : `noloc-${npc.id}`;
+        const group = map.get(key) ?? [];
+        group.push(npc);
+        map.set(key, group);
+    }
+    return map;
+}
