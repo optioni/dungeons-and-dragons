@@ -438,19 +438,6 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         });
 
         toolRegistry.register({
-            toolName: 'trigger_catastrophe',
-            execute: async (sessionId, input): Promise<ToolResult> => {
-                const ctx = await this.loadCtx(sessionId);
-                if (!ctx) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
-                return world.triggerCatastrophe(
-                    ctx.campaignId,
-                    this.str(input.description),
-                    input.location_id !== undefined ? this.num(input.location_id) : null,
-                );
-            },
-        });
-
-        toolRegistry.register({
             toolName: 'advance_antagonist_stage',
             execute: async (sessionId): Promise<ToolResult> => {
                 const ctx = await this.loadCtx(sessionId);
