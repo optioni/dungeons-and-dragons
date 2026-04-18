@@ -28,7 +28,7 @@ export type Cursor = Record<string, number | string>;
  * Options for the find operation.
  */
 export interface FindOptions<T extends AnyEntity> {
-    resolvers?: Record<string, ResolverFunction<T>>;
+    resolvers?: Record<string, ResolverFunction<T>>
 }
 
 @Injectable()
@@ -124,7 +124,7 @@ export class GraphqlService {
         }
 
         const keys = [...orderBy.keys()].filter((key) => cursor[key] !== undefined);
-         
+
         const orConditions: Array<FilterQuery<T>> = [];
 
         for (const [index, key] of keys.entries()) {
@@ -134,7 +134,6 @@ export class GraphqlService {
                 comparatorOp = comparatorOp === '$lt' ? '$gt' : '$lt';
             }
 
-             
             const andConditions: Array<FilterQuery<T>> = [];
 
             for (const item of keys.slice(0, index)) {
@@ -142,8 +141,11 @@ export class GraphqlService {
                 andConditions.push({ [item]: { $eq: this.getCursorValue(cursor[item]) } } as any as FilterQuery<T>);
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            andConditions.push({ [key]: { [comparatorOp]: this.getCursorValue(cursor[key]) } } as any as FilterQuery<T>);
+            const keyCondition = {
+                [key]: { [comparatorOp]: this.getCursorValue(cursor[key]) },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any as FilterQuery<T>;
+            andConditions.push(keyCondition);
 
             if (andConditions.length === 1) {
                 orConditions.push(andConditions[0]);
@@ -191,8 +193,8 @@ export class GraphqlService {
         options?: FindOptions<T>,
     ): Promise<Connection<T>> {
         let orderBy = this.getOrder(order);
-        const qb =
-            repositoryOrQueryBuilder instanceof EntityRepository
+        const qb
+            = repositoryOrQueryBuilder instanceof EntityRepository
                 ? repositoryOrQueryBuilder.createQueryBuilder()
                 : repositoryOrQueryBuilder;
         const limit = connArgs.first ?? connArgs.last ?? 25;
@@ -282,8 +284,8 @@ export class GraphqlService {
         where: RelayWhere,
         options?: FindOptions<T>,
     ): Promise<T | undefined> {
-        const qb =
-            repositoryOrQueryBuilder instanceof EntityRepository
+        const qb
+            = repositoryOrQueryBuilder instanceof EntityRepository
                 ? repositoryOrQueryBuilder.createQueryBuilder()
                 : repositoryOrQueryBuilder;
 

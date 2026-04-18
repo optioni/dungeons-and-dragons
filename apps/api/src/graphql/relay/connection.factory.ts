@@ -4,13 +4,13 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { PageInfo } from './page-info.js';
 
 export interface IEdge<T> {
-    cursor: string;
-    node: T;
+    cursor: string
+    node: T
 }
 
 export interface IConnection<T> {
-    edges: Array<IEdge<T>>;
-    pageInfo: PageInfo;
+    edges: Array<IEdge<T>>
+    pageInfo: PageInfo
 }
 
 /**

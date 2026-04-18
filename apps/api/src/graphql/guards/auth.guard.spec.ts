@@ -1,6 +1,14 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { type Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
+import { JwtService } from '@nestjs/jwt';
+import {
+    describe, expect, it, vi,
+} from 'vitest';
 
+import { AuthGuard } from './auth.guard';
+
+/* eslint-disable @typescript-eslint/naming-convention */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -17,33 +25,33 @@ vi.mock('@nestjs/graphql', () => ({
 vi.mock('@nestjs/jwt', () => ({
     JwtService: class {
         verify(token: string) {
-            if (token === 'valid-token') return { sub: 'user-uuid' };
+            if (token === 'valid-token') {
+                return { sub: 'user-uuid' };
+            }
+
             throw new Error('invalid token');
         }
     },
 }));
 
-import { GqlExecutionContext } from '@nestjs/graphql';
-import { JwtService } from '@nestjs/jwt';
-import { Reflector } from '@nestjs/core';
-
-import { AuthGuard } from './auth.guard';
-
 const makeContext = (overrides: Partial<{
-    isPublic: boolean;
-    cookieHeader: string | undefined;
-    dbUser: object | null;
-    userInRepo: object | null;
+    isPublic: boolean
+    cookieHeader: string | undefined
+    dbUser: object | null
+    userInRepo: object | null
 }> = {}) => {
     const {
         isPublic = false,
-        cookieHeader = undefined,
+        cookieHeader,
         userInRepo = null,
     } = overrides;
 
     const reflector = {
         get: vi.fn((key: string) => {
-            if (key === 'isPublic') return isPublic;
+            if (key === 'isPublic') {
+                return isPublic;
+            }
+
             return undefined;
         }),
     } as unknown as Reflector;
@@ -52,8 +60,8 @@ const makeContext = (overrides: Partial<{
         headers: { cookie: cookieHeader },
     };
 
-    const gqlCtx = { getContext: vi.fn(() => ({ req: request })) };
-    vi.mocked(GqlExecutionContext.create).mockReturnValue(gqlCtx as never);
+    const gqlContext = { getContext: vi.fn(() => ({ req: request })) };
+    vi.mocked(GqlExecutionContext.create).mockReturnValue(gqlContext as never);
 
     const jwtService = new JwtService();
     const em = { findOne: vi.fn().mockResolvedValue(userInRepo) };
@@ -105,12 +113,13 @@ describe('AuthGuard', () => {
             userInRepo: user,
         });
         const guard = new AuthGuard(reflector, jwtService, userRepo as never);
-        const ctx = { req: { headers: { cookie: 'access_token=valid-token' } } };
-        vi.mocked(GqlExecutionContext.create).mockReturnValue({ getContext: vi.fn(() => ctx) } as never);
+        const context = { req: { headers: { cookie: 'access_token=valid-token' } } };
+        vi.mocked(GqlExecutionContext.create).mockReturnValue({ getContext: vi.fn(() => context) } as never);
 
         const result = await guard.canActivate(executionContext as never);
 
         expect(result).toBe(true);
-        expect((ctx.req as { dbUser?: typeof user }).dbUser).toEqual(user);
+        expect((context.req as { dbUser?: typeof user }).dbUser).toEqual(user);
     });
 });
+/* eslint-enable @typescript-eslint/naming-convention */

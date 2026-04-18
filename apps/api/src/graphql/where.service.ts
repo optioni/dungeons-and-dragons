@@ -31,11 +31,11 @@ export type ResolverFunction<T extends AnyEntity, V = any> = (
  */
 export interface RelayWhere {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    AND?: RelayWhere[];
+    AND?: RelayWhere[]
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    OR?: RelayWhere[];
+    OR?: RelayWhere[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
+    [key: string]: any
 }
 
 @Injectable()
@@ -76,7 +76,6 @@ export class WhereService {
         where: RelayWhere,
         resolvers?: Record<string, ResolverFunction<T>>,
     ): FilterQuery<T> {
-         
         const conditions: Array<FilterQuery<T>> = [];
 
         for (const fieldName of Object.keys(where)) {

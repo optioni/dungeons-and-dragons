@@ -1,5 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import {
+    beforeEach, describe, expect, it, vi,
+} from 'vitest';
 
+import { AuthService } from './auth.service';
+
+/* eslint-disable @typescript-eslint/naming-convention */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -14,14 +21,11 @@ vi.mock('bcryptjs', () => ({
 
 vi.mock('@nestjs/jwt', () => ({
     JwtService: class {
-        sign() { return 'signed-jwt-token'; }
+        sign() {
+            return 'signed-jwt-token';
+        }
     },
 }));
-
-import { UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-
-import { AuthService } from './auth.service';
 
 const makeRepo = () => {
     const flush = vi.fn(async () => {});
@@ -106,3 +110,4 @@ describe('AuthService', () => {
         });
     });
 });
+/* eslint-enable @typescript-eslint/naming-convention */

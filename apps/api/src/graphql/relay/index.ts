@@ -6,19 +6,19 @@ export * from './order-by.input';
 export * from './page-info';
 
 interface PagingForward {
-    pagingType: 'forward';
-    after?: string;
-    first: number;
+    pagingType: 'forward'
+    after?: string
+    first: number
 }
 
 interface PagingBackward {
-    pagingType: 'backward';
-    before?: string;
-    last: number;
+    pagingType: 'backward'
+    before?: string
+    last: number
 }
 
 interface PagingNone {
-    pagingType: 'none';
+    pagingType: 'none'
 }
 
 type PagingMeta = PagingForward | PagingBackward | PagingNone;

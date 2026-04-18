@@ -1,13 +1,15 @@
+// eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
-
 import { MikroORM } from '@mikro-orm/core';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+    afterEach, beforeEach, describe, expect, it,
+} from 'vitest';
 
-import { User } from './entities/user.entity';
 import { AuthService } from './auth.service';
+import { User } from './entities/user.entity';
 
 const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
 const TEST_JWT_SECRET = 'integration-test-secret-min-16-chars';
@@ -36,11 +38,14 @@ describe('AuthService integration', () => {
 
     afterEach(async () => {
         // Clean up created test users
-        if (createdEmails.length > 0) {
+        const emailsToDelete = [...createdEmails];
+        createdEmails.length = 0;
+
+        if (emailsToDelete.length > 0) {
             const em = orm.em.fork();
-            await em.nativeDelete(User, { email: { $in: createdEmails } });
-            createdEmails.length = 0;
+            await em.nativeDelete(User, { email: { $in: emailsToDelete } });
         }
+
         await orm.close();
     });
 

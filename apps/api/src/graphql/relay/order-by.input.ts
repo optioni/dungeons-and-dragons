@@ -6,9 +6,9 @@ export enum OrderByDirection {
 }
 
 export interface OrderBy<T = string> {
-    field: T;
+    field: T
 
-    direction: OrderByDirection;
+    direction: OrderByDirection
 }
 
 registerEnumType(OrderByDirection, { name: 'OrderByDirection' });

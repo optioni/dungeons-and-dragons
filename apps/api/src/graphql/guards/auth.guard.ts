@@ -1,5 +1,5 @@
-import { type EntityRepository } from '@mikro-orm/postgresql';
 import { InjectRepository } from '@mikro-orm/nestjs';
+import { type EntityRepository } from '@mikro-orm/postgresql';
 import { CanActivate, type ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
@@ -31,11 +31,11 @@ export class AuthGuard implements CanActivate {
         }
 
         const gqlContext = GqlExecutionContext.create(context).getContext<{
-            req: { headers: { cookie?: string; authorization?: string }; dbUser?: User };
+            req: { headers: { cookie?: string; authorization?: string }; dbUser?: User }
         }>();
-        const req = gqlContext.req;
+        const request = gqlContext.req;
 
-        const token = this.extractToken(req.headers);
+        const token = this.extractToken(request.headers);
 
         if (!token) {
             throw new UnauthorizedException('Authentication required');
@@ -48,20 +48,20 @@ export class AuthGuard implements CanActivate {
             throw new UnauthorizedException('Invalid or expired token');
         }
 
-        const user = await this.userRepository.getEntityManager().findOne(User, { id: payload.sub });
+        const user = await this.userRepository.getEntityManager().findOne(User, { id: Number(payload.sub) });
 
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
 
-        req.dbUser = user;
+        request.dbUser = user;
         return true;
     }
 
     private extractToken(headers: { cookie?: string; authorization?: string }): string | undefined {
         // Try httpOnly cookie first
         if (headers.cookie) {
-            const match = /access_token=([^;]+)/.exec(headers.cookie);
+            const match = /access_token=([^;]+)/u.exec(headers.cookie);
             if (match?.[1]) {
                 return match[1];
             }

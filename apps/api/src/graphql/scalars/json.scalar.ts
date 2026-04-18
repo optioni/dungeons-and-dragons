@@ -26,6 +26,7 @@ export class JsonScalar implements CustomScalar<unknown, unknown> {
                 } catch {
                     return ast.value;
                 }
+
             default:
                 return null;
         }

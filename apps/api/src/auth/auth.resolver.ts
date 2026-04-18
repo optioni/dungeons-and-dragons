@@ -32,8 +32,11 @@ export class AuthResolver {
         return { accessToken };
     }
 
-    private setAuthCookie(res: { cookie: (name: string, value: string, options: object) => void }, token: string): void {
-        res.cookie('access_token', token, {
+    private setAuthCookie(
+        response: { cookie: (name: string, value: string, options: object) => void },
+        token: string,
+    ): void {
+        response.cookie('access_token', token, {
             httpOnly: true,
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000,

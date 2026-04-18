@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { User } from './user.entity';
+
+/* eslint-disable @typescript-eslint/naming-convention */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
     Property: () => () => {},
     Unique: () => () => {},
 }));
-
-import { User } from './user.entity';
 
 describe('User entity', () => {
     it('can be instantiated with email, passwordHash, and createdAt', () => {
@@ -20,9 +21,10 @@ describe('User entity', () => {
         expect(user.createdAt).toBeInstanceOf(Date);
     });
 
-    it('has a string id property set by default', () => {
+    it('has a numeric id property', () => {
         const user = new User();
-        expect(typeof user.id).toBe('string');
-        expect(user.id.length).toBeGreaterThan(0);
+        user.id = 1;
+        expect(typeof user.id).toBe('number');
     });
 });
+/* eslint-enable @typescript-eslint/naming-convention */

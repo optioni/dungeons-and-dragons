@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    beforeEach, describe, expect, it, vi,
+} from 'vitest';
 
 import { GraphqlService } from './graphql.service';
 import { OrderByDirection } from './relay/order-by.input';
@@ -21,8 +23,8 @@ describe('GraphqlService', () => {
     beforeEach(() => {
         whereService = {
             getWhere: vi.fn(),
-        } as any;
-        service = new GraphqlService(whereService as any);
+        } as unknown as WhereService;
+        service = new GraphqlService(whereService);
     });
 
     it('should convert order array to OrderMap', () => {
@@ -56,7 +58,7 @@ describe('GraphqlService', () => {
         const entity = { title: 'Test', createdAt: '2023-01-01' };
         const orderBy = new Map([['title', OrderByDirection.ASC]]);
 
-        const cursor = service.getCursor(entity as any, orderBy);
+        const cursor = service.getCursor(entity as never, orderBy);
 
         expect(cursor).toEqual({
             id: '123',
@@ -107,12 +109,14 @@ describe('GraphqlService', () => {
     it('should throw if findAndPaginate is called with missing methods', async () => {
         // Simulate a repository with missing methods
         const repo = {};
-        await expect(service.findAndPaginate(repo as any, undefined, undefined, { first: 1 } as any)).rejects.toThrow();
+        await expect(
+            service.findAndPaginate(repo as never, undefined, undefined, { first: 1 } as never),
+        ).rejects.toThrow();
     });
 
     it('should throw if findOne is called with missing methods', async () => {
         // Simulate a repository with missing methods
         const repo = {};
-        await expect(service.findOne(repo as any, {}, {})).rejects.toThrow();
+        await expect(service.findOne(repo as never, {}, {})).rejects.toThrow();
     });
 });

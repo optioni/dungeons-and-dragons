@@ -1,5 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    beforeEach, describe, expect, it, vi,
+} from 'vitest';
 
+import { AuthResolver } from './auth.resolver';
+import { type AuthService } from './auth.service';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -33,9 +39,6 @@ vi.mock('../graphql/decorators/public.decorator', () => ({
     Public: () => () => {},
 }));
 
-import { AuthResolver } from './auth.resolver';
-import { AuthService } from './auth.service';
-
 const makeAuthService = () => ({
     register: vi.fn(),
     login: vi.fn(),
@@ -68,11 +71,11 @@ describe('AuthResolver', () => {
 
         it('sets httpOnly cookie on success', async () => {
             authService.register.mockResolvedValue('jwt-token');
-            const ctx = makeContext();
+            const context = makeContext();
 
-            await resolver.register({ email: 'test@example.com', password: 'password123' }, ctx);
+            await resolver.register({ email: 'test@example.com', password: 'password123' }, context);
 
-            expect(ctx.res.cookie).toHaveBeenCalledWith(
+            expect(context.res.cookie).toHaveBeenCalledWith(
                 'access_token',
                 'jwt-token',
                 expect.objectContaining({ httpOnly: true }),
@@ -102,11 +105,11 @@ describe('AuthResolver', () => {
 
         it('sets httpOnly cookie on success', async () => {
             authService.login.mockResolvedValue('jwt-token');
-            const ctx = makeContext();
+            const context = makeContext();
 
-            await resolver.login({ email: 'test@example.com', password: 'password123' }, ctx);
+            await resolver.login({ email: 'test@example.com', password: 'password123' }, context);
 
-            expect(ctx.res.cookie).toHaveBeenCalledWith(
+            expect(context.res.cookie).toHaveBeenCalledWith(
                 'access_token',
                 'jwt-token',
                 expect.objectContaining({ httpOnly: true }),
@@ -114,3 +117,4 @@ describe('AuthResolver', () => {
         });
     });
 });
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class */

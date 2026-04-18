@@ -1,12 +1,15 @@
+// eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
-
 import { MikroORM } from '@mikro-orm/core';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { UnauthorizedException } from '@nestjs/common';
+import { type Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
-import { Reflector } from '@nestjs/core';
 import * as bcrypt from 'bcryptjs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    afterEach, beforeEach, describe, expect, it, vi,
+} from 'vitest';
 
 import { User } from '../../auth/entities/user.entity';
 import { AuthGuard } from './auth.guard';
@@ -26,17 +29,19 @@ async function createOrm(): Promise<MikroORM> {
 function makeGuard(userRepo: object, jwtService: JwtService): AuthGuard {
     const reflector = {
         get: vi.fn((key: string) => {
-            if (key === 'isPublic') return false;
+            if (key === 'isPublic') {
+                return false;
+            }
+
             return undefined;
         }),
     } as unknown as Reflector;
     return new AuthGuard(reflector, jwtService, userRepo as never);
 }
 
-function makeExecutionContext(gqlCtxObj: object) {
-    const { GqlExecutionContext } = require('@nestjs/graphql') as typeof import('@nestjs/graphql');
+function makeExecutionContext(gqlContextObject: object) {
     vi.spyOn(GqlExecutionContext, 'create').mockReturnValue({
-        getContext: () => gqlCtxObj,
+        getContext: () => gqlContextObject,
     } as never);
 
     return {
@@ -76,8 +81,8 @@ describe('AuthGuard integration', () => {
 
     it('rejects unauthenticated request (no cookie)', async () => {
         const guard = makeGuard(userRepo, jwtService);
-        const req = { headers: {} };
-        const executionContext = makeExecutionContext({ req });
+        const request = { headers: {} };
+        const executionContext = makeExecutionContext({ req: request });
 
         await expect(guard.canActivate(executionContext as never)).rejects.toThrow(UnauthorizedException);
     });
@@ -85,20 +90,20 @@ describe('AuthGuard integration', () => {
     it('accepts request with valid JWT cookie and sets dbUser', async () => {
         const guard = makeGuard(userRepo, jwtService);
         const token = jwtService.sign({ sub: testUser.id });
-        const req = { headers: { cookie: `access_token=${token}` }, dbUser: undefined as User | undefined };
-        const executionContext = makeExecutionContext({ req });
+        const request = { headers: { cookie: `access_token=${token}` }, dbUser: undefined as User | undefined };
+        const executionContext = makeExecutionContext({ req: request });
 
         const result = await guard.canActivate(executionContext as never);
 
         expect(result).toBe(true);
-        expect(req.dbUser).toBeDefined();
-        expect(req.dbUser!.id).toBe(testUser.id);
+        expect(request.dbUser).toBeDefined();
+        expect(request.dbUser!.id).toBe(testUser.id);
     });
 
     it('rejects request with invalid JWT token', async () => {
         const guard = makeGuard(userRepo, jwtService);
-        const req = { headers: { cookie: 'access_token=invalid-token' } };
-        const executionContext = makeExecutionContext({ req });
+        const request = { headers: { cookie: 'access_token=invalid-token' } };
+        const executionContext = makeExecutionContext({ req: request });
 
         await expect(guard.canActivate(executionContext as never)).rejects.toThrow(UnauthorizedException);
     });

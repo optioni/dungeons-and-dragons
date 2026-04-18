@@ -11,8 +11,10 @@ import { GqlExecutionContext } from '@nestjs/graphql';
  * @param context - The execution context containing the request context.
  * @returns The connection ID string, or undefined if not in a subscription context.
  */
-export const CurrentConnectionId = createParamDecorator((data: unknown, context: ExecutionContext): string | undefined => {
-    const { connectionId } = GqlExecutionContext.create(context).getContext();
+export const CurrentConnectionId = createParamDecorator(
+    (data: unknown, context: ExecutionContext): string | undefined => {
+        const { connectionId } = GqlExecutionContext.create(context).getContext();
 
-    return connectionId;
-});
+        return connectionId;
+    },
+);
