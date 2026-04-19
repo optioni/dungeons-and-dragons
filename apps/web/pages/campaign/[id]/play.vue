@@ -299,6 +299,27 @@ watch(
                         {{ sceneType }}
                     </u-badge>
                 </div>
+
+                <!-- Navigation -->
+                <div class="mt-4 pt-4 border-t border-gray-800 space-y-1">
+                    <nuxt-link
+                        :to="`/campaign/${campaignId}/character`"
+                        class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
+                        active-class="text-white bg-gray-800"
+                    >
+                        <u-icon name="i-lucide-user" />
+                        Character
+                    </nuxt-link>
+
+                    <nuxt-link
+                        :to="`/campaign/${campaignId}/quests`"
+                        class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
+                        active-class="text-white bg-gray-800"
+                    >
+                        <u-icon name="i-lucide-scroll-text" />
+                        Quests
+                    </nuxt-link>
+                </div>
             </div>
 
             <!-- Narrative column -->
