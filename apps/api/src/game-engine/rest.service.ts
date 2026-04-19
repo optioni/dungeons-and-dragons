@@ -78,7 +78,7 @@ export class RestService {
         char.deathSaveSuccesses = 0;
         char.deathSaveFailures = 0;
 
-        // Advance inGameDate
+        // Advance inGameDate and inGameDay
         if (campaign) {
             const current = campaign.inGameDate ?? 'Day 1';
             // Simple increment: append " (next day)" or parse if it's "Day N"
@@ -88,6 +88,7 @@ export class RestService {
             } else {
                 campaign.inGameDate = `${current} (next day)`;
             }
+            campaign.inGameDay = (campaign.inGameDay ?? 1) + 1;
         }
 
         await this.em.flush();

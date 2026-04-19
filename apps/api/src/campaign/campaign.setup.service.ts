@@ -631,6 +631,7 @@ export class CampaignSetupService {
             campaign.openingSceneSeed = seed.openingSceneSeed;
             campaign.loreDocument = seed.loreDocument;
             campaign.inGameDate = seed.inGameDate;
+            campaign.inGameDay = 1;
             campaign.setupStatus = CampaignSetupStatus.READY_TO_PLAY;
 
             // Suppress unused warning — event is persisted via em.create above

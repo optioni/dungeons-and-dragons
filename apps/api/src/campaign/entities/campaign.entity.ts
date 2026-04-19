@@ -88,6 +88,10 @@ export class Campaign extends BaseEntity {
     @Property({ type: 'text', nullable: true })
     inGameDate: string | null = null;
 
+    /** Monotonic day counter — authoritative source of truth for all time-relative comparisons. Incremented by `take_long_rest`. */
+    @Property({ type: 'integer', default: 1 })
+    inGameDay: Opt<number> = 1;
+
     /** Narrative facts about the world — not canonical state read by tool calls. */
     @Field({ nullable: true })
     @Property({ type: 'text', nullable: true })
