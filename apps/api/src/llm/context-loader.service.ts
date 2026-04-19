@@ -10,6 +10,8 @@ import type { MemoryService } from '../memory/memory.service.js';
 import { EventType, SceneType } from '../session/session.enums.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
+import { Npc } from '../world/entities/npc.entity.js';
+import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { PromptModuleRegistry } from './prompt-module-registry.service.js';
 
 export type AnthropicMessage = Anthropic.MessageParam;
@@ -44,6 +46,8 @@ export class ContextLoader {
         private readonly eventRepository: EntityRepository<GameEvent>,
         @InjectRepository(GameSession)
         private readonly sessionRepository: EntityRepository<GameSession>,
+        @InjectRepository(NpcItem)
+        private readonly npcItemRepository: EntityRepository<NpcItem>,
         private readonly promptModuleRegistry: PromptModuleRegistry,
         private readonly memoryService: Pick<MemoryService, 'getRecentDiaryEntries'>,
     ) {}
@@ -82,8 +86,10 @@ export class ContextLoader {
     }
 
     /**
-     * Block 3: Character state, world state, and last 7 diary entries.
+     * Block 3: Character state, merchant inventory for NPCs at current location, and last 7 diary entries.
      * Cache-control: ephemeral — invalidated when character/world changes or a new diary entry is created.
+     * Merchant inventory is rebuilt from DB each turn; Anthropic content-based caching handles freshness
+     * after buy_item, sell_item, or restock_merchant mutations — no explicit invalidation hook is needed.
      */
     async loadWorldBlock(campaignId: number, characterId?: number): Promise<string> {
         const parts: string[] = [];
@@ -92,6 +98,43 @@ export class ContextLoader {
             const character = await this.characterRepository.getEntityManager().findOne(Character, characterId);
             if (character) {
                 parts.push(`## Character Sheet\nName: ${character.name}\nLevel: ${character.level}\nHP: ${character.hp}/${character.maxHp}\nAC: ${character.ac}\nConditions: ${character.conditions.join(', ') || 'none'}\nSpell Slots: ${JSON.stringify(character.spellSlots)}`);
+            }
+        }
+
+        const campaign = await this.campaignRepository.getEntityManager().findOne(Campaign, campaignId);
+        if (campaign?.currentLocationId) {
+            const em = this.npcItemRepository.getEntityManager();
+            const npcsAtLocation = await em.find(Npc, {
+                campaignId,
+                currentLocationId: campaign.currentLocationId,
+            });
+
+            if (npcsAtLocation.length > 0) {
+                const npcIds = npcsAtLocation.map((n) => n.id);
+                const npcItems = await em.find(NpcItem, { npcId: npcIds });
+
+                const merchantSections: string[] = [];
+                for (const npc of npcsAtLocation) {
+                    const items = npcItems.filter((i) => i.npcId === npc.id);
+                    if (items.length === 0) continue;
+
+                    const heading = npc.profession
+                        ? `### ${npc.name} (${npc.profession})`
+                        : `### ${npc.name}`;
+
+                    const itemLines = items
+                        .map((i) => {
+                            const price = i.merchantPrice !== null ? ` — ${i.merchantPrice} gp` : '';
+                            return `- ${i.name} x${i.quantity}${price}`;
+                        })
+                        .join('\n');
+
+                    merchantSections.push(`${heading}\n${itemLines}`);
+                }
+
+                if (merchantSections.length > 0) {
+                    parts.push(`## Merchant Inventory\n${merchantSections.join('\n\n')}`);
+                }
             }
         }
 

@@ -42,12 +42,14 @@ describe('ContextLoader', () => {
     beforeEach(() => {
         em = {
             findOneOrFail: vi.fn(),
+            findOne: vi.fn(),
             find: vi.fn(),
         };
         promptRegistry = makeMockPromptRegistry();
         memoryService = makeMockMemoryService();
         const repo = makeMockRepo(em);
         service = new ContextLoader(
+            repo as never,
             repo as never,
             repo as never,
             repo as never,
@@ -177,7 +179,7 @@ describe('ContextLoader', () => {
                 { inGameDate: 'Day 1', content: 'The adventure began.' },
             ]);
             const repo = makeMockRepo(em);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
 
             const result = await service.loadWorldBlock(1);
 
@@ -189,7 +191,7 @@ describe('ContextLoader', () => {
         it('omits diary section without error when no entries exist', async () => {
             memoryService = makeMockMemoryService([]);
             const repo = makeMockRepo(em);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
 
             const result = await service.loadWorldBlock(1);
 
@@ -201,12 +203,12 @@ describe('ContextLoader', () => {
 
             // First call: no entries
             memoryService = makeMockMemoryService([]);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
             const resultBefore = await service.loadWorldBlock(1);
 
             // Second call: new entry added
             memoryService = makeMockMemoryService([{ inGameDate: 'Day 1', content: 'A new diary entry.' }]);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
             const resultAfter = await service.loadWorldBlock(1);
 
             expect(resultBefore).not.toBe(resultAfter);
@@ -220,13 +222,65 @@ describe('ContextLoader', () => {
                 { inGameDate: 'Day 1', content: 'First day content.' }, // oldest
             ]);
             const repo = makeMockRepo(em);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
 
             const result = await service.loadWorldBlock(1);
 
             const day1Pos = result.indexOf('First day content.');
             const day3Pos = result.indexOf('Third day content.');
             expect(day1Pos).toBeLessThan(day3Pos);
+        });
+    });
+
+    describe('loadWorldBlock — merchant inventory at current location', () => {
+        it('includes inventory block when an NPC with items is at currentLocationId', async () => {
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
+            em.find.mockResolvedValueOnce([{ id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42 }]);
+            em.find.mockResolvedValueOnce([{ npcId: 10, name: 'Iron Dagger', quantity: 2, merchantPrice: 5 }]);
+
+            const result = await service.loadWorldBlock(1);
+
+            expect(result).toContain('## Merchant Inventory');
+            expect(result).toContain('Aldric (merchant)');
+            expect(result).toContain('Iron Dagger x2 — 5 gp');
+        });
+
+        it('omits inventory block for an NPC at currentLocationId with zero items', async () => {
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
+            em.find.mockResolvedValueOnce([{ id: 10, name: 'Guard Bob', profession: null, currentLocationId: 42 }]);
+            em.find.mockResolvedValueOnce([]); // no NpcItems
+
+            const result = await service.loadWorldBlock(1);
+
+            expect(result).not.toContain('## Merchant Inventory');
+        });
+
+        it('produces no merchant inventory section when no NPCs at currentLocationId have items', async () => {
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
+            em.find.mockResolvedValueOnce([]); // no NPCs at location
+
+            const result = await service.loadWorldBlock(1);
+
+            expect(result).not.toContain('## Merchant Inventory');
+        });
+
+        it('includes a separate inventory block for each merchant when multiple NPCs have items', async () => {
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
+            em.find.mockResolvedValueOnce([
+                { id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42 },
+                { id: 11, name: 'Mira', profession: 'alchemist', currentLocationId: 42 },
+            ]);
+            em.find.mockResolvedValueOnce([
+                { npcId: 10, name: 'Iron Dagger', quantity: 2, merchantPrice: 5 },
+                { npcId: 11, name: 'Healing Potion', quantity: 3, merchantPrice: 50 },
+            ]);
+
+            const result = await service.loadWorldBlock(1);
+
+            expect(result).toContain('Aldric (merchant)');
+            expect(result).toContain('Iron Dagger x2 — 5 gp');
+            expect(result).toContain('Mira (alchemist)');
+            expect(result).toContain('Healing Potion x3 — 50 gp');
         });
     });
 });

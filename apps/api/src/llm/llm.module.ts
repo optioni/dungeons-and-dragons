@@ -7,6 +7,7 @@ import { MemoryModule } from '../memory/memory.module.js';
 import { Character } from '../character/entities/character.entity.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
+import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { ContextLoader } from './context-loader.service.js';
 import { PromptModuleRegistry } from './prompt-module-registry.service.js';
 import { ToolRegistry } from './tool-registry.service.js';
@@ -18,7 +19,7 @@ import { SetSceneTypeHandler } from './tools/set-scene-type.handler.js';
  */
 @Module({
     imports: [
-        MikroOrmModule.forFeature([Campaign, Character, GameEvent, GameSession]),
+        MikroOrmModule.forFeature([Campaign, Character, GameEvent, GameSession, NpcItem]),
         CampaignModule,
         MemoryModule,
     ],
