@@ -3,6 +3,7 @@ export interface ToolResult {
     data?: unknown;
     errorCode?: string;
     message?: string;
+    questCompleted?: { questId: number; questTitle: string };
 }
 
 export interface ToolHandler {

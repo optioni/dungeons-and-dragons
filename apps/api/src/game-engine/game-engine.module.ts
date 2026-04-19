@@ -7,6 +7,7 @@ import { CharacterItem } from '../character/entities/character-item.entity.js';
 import { Item } from '../character/entities/item.entity.js';
 import { LlmModule } from '../llm/llm.module.js';
 import { MemoryModule } from '../memory/memory.module.js';
+import { QuestModule } from '../quest/quest.module.js';
 import { CombatSession } from '../session/entities/combat-session.entity.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
@@ -52,6 +53,7 @@ import { WorldMutationService } from './world-mutation.service.js';
         ]),
         LlmModule,
         MemoryModule,
+        QuestModule,
     ],
     providers: [
         DiceService,

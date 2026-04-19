@@ -12,7 +12,7 @@ vi.mock('@mikro-orm/decorators/legacy', () => ({
     Index: () => () => {},
 }));
 vi.mock('@mikro-orm/core', () => ({ type: {}, OptionalProps: Symbol(), Collection: class {}, Type: class {} }));
-vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {} }));
+vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {}, EntityRepository: class {} }));
 vi.mock('@nestjs/graphql', () => ({
     ObjectType: () => () => {},
     Field: () => () => {},
