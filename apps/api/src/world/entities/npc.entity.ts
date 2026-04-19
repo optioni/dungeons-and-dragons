@@ -75,19 +75,19 @@ export class Npc extends BaseEntity {
 
     /**
      * What the NPC is currently trying to achieve. Processed by the world-tick
-     * Haiku calls when `nextTickInGameDate` is reached.
+     * Haiku calls when `nextTickInGameDay` is reached.
      */
     @Field({ nullable: true })
     @Property({ type: 'text', nullable: true })
     agenda: string | null = null;
 
     /**
-     * In-game date when this NPC's agenda should next be evaluated.
-     * A narrative string, not a real timestamp.
+     * In-game day when this NPC's agenda should next be evaluated.
+     * An integer compared against `campaign.inGameDay`. Null means no scheduled tick.
      */
-    @Field({ nullable: true })
-    @Property({ type: 'text', nullable: true })
-    nextTickInGameDate: string | null = null;
+    @Field(() => Int, { nullable: true })
+    @Property({ type: 'integer', nullable: true })
+    nextTickInGameDay: number | null = null;
 
     /** Timestamp of the last world-tick conversation this NPC participated in. */
     @Field({ nullable: true })

@@ -201,18 +201,18 @@ export class WorldService {
     }
 
     /**
-     * Returns NPCs whose `nextTickInGameDate` is non-null and lexicographically ≤ `inGameDate`,
-     * ordered by earliest date first, capped at `limit`. Used by the world tick worker.
+     * Returns NPCs whose `nextTickInGameDay` is non-null and ≤ `inGameDay`,
+     * ordered by ascending day, capped at `limit`. Used by the world tick worker.
      */
-    async getDueNpcs(campaignId: number, inGameDate: string, limit: number): Promise<Npc[]> {
+    async getDueNpcs(campaignId: number, inGameDay: number, limit: number): Promise<Npc[]> {
         const em = this.npcRepo.getEntityManager();
         return em.find(
             Npc,
             {
                 campaignId,
-                nextTickInGameDate: { $lte: inGameDate, $ne: null } as never,
+                nextTickInGameDay: { $lte: inGameDay, $ne: null } as never,
             },
-            { orderBy: { nextTickInGameDate: 'ASC' }, limit },
+            { orderBy: { nextTickInGameDay: 'ASC' }, limit },
         );
     }
 

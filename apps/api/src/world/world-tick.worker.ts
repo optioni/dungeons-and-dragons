@@ -23,7 +23,7 @@ interface WorldTickJobPayload {
 interface AgendaOutcome {
     npcId: number;
     agenda: string;
-    nextTickInGameDate: string;
+    nextTickInGameDay: number;
     newLocationId?: number | null;
     departureDescription?: string | null;
 }
@@ -112,6 +112,7 @@ export class WorldTickWorker extends WorkerHost {
         }
 
         const inGameDate = campaign.inGameDate ?? 'Day 1';
+        const inGameDay = campaign.inGameDay ?? 1;
         const maxNpcs = this.config.get<number>('MAX_NPCS_PER_TICK', 10);
 
         const batch: TickOutcomeBatch = {
@@ -121,9 +122,9 @@ export class WorldTickWorker extends WorkerHost {
         };
 
         // Step 1: NPC agenda evaluation
-        const dueNpcs = await this.worldService.getDueNpcs(campaignId, inGameDate, maxNpcs);
+        const dueNpcs = await this.worldService.getDueNpcs(campaignId, inGameDay, maxNpcs);
         if (dueNpcs.length > 0) {
-            const agendaOutcomes = await this.evaluateAgendas(dueNpcs, inGameDate, campaignId);
+            const agendaOutcomes = await this.evaluateAgendas(dueNpcs, inGameDay, campaignId);
             batch.agendaOutcomes = agendaOutcomes;
 
             for (const outcome of agendaOutcomes) {
@@ -164,7 +165,7 @@ export class WorldTickWorker extends WorkerHost {
      * Groups NPCs by location, then evaluates agendas in parallel for independent NPCs
      * and sequentially for co-located NPCs.
      */
-    async evaluateAgendas(npcs: Npc[], inGameDate: string, campaignId: number): Promise<AgendaOutcome[]> {
+    async evaluateAgendas(npcs: Npc[], inGameDay: number, campaignId: number): Promise<AgendaOutcome[]> {
         const byLocation = groupByLocation(npcs);
         const outcomes: AgendaOutcome[] = [];
 
@@ -181,14 +182,14 @@ export class WorldTickWorker extends WorkerHost {
 
         // Parallel for independent NPCs
         const parallelResults = await Promise.all(
-            independentGroups.flat().map((npc) => this.evaluateSingleNpcAgenda(npc, inGameDate, campaignId)),
+            independentGroups.flat().map((npc) => this.evaluateSingleNpcAgenda(npc, inGameDay, campaignId)),
         );
         outcomes.push(...parallelResults.filter((r): r is AgendaOutcome => r !== null));
 
         // Sequential for co-located NPCs
         for (const group of coLocatedGroups) {
             for (const npc of group) {
-                const result = await this.evaluateSingleNpcAgenda(npc, inGameDate, campaignId);
+                const result = await this.evaluateSingleNpcAgenda(npc, inGameDay, campaignId);
                 if (result !== null) {
                     outcomes.push(result);
                 }
@@ -201,7 +202,7 @@ export class WorldTickWorker extends WorkerHost {
     /** Calls Haiku to evaluate a single NPC's agenda and returns a structured outcome. */
     private async evaluateSingleNpcAgenda(
         npc: Npc,
-        inGameDate: string,
+        inGameDay: number,
         campaignId: number,
     ): Promise<AgendaOutcome | null> {
         try {
@@ -221,7 +222,7 @@ export class WorldTickWorker extends WorkerHost {
                 messages: [
                     {
                         role: 'user',
-                        content: `Evaluate this NPC's agenda. Current in-game date: ${inGameDate}.
+                        content: `Evaluate this NPC's agenda. Current in-game day: ${inGameDay}.
 
 NPC: ${npc.name}
 Profession: ${npc.profession ?? 'unknown'}
@@ -234,7 +235,7 @@ Available locations: ${locationList}
 Respond with JSON:
 {
   "agenda": "updated agenda text",
-  "nextTickInGameDate": "narrative in-game date for next evaluation",
+  "nextTickInGameDay": <integer day number for next evaluation, e.g. ${inGameDay + 3}>,
   "newLocationId": <number or null>,
   "departureDescription": "<narrative of departure, or null if not moving>"
 }`,
@@ -247,7 +248,7 @@ Respond with JSON:
 
             const parsed = JSON.parse(text.text) as {
                 agenda: string;
-                nextTickInGameDate: string;
+                nextTickInGameDay: number;
                 newLocationId?: number | null;
                 departureDescription?: string | null;
             };
@@ -255,7 +256,7 @@ Respond with JSON:
             return {
                 npcId: npc.id,
                 agenda: parsed.agenda,
-                nextTickInGameDate: parsed.nextTickInGameDate,
+                nextTickInGameDay: parsed.nextTickInGameDay,
                 newLocationId: parsed.newLocationId ?? null,
                 departureDescription: parsed.departureDescription ?? null,
             };
@@ -360,7 +361,7 @@ Respond with JSON:
             if (!npc) continue;
 
             npc.agenda = outcome.agenda;
-            npc.nextTickInGameDate = outcome.nextTickInGameDate;
+            npc.nextTickInGameDay = outcome.nextTickInGameDay;
 
             if (outcome.newLocationId != null) {
                 npc.currentLocationId = outcome.newLocationId;

@@ -82,7 +82,7 @@ function makeWorker(overrides: Partial<{
     const anthropic = overrides.anthropic ?? makeAnthropicClient();
     const config = overrides.config ?? makeConfig();
 
-    const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5' });
+    const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
     em.findOne = vi.fn().mockImplementation((entity: unknown, where: unknown) => {
         if (entity === Campaign) return Promise.resolve(campaign);
         return Promise.resolve(null);
@@ -174,14 +174,14 @@ describe('WorldTickWorker', () => {
             anthropic.messages.create.mockResolvedValue({
                 content: [{ type: 'text', text: JSON.stringify({
                     agenda: 'updated',
-                    nextTickInGameDate: 'Day 10',
+                    nextTickInGameDay: 10,
                     newLocationId: null,
                     departureDescription: null,
                 }) }],
             });
 
             vi.spyOn(worker['em'], 'find').mockResolvedValue([]);
-            await worker.evaluateAgendas([npcA, npcB], 'Day 5', 1);
+            await worker.evaluateAgendas([npcA, npcB], 5, 1);
 
             expect(anthropic.messages.create).toHaveBeenCalledTimes(2);
         });
@@ -202,7 +202,7 @@ describe('WorldTickWorker', () => {
                 return {
                     content: [{ type: 'text', text: JSON.stringify({
                         agenda: 'updated',
-                        nextTickInGameDate: 'Day 10',
+                        nextTickInGameDay: 10,
                         newLocationId: null,
                         departureDescription: null,
                     }) }],
@@ -210,7 +210,7 @@ describe('WorldTickWorker', () => {
             });
 
             vi.spyOn(worker['em'], 'find').mockResolvedValue([]);
-            await worker.evaluateAgendas([npcA, npcB], 'Day 5', 1);
+            await worker.evaluateAgendas([npcA, npcB], 5, 1);
 
             expect(anthropic.messages.create).toHaveBeenCalledTimes(2);
             expect(callOrder).toHaveLength(2);
@@ -227,10 +227,10 @@ describe('WorldTickWorker departure events', () => {
         const anthropic = makeAnthropicClient();
         const config = makeConfig();
 
-        const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5' });
+        const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
         const npc = Object.assign(new Npc(), {
             id: 10, campaignId: 1, currentLocationId: 100, personalityTraits: [], agenda: 'travel',
-            nextTickInGameDate: 'Day 3',
+            nextTickInGameDay: 3,
         });
 
         const createdEvents: unknown[] = [];
@@ -250,7 +250,7 @@ describe('WorldTickWorker departure events', () => {
         anthropic.messages.create.mockResolvedValue({
             content: [{ type: 'text', text: JSON.stringify({
                 agenda: 'arrived at new place',
-                nextTickInGameDate: 'Day 10',
+                nextTickInGameDay: 10,
                 newLocationId: 200,
                 departureDescription: 'Gareth headed south to the forest.',
             }) }],
@@ -288,10 +288,10 @@ describe('WorldTickWorker departure events', () => {
         const anthropic = makeAnthropicClient();
         const config = makeConfig();
 
-        const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5' });
+        const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
         const npc = Object.assign(new Npc(), {
             id: 10, campaignId: 1, currentLocationId: 100, personalityTraits: [], agenda: 'guard post',
-            nextTickInGameDate: 'Day 3',
+            nextTickInGameDay: 3,
         });
 
         const createdEvents: unknown[] = [];
@@ -311,7 +311,7 @@ describe('WorldTickWorker departure events', () => {
         anthropic.messages.create.mockResolvedValue({
             content: [{ type: 'text', text: JSON.stringify({
                 agenda: 'continued guarding',
-                nextTickInGameDate: 'Day 8',
+                nextTickInGameDay: 8,
                 newLocationId: null,
                 departureDescription: null,
             }) }],
@@ -367,7 +367,7 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
         const anthropic = makeAnthropicClient();
         const config = makeConfig();
 
-        const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5' });
+        const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
         em.findOne = vi.fn().mockImplementation((entity: unknown) => {
             if (entity === Campaign) return Promise.resolve(campaign);
             return Promise.resolve(null);
@@ -559,7 +559,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         const em = makeEm();
         const npc1 = Object.assign(new Npc(), { id: 1, agenda: null, lastConversedAt: null });
         const npc2 = Object.assign(new Npc(), { id: 2, agenda: null, lastConversedAt: null });
-        const agendaNpc = Object.assign(new Npc(), { id: 3, agenda: 'patrol', nextTickInGameDate: 'Day 8' });
+        const agendaNpc = Object.assign(new Npc(), { id: 3, agenda: 'patrol', nextTickInGameDay: 8 });
 
         em.findOne = vi.fn().mockImplementation((_entity: unknown, where: unknown) => {
             const w = where as { id?: number };
@@ -582,7 +582,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         await worker.applyOutcomes(
             {
                 agendaOutcomes: [
-                    { npcId: 3, agenda: 'updated patrol', nextTickInGameDate: 'Day 12', newLocationId: null, departureDescription: null },
+                    { npcId: 3, agenda: 'updated patrol', nextTickInGameDay: 12, newLocationId: null, departureDescription: null },
                 ],
                 conversationOutcomes: [
                     {

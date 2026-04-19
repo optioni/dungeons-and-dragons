@@ -84,14 +84,14 @@ describe('WorldService', () => {
     });
 
     describe('getDueNpcs', () => {
-        it('returns NPCs whose nextTickInGameDate is overdue', async () => {
-            const overdueNpc = Object.assign(new Npc(), { id: 1, campaignId: 1, nextTickInGameDate: 'Day 3' });
+        it('returns NPCs whose nextTickInGameDay is overdue', async () => {
+            const overdueNpc = Object.assign(new Npc(), { id: 1, campaignId: 1, nextTickInGameDay: 3 });
             npcRepo.getEntityManager.mockReturnValue({
                 findOne: vi.fn().mockResolvedValue(null),
                 find: vi.fn().mockResolvedValue([overdueNpc]),
             });
 
-            const result = await service.getDueNpcs(1, 'Day 5', 10);
+            const result = await service.getDueNpcs(1, 5, 10);
             expect(result).toContain(overdueNpc);
         });
 
@@ -101,7 +101,7 @@ describe('WorldService', () => {
                 find: vi.fn().mockResolvedValue([]),
             });
 
-            const result = await service.getDueNpcs(1, 'Day 5', 10);
+            const result = await service.getDueNpcs(1, 5, 10);
             expect(result).toHaveLength(0);
         });
 
@@ -112,7 +112,7 @@ describe('WorldService', () => {
                 find: findMock,
             });
 
-            await service.getDueNpcs(1, 'Day 5', 3);
+            await service.getDueNpcs(1, 5, 3);
             expect(findMock).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.anything(),
@@ -120,17 +120,17 @@ describe('WorldService', () => {
             );
         });
 
-        it('excludes NPCs with null nextTickInGameDate', async () => {
+        it('excludes NPCs with null nextTickInGameDay', async () => {
             const findMock = vi.fn().mockResolvedValue([]);
             npcRepo.getEntityManager.mockReturnValue({
                 findOne: vi.fn().mockResolvedValue(null),
                 find: findMock,
             });
 
-            await service.getDueNpcs(1, 'Day 5', 10);
+            await service.getDueNpcs(1, 5, 10);
             const whereArg = findMock.mock.calls[0][1] as Record<string, unknown>;
             expect(whereArg).toMatchObject({
-                nextTickInGameDate: expect.objectContaining({ $ne: null }),
+                nextTickInGameDay: expect.objectContaining({ $ne: null }),
             });
         });
     });
