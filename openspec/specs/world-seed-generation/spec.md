@@ -38,27 +38,20 @@ The system SHALL expose a `selectCampaignStoryConcept` mutation for the campaign
 
 ### Requirement: World seed generation persists a complete playable starting state
 The system SHALL expose a `generateCampaignWorldSeed` mutation for the campaign owner. Using the selected story concept, the mutation SHALL generate and persist a complete world seed that includes:
-- 3-5 locations with one designated starting location
-- 1 `LocationDiscovery` row for the starting location with `source = SETUP`
-- 2-3 factions
-- 3-5 key NPCs including the antagonist
-- at least 1 active antagonist-driven `WorldEvent` with `source = SETUP`
+- locations, factions, NPCs, and world events
+- 1 starting location stored on the campaign
+- 1 lore document stored on the campaign
+- 1 antagonist pointer stored on the campaign
 - 1 opening scene seed stored on the campaign
-- 1 campaign lore document
-
-The mutation SHALL persist the campaign's current location, antagonist NPC pointer, and structured antagonist plan state, and SHALL mark the campaign as ready to begin play.
+- `Campaign.inGameDay` initialised to `1`
 
 #### Scenario: Successful world seed creates playable starting state
 - **WHEN** `generateCampaignWorldSeed` succeeds for a campaign with a selected concept
-- **THEN** the campaign stores a starting location, lore document, opening scene seed, antagonist pointer, and the required world, faction, NPC, and event rows
+- **THEN** the campaign stores a starting location, lore document, opening scene seed, antagonist pointer, the required world rows, and `Campaign.inGameDay = 1`
 
-#### Scenario: Opening scene is stored for first-session bootstrap
+#### Scenario: World seed sets inGameDay to 1
 - **WHEN** the initial world seed is persisted
-- **THEN** the campaign stores an opening scene seed that can later be materialized into the first `GameEvent`
-
-#### Scenario: Starting location is immediately discovered
-- **WHEN** the initial world seed is persisted
-- **THEN** the campaign also stores a `LocationDiscovery` row for its starting location so the current location is already discovered at the beginning of play
+- **THEN** `Campaign.inGameDay` is set to `1`, establishing the monotonic day counter at the start of the campaign
 
 ### Requirement: World seed persistence is transactional and idempotent
 World seed persistence SHALL be applied as a single logical operation. If validation or persistence fails, the system SHALL NOT leave a partially seeded world in the database. If the same campaign is submitted again after a successful seed, the system SHALL NOT create duplicate world rows.

@@ -15,7 +15,7 @@ The system SHALL persist the following campaign-scoped world entities:
 - `Faction` with `name`, goals, power level, player disposition, and territory
 - `WorldEvent` with `description`, optional `locationId`, optional `deadlineInGameDate`, `source`, `status`, optional `outcome`, and `createdAt`
 
-`WorldEvent.source` SHALL include `SETUP` for world events created during initial campaign generation. `LocationDiscovery.source` SHALL include `SETUP` for the player's initial starting-location discovery.
+`WorldEvent.source` SHALL include `SETUP` for world events created during initial campaign generation, `WORLD_TICK` for events generated during a world tick (including NPC departure events), and `CATASTROPHE` for catastrophic world events triggered by the `trigger_catastrophe` tool. `LocationDiscovery.source` SHALL include `SETUP` for the player's initial starting-location discovery.
 
 #### Scenario: Seeded world entities are persisted
 - **WHEN** a world seed is successfully generated for a campaign
@@ -28,6 +28,14 @@ The system SHALL persist the following campaign-scoped world entities:
 #### Scenario: Starting-location discovery uses setup source
 - **WHEN** the starting location is recorded as discovered during campaign setup
 - **THEN** the created `LocationDiscovery` row uses `source = SETUP`
+
+#### Scenario: NPC departure event uses WORLD_TICK source
+- **WHEN** a world tick produces an NPC movement outcome
+- **THEN** the created departure `WorldEvent` has `source = WORLD_TICK` and `locationId` set to the NPC's departure location
+
+#### Scenario: Catastrophe event uses CATASTROPHE source
+- **WHEN** the `trigger_catastrophe` tool is invoked during a world tick
+- **THEN** the created `WorldEvent` has `source = CATASTROPHE`
 
 ### Requirement: Location discovery is derived exclusively from `LocationDiscovery`
 The system SHALL treat location discovery as derived data from `LocationDiscovery` records. `Location` itself SHALL NOT store a discovered flag.
