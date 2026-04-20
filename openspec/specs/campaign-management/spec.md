@@ -6,8 +6,8 @@ Defines how campaigns are created, owned, queried, and tracked through the setup
 
 ## Requirements
 
-### Requirement: Campaign records persist ownership, metadata, and setup state
-The system SHALL persist a `Campaign` record owned by exactly one authenticated user. A campaign MAY exist without a character while setup is still in progress, but it SHALL be associated with exactly one character before story concept generation can begin. A campaign SHALL store its gameplay metadata (`name`, `inGameDate`, `currentLocationId`, `loreDocument`, `deathMode`, `createdAt`) and its setup-state fields (`setupStatus`, selected tone, generated story concepts, selected story concept, opening scene seed, antagonist NPC pointer, and structured antagonist plan state).
+### Requirement: Campaign records persist ownership, metadata, setup state, and lifecycle status
+The system SHALL persist a `Campaign` record owned by exactly one authenticated user. A campaign MAY exist without a character while setup is still in progress, but it SHALL be associated with exactly one character before story concept generation can begin. A campaign SHALL store its gameplay metadata (`name`, `inGameDate`, `currentLocationId`, `loreDocument`, `deathMode`, `createdAt`), lifecycle fields (`status: CampaignStatus` enum `ACTIVE | ENDED`, `endedAt: Date | null`, `endReason: string | null`), and its setup-state fields (`setupStatus`, selected tone, generated story concepts, selected story concept, opening scene seed, antagonist NPC pointer, and structured antagonist plan state).
 
 #### Scenario: Draft campaign is created with setup state
 - **WHEN** an authenticated user creates a new campaign shell
@@ -71,3 +71,40 @@ The UI SHALL allow a user to resume an incomplete campaign setup after refresh o
 #### Scenario: Ready campaign does not restart setup
 - **WHEN** a user opens `/campaign/[id]/setup` for a campaign that is ready to play
 - **THEN** the UI redirects or offers navigation to the campaign's next gameplay destination instead of showing setup steps
+
+### Requirement: Campaign records carry a lifecycle status
+The system SHALL add a `status` field of type `CampaignStatus` (enum: `ACTIVE` | `ENDED`) to the `Campaign` entity, with a default value of `ACTIVE`. The entity SHALL also store `endedAt: Date | null` and `endReason: string | null`. A MikroORM migration SHALL add these three columns; all existing rows default to `ACTIVE` with null timestamps.
+
+#### Scenario: New campaign defaults to ACTIVE
+- **WHEN** a `Campaign` record is created via `createCampaign`
+- **THEN** its `status` is `ACTIVE`, `endedAt` is `null`, and `endReason` is `null`
+
+#### Scenario: Ended campaign persists status, timestamp, and reason
+- **WHEN** a campaign's status is set to `ENDED`
+- **THEN** the system persists `status = ENDED`, a non-null `endedAt` timestamp (UTC), and the provided `endReason` string
+
+#### Scenario: ENDED status is permanent
+- **WHEN** a campaign already has `status = ENDED`
+- **THEN** any attempt to transition it back to `ACTIVE` is rejected with a structured error
+
+### Requirement: CampaignStatus enum is exposed via GraphQL
+The system SHALL expose `status`, `endedAt`, and `endReason` as fields on the `Campaign` GraphQL type so the frontend can read campaign lifecycle state.
+
+#### Scenario: Campaign query returns status fields
+- **WHEN** an authenticated owner queries their campaign
+- **THEN** the response includes `status`, `endedAt`, and `endReason` fields
+
+#### Scenario: Ended campaign is visible in campaigns list
+- **WHEN** the owner queries the campaigns connection
+- **THEN** campaigns with `status = ENDED` are included in results alongside active ones
+
+### Requirement: Ended campaigns are marked with a memorial badge and all action buttons are disabled
+The web application SHALL modify the dashboard and setup route to treat campaigns with `status = ENDED` as read-only records. Campaigns with `status = ENDED` SHALL be rendered with a memorial badge on the dashboard card and SHALL NOT display action buttons for continue setup or play. The setup route SHALL not allow access to ended campaigns.
+
+#### Scenario: Ended campaign shows memorial badge on dashboard
+- **WHEN** a user views the dashboard and one of their campaigns has `status = ENDED`
+- **THEN** that campaign card displays a memorial badge and no action buttons for setup or play
+
+#### Scenario: Ended campaign is read-only on dashboard
+- **WHEN** a user attempts to interact with an ended campaign card on the dashboard
+- **THEN** no navigation to setup or play routes is permitted; the card is purely informational

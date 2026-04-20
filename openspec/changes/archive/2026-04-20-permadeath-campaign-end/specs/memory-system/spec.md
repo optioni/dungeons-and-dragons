@@ -1,13 +1,7 @@
-# Diary System Spec
-
-## Purpose
-
-Defines how the system creates and stores per-day narrative diary entries written by Claude Haiku at the end of each in-game day, including embedding generation for semantic retrieval.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: DiaryEntry entity stores a Haiku-written narrative summary per in-game day
-The system SHALL persist a `DiaryEntry` record for each in-game day that ends via `take_long_rest`. Each entry SHALL store the campaign ID, the in-game date string, narrative content (max 1000 characters), a pgvector embedding of that content, an `entryType` field (enum: `DAILY` | `MEMORIAL`, default `DAILY`), and a creation timestamp.
+The system SHALL persist a `DiaryEntry` record for each in-game day that ends via `take_long_rest`. Each entry SHALL store the campaign ID, the in-game date string, narrative content (max 1000 characters), a pgvector embedding of that content, a creation timestamp, and an `entryType` field (enum: `DAILY` | `MEMORIAL`, default `DAILY`).
 
 #### Scenario: Diary entry created on long rest
 - **WHEN** the `take_long_rest` tool is executed for an active campaign
@@ -25,16 +19,7 @@ The system SHALL persist a `DiaryEntry` record for each in-game day that ends vi
 - **WHEN** `take_long_rest` is executed on separate in-game dates
 - **THEN** each execution produces a separate `DiaryEntry` with a distinct `inGameDate` value
 
-### Requirement: DiaryEntry embedding is generated via Voyage AI
-The system SHALL generate a 1024-dimensional vector embedding for each `DiaryEntry` content using the Voyage AI SDK (`voyage-3-large` model) and store it in the `embedding` column (pgvector `vector(1024)`).
-
-#### Scenario: Embedding stored on creation
-- **WHEN** a `DiaryEntry` is created with non-empty content
-- **THEN** the system calls Voyage AI to produce an embedding and persists it alongside the content in the same transaction
-
-#### Scenario: Embedding failure does not block diary persistence
-- **WHEN** the Voyage AI API call fails during diary creation
-- **THEN** the system persists the diary entry with a null embedding and logs the error, allowing the world tick to continue
+## ADDED Requirements
 
 ### Requirement: Memorial diary entry is written on permadeath
 The system SHALL allow `DiaryService.writeDiaryEntry` to be called with `entryType = MEMORIAL` from the game engine's permadeath end sequence. A memorial entry SHALL be written by Claude Haiku using the campaign's full session transcript as context, summarising the character's life and cause of death. The memorial entry SHALL follow the same 1000-character limit and embedding pipeline as `DAILY` entries.
@@ -54,14 +39,3 @@ The system SHALL allow `DiaryService.writeDiaryEntry` to be called with `entryTy
 #### Scenario: Memorial entry failure does not block campaign end
 - **WHEN** the Haiku memorial write call fails
 - **THEN** the error is logged and the permadeath end sequence continues without a memorial diary entry
-
-### Requirement: Last 7 diary entries are retrievable for prompt injection
-`MemoryService` SHALL expose a method that returns the 7 most recent `DiaryEntry` records for a given campaign, ordered by `inGameDate` descending, for use by `LLMModule` at context assembly time.
-
-#### Scenario: Fewer than 7 entries exist
-- **WHEN** a campaign has fewer than 7 diary entries
-- **THEN** the method returns all available entries without error
-
-#### Scenario: Entries ordered by in-game date descending
-- **WHEN** multiple diary entries exist for a campaign
-- **THEN** the 7 returned entries are ordered most-recent-first

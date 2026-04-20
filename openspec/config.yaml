@@ -87,4 +87,5 @@ rules:
     - Follow TDD — write the failing test before the implementation
     - One clear responsibility per file/module
     - Document all public classes, methods, and non-obvious logic with JSDoc comments
-    - Always add these as the final tasks in every change: run lint, run typecheck, run tests
+    - The final tasks of EVERY change MUST be: run lint, run typecheck, run tests — in that order. Fix all errors before the change is considered complete. These are mandatory, not optional.
+    - After completing each task group (numbered section), clear the conversation context with /clear before starting the next group. This keeps token usage low and prevents stale context from earlier groups polluting later ones.
