@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc --noEmit",
     "mikro-orm": "MIKRO_ORM_CLI_TS_LOADER=tsx mikro-orm"
   },
   "dependencies": {

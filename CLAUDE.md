@@ -108,7 +108,13 @@ cd api && yarn test
 # API integration tests (requires real PostgreSQL + pgvector)
 cd api && yarn test:integration
 
-# Web
+# API type checking
+cd api && yarn typecheck
+
+# Web type checking
+cd web && yarn typecheck
+
+# Web tests (if implemented)
 cd web && yarn test
 ```
 
