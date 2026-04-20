@@ -1,4 +1,6 @@
-import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
+import {
+    Field, ID, Int, ObjectType, registerEnumType,
+} from '@nestjs/graphql';
 
 import { JsonScalar } from '../../graphql/scalars/json.scalar.js';
 

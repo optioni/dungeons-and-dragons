@@ -24,8 +24,7 @@ export const REDIS_CLIENT = Symbol('REDIS_CLIENT');
     providers: [
         {
             provide: REDIS_CLIENT,
-            useFactory: (config: ConfigService) =>
-                new Redis(config.getOrThrow<string>('REDIS_URL')),
+            useFactory: (config: ConfigService) => new Redis(config.getOrThrow<string>('REDIS_URL')),
             inject: [ConfigService],
         },
     ],

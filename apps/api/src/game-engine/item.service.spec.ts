@@ -2,6 +2,9 @@ import {
     describe, expect, it, vi,
 } from 'vitest';
 
+import { ItemService } from './item.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -25,11 +28,12 @@ vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
 }));
 vi.mock('@nestjs/event-emitter', () => ({
-    EventEmitter2: class EventEmitter2 { emit() {} },
+    EventEmitter2: class EventEmitter2 {
+        emit() {}
+    },
     InjectEventEmitter: () => () => {},
 }));
-
-import { ItemService } from './item.service.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 function makeCharacter(overrides: Record<string, unknown> = {}) {
     return { id: 1, goldPieces: 100, conditions: [] as string[], ...overrides };
@@ -40,35 +44,51 @@ function makeItem(overrides: Record<string, unknown> = {}) {
 }
 
 function makeCharacterItem(overrides: Record<string, unknown> = {}) {
-    return { id: 5, character: { id: 1 }, item: { id: 10 }, quantity: 1, slot: null, ...overrides };
+    return {
+        id: 5, character: { id: 1 }, item: { id: 10 }, quantity: 1, slot: null, ...overrides,
+    };
 }
 
 function makeNpcItem(overrides: Record<string, unknown> = {}) {
-    return { id: 20, npcId: 99, itemId: 10, name: 'Sword', quantity: 5, merchantPrice: 10, ...overrides };
+    return {
+        id: 20, npcId: 99, itemId: 10, name: 'Sword', quantity: 5, merchantPrice: 10, ...overrides,
+    };
 }
 
 function makeEm(entities: {
-    character?: unknown;
-    item?: unknown;
-    characterItem?: unknown;
-    npcItem?: unknown;
-    npcItems?: unknown[];
+    character?: unknown
+    item?: unknown
+    characterItem?: unknown
+    npcItem?: unknown
+    npcItems?: unknown[]
 } = {}) {
     return {
         findOne: vi.fn().mockImplementation((entity: unknown) => {
             const name = String(entity);
-            if (name.includes('Character') && !name.includes('Item')) return Promise.resolve(entities.character ?? null);
-            if (name.includes('CharacterItem')) return Promise.resolve(entities.characterItem ?? null);
-            if (name.includes('NpcItem')) return Promise.resolve(entities.npcItem ?? null);
-            if (name.includes('Item')) return Promise.resolve(entities.item ?? null);
+            if (name.includes('Character') && !name.includes('Item')) {
+                return Promise.resolve(entities.character ?? null);
+            }
+
+            if (name.includes('CharacterItem')) {
+                return Promise.resolve(entities.characterItem ?? null);
+            }
+
+            if (name.includes('NpcItem')) {
+                return Promise.resolve(entities.npcItem ?? null);
+            }
+
+            if (name.includes('Item')) {
+                return Promise.resolve(entities.item ?? null);
+            }
+
             return Promise.resolve(null);
         }),
         find: vi.fn().mockResolvedValue(entities.npcItems ?? []),
-        create: vi.fn().mockImplementation((_e: unknown, data: unknown) => ({ ...data as object, id: 99 })),
+        create: vi.fn().mockImplementation((_error: unknown, data: unknown) => ({ ...data as object, id: 99 })),
         persist: vi.fn(),
         remove: vi.fn(),
         flush: vi.fn(),
-        transactional: vi.fn().mockImplementation((fn: () => Promise<unknown>) => fn()),
+        transactional: vi.fn().mockImplementation((callback: () => Promise<unknown>) => callback()),
         getEntityManager: vi.fn().mockReturnThis(),
     };
 }
@@ -80,7 +100,10 @@ describe('ItemService', () => {
             const em = makeEm({ characterItem: charItem });
             em.findOne.mockImplementation((_entity: unknown, query: Record<string, unknown>) => {
                 // Direct id lookup returns charItem; conflict check (has 'character' key) returns null
-                if ('character' in query) return Promise.resolve(null);
+                if ('character' in query) {
+                    return Promise.resolve(null);
+                }
+
                 return Promise.resolve(charItem);
             });
             const service = new ItemService(em as never, null as never);
@@ -94,13 +117,16 @@ describe('ItemService', () => {
             const occupyingItem = makeCharacterItem({ id: 6, slot: 'MAIN_HAND', character: { id: 1 } });
             const em = makeEm({ characterItem: charItem });
             em.findOne.mockImplementation((_entity: unknown, query: Record<string, unknown>) => {
-                if ('character' in query) return Promise.resolve(occupyingItem);
+                if ('character' in query) {
+                    return Promise.resolve(occupyingItem);
+                }
+
                 return Promise.resolve(charItem);
             });
             const service = new ItemService(em as never, null as never);
             const result = await service.equipItem(5, 'MAIN_HAND');
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('SLOT_OCCUPIED');
+            expect((result as { errorCode: string }).errorCode).toBe('SLOT_OCCUPIED');
         });
     });
 
@@ -111,16 +137,28 @@ describe('ItemService', () => {
             const em = makeEm({ character: char, npcItem });
             em.findOne.mockImplementation((entity: unknown) => {
                 const name = String(entity);
-                if (name.includes('NpcItem')) return Promise.resolve(npcItem);
-                if (name.includes('Character') && !name.includes('Item')) return Promise.resolve(char);
-                if (name.includes('CharacterItem')) return Promise.resolve(null); // no existing
+                if (name.includes('NpcItem')) {
+                    return Promise.resolve(npcItem);
+                }
+
+                if (name.includes('Character') && !name.includes('Item')) {
+                    return Promise.resolve(char);
+                }
+
+                if (name.includes('CharacterItem')) {
+                    // no existing
+                    return Promise.resolve(null);
+                }
+
                 return Promise.resolve(null);
             });
             const service = new ItemService(em as never, null as never);
             const result = await service.buyItem(1, 99, 10, 2);
             expect(result.success).toBe(true);
-            expect(char.goldPieces).toBe(30); // 50 - 2*10
-            expect(npcItem.quantity).toBe(3); // 5 - 2
+            // 50 - 2*10
+            expect(char.goldPieces).toBe(30);
+            // 5 - 2
+            expect(npcItem.quantity).toBe(3);
         });
 
         it('returns INSUFFICIENT_GOLD when character cannot afford', async () => {
@@ -128,13 +166,16 @@ describe('ItemService', () => {
             const npcItem = makeNpcItem({ quantity: 5, merchantPrice: 10 });
             const em = makeEm({ character: char, npcItem });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('NpcItem')) return Promise.resolve(npcItem);
+                if (String(entity).includes('NpcItem')) {
+                    return Promise.resolve(npcItem);
+                }
+
                 return Promise.resolve(char);
             });
             const service = new ItemService(em as never, null as never);
             const result = await service.buyItem(1, 99, 10, 2);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('INSUFFICIENT_GOLD');
+            expect((result as { errorCode: string }).errorCode).toBe('INSUFFICIENT_GOLD');
         });
 
         it('returns INSUFFICIENT_STOCK when NPC lacks quantity', async () => {
@@ -142,13 +183,16 @@ describe('ItemService', () => {
             const npcItem = makeNpcItem({ quantity: 1, merchantPrice: 10 });
             const em = makeEm({ character: char, npcItem });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('NpcItem')) return Promise.resolve(npcItem);
+                if (String(entity).includes('NpcItem')) {
+                    return Promise.resolve(npcItem);
+                }
+
                 return Promise.resolve(char);
             });
             const service = new ItemService(em as never, null as never);
             const result = await service.buyItem(1, 99, 10, 3);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('INSUFFICIENT_STOCK');
+            expect((result as { errorCode: string }).errorCode).toBe('INSUFFICIENT_STOCK');
         });
     });
 
@@ -158,8 +202,14 @@ describe('ItemService', () => {
             const charItem = makeCharacterItem({ quantity: 1, item: makeItem({ value: 50 }) });
             const em = makeEm({ character: char, characterItem: charItem, npcItem: null });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('CharacterItem')) return Promise.resolve(charItem);
-                if (String(entity).includes('NpcItem')) return Promise.resolve(null);
+                if (String(entity).includes('CharacterItem')) {
+                    return Promise.resolve(charItem);
+                }
+
+                if (String(entity).includes('NpcItem')) {
+                    return Promise.resolve(null);
+                }
+
                 return Promise.resolve(char);
             });
             const service = new ItemService(em as never, null as never);
@@ -178,9 +228,18 @@ describe('ItemService', () => {
             const em = makeEm({ character: char, item, characterItem: null });
             em.findOne.mockImplementation((entity: unknown) => {
                 const name = String(entity);
-                if (name.includes('Item') && !name.includes('Character') && !name.includes('Npc')) return Promise.resolve(item);
-                if (name.includes('Character') && !name.includes('Item')) return Promise.resolve(char);
-                if (name.includes('CharacterItem')) return Promise.resolve(null);
+                if (name.includes('Item') && !name.includes('Character') && !name.includes('Npc')) {
+                    return Promise.resolve(item);
+                }
+
+                if (name.includes('Character') && !name.includes('Item')) {
+                    return Promise.resolve(char);
+                }
+
+                if (name.includes('CharacterItem')) {
+                    return Promise.resolve(null);
+                }
+
                 return Promise.resolve(null);
             });
             const service = new ItemService(em as never, { emit: emitMock } as never);

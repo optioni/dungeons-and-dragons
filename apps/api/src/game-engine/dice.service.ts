@@ -1,40 +1,45 @@
 import { Injectable } from '@nestjs/common';
 
 export interface RollResult {
-    success: true;
-    expression: string;
-    total: number;
-    rolls: number[];
+    success: true
+    expression: string
+    total: number
+    rolls: number[]
 }
 
 export interface RollError {
-    success: false;
-    errorCode: 'INVALID_EXPRESSION';
-    message: string;
+    success: false
+    errorCode: 'INVALID_EXPRESSION'
+    message: string
 }
 
 export type RollOutcome = RollResult | RollError;
 
 /** Regex: NdX, optional kh/kl N, optional +/-M */
+// eslint-disable-next-line require-unicode-regexp
 const DICE_RE = /^(\d+)d(\d+)(?:k([hl])(\d+))?([+-]\d+)?$/i;
 
+/* eslint-disable no-bitwise */
 function mulberry32(seed: number): () => number {
-    let s = seed;
+    let state = seed;
     return () => {
-        s = (s + 0x6D2B79F5) >>> 0;
-        let t = Math.imul(s ^ (s >>> 15), 1 | s);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) >>> 0;
-        return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+        state = (state + 0x6D_2B_79_F5) >>> 0;
+        let temporary = Math.imul(state ^ (state >>> 15), 1 | state);
+        temporary = (temporary + Math.imul(temporary ^ (temporary >>> 7), 61 | temporary)) >>> 0;
+        return ((temporary ^ (temporary >>> 14)) >>> 0) / 4_294_967_296;
     };
 }
 
-function hashString(str: string): number {
+function hashString(input: string): number {
     let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = Math.imul(31, hash) + str.charCodeAt(i) >>> 0;
+    for (let index = 0; index < input.length; index++) {
+        // eslint-disable-next-line unicorn/prefer-code-point
+        hash = Math.imul(31, hash) + input.charCodeAt(index) >>> 0;
     }
+
     return hash;
 }
+/* eslint-enable no-bitwise */
 
 /**
  * Thin injectable wrapper for dice rolling. Use `withSeed` in tests for deterministic results.
@@ -71,11 +76,11 @@ export class DiceService {
             };
         }
 
-        const count = parseInt(match[1]!, 10);
-        const sides = parseInt(match[2]!, 10);
+        const count = Number.parseInt(match[1]!, 10);
+        const sides = Number.parseInt(match[2]!, 10);
         const keepType = match[3]?.toLowerCase() as 'h' | 'l' | undefined;
-        const keepCount = match[4] !== undefined ? parseInt(match[4], 10) : undefined;
-        const modifier = match[5] !== undefined ? parseInt(match[5], 10) : 0;
+        const keepCount = match[4] === undefined ? undefined : Number.parseInt(match[4], 10);
+        const modifier = match[5] === undefined ? 0 : Number.parseInt(match[5], 10);
 
         if (count < 1 || sides < 1) {
             return {
@@ -86,7 +91,7 @@ export class DiceService {
         }
 
         const rolls: number[] = [];
-        for (let i = 0; i < count; i++) {
+        for (let index = 0; index < count; index++) {
             rolls.push(Math.floor(this.rand() * sides) + 1);
         }
 

@@ -2,6 +2,10 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { SubjectType } from './entities/memory.entity.js';
+import { type MemorySearchResult, MemoryService } from './memory.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -11,11 +15,11 @@ vi.mock('@mikro-orm/decorators/legacy', () => ({
 }));
 vi.mock('@mikro-orm/core', () => ({
     type: {},
-    OptionalProps: Symbol(),
-    Collection: class {},
-    Type: class {},
+    OptionalProps: Symbol('OptionalProps'),
+    Collection: class {}, // eslint-disable-line @typescript-eslint/no-extraneous-class
+    Type: class {}, // eslint-disable-line @typescript-eslint/no-extraneous-class
 }));
-vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {} }));
+vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {} })); // eslint-disable-line @typescript-eslint/no-extraneous-class
 vi.mock('@nestjs/graphql', () => ({
     ObjectType: () => () => {},
     Field: () => () => {},
@@ -26,11 +30,11 @@ vi.mock('@nestjs/graphql', () => ({
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
     Inject: () => () => {},
-    Logger: class { error = vi.fn(); },
+    Logger: class {
+        error = vi.fn();
+    },
 }));
-
-import { MemoryService, type MemorySearchResult } from './memory.service.js';
-import { SubjectType } from './entities/memory.entity.js';
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function makeEmbeddingService(embedding: number[] | null = [0.1, 0.2]) {
     return { generateEmbedding: vi.fn().mockResolvedValue(embedding) };
@@ -49,7 +53,7 @@ function makeAnthropicClient(content = 'A brave day in the dungeon.') {
 function makeEm() {
     const entities: unknown[] = [];
     return {
-        create: vi.fn().mockImplementation((_Entity: unknown, data: unknown) => {
+        create: vi.fn().mockImplementation((_entityClass: unknown, data: unknown) => {
             const entity = { ...data as object, id: entities.length + 1 };
             entities.push(entity);
             return entity;
@@ -127,7 +131,7 @@ describe('MemoryService', () => {
 
     describe('getRecentDiaryEntries', () => {
         it('returns up to 7 entries when more exist', async () => {
-            const entries = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, inGameDate: `Day ${i + 1}` }));
+            const entries = Array.from({ length: 10 }, (_, index) => ({ id: index + 1, inGameDate: `Day ${index + 1}` }));
             em.find.mockResolvedValue(entries.slice(0, 7));
 
             const result = await service.getRecentDiaryEntries(1);
@@ -209,12 +213,22 @@ describe('MemoryService', () => {
 
     describe('searchMemories', () => {
         const diaryRow = {
-            type: 'diary', id: 1, content: 'A day in the dungeon', inGameDate: 'Day 3',
-            subjectType: null, subjectId: null, score: 0.1,
+            type: 'diary',
+            id: 1,
+            content: 'A day in the dungeon',
+            inGameDate: 'Day 3',
+            subjectType: null,
+            subjectId: null,
+            score: 0.1,
         };
         const factRow = {
-            type: 'fact', id: 2, content: 'Goblin chief has a scar', inGameDate: null,
-            subjectType: 'npc', subjectId: 'uuid-1', score: 0.2,
+            type: 'fact',
+            id: 2,
+            content: 'Goblin chief has a scar',
+            inGameDate: null,
+            subjectType: 'npc',
+            subjectId: 'uuid-1',
+            score: 0.2,
         };
 
         it('merges and sorts results from both tables by score', async () => {
@@ -226,7 +240,8 @@ describe('MemoryService', () => {
             const results = await service.searchMemories(1, 'goblin');
 
             expect(results).toHaveLength(2);
-            expect(results[0]!.type).toBe('diary'); // lower score = more similar
+            // lower score = more similar
+            expect(results[0]!.type).toBe('diary');
             expect(results[1]!.type).toBe('fact');
         });
 
@@ -239,13 +254,13 @@ describe('MemoryService', () => {
 
             // Only one SQL call — diary is skipped entirely; memory query uses subjectType
             expect(conn.execute).toHaveBeenCalledTimes(1);
-            const [, memoryParams] = conn.execute.mock.calls[0] as [string, unknown[]];
-            expect(memoryParams).toContain('npc');
+            const [, memoryParameters] = conn.execute.mock.calls[0] as [string, unknown[]];
+            expect(memoryParameters).toContain('npc');
         });
 
         it('respects the limit option', async () => {
             const conn = em.getConnection();
-            const rows = Array.from({ length: 10 }, (_, i) => ({ ...diaryRow, id: i, score: i * 0.1 }));
+            const rows = Array.from({ length: 10 }, (_, index) => ({ ...diaryRow, id: index, score: index * 0.1 }));
             conn.execute
                 .mockResolvedValueOnce(rows)
                 .mockResolvedValueOnce([]);
@@ -259,11 +274,15 @@ describe('MemoryService', () => {
             const conn = em.getConnection();
             // First two calls: vector search returns nothing
             conn.execute
-                .mockResolvedValueOnce([]) // diary vector
-                .mockResolvedValueOnce([]) // memory vector
+                // diary vector
+                .mockResolvedValueOnce([])
+                // memory vector
+                .mockResolvedValueOnce([])
                 // Second two calls: full-text returns results
-                .mockResolvedValueOnce([diaryRow]) // diary FTS
-                .mockResolvedValueOnce([]);          // memory FTS
+                // diary FTS
+                .mockResolvedValueOnce([diaryRow])
+                // memory FTS
+                .mockResolvedValueOnce([]);
 
             const results = await service.searchMemories(1, 'goblin');
 
@@ -275,8 +294,10 @@ describe('MemoryService', () => {
             embeddingService.generateEmbedding.mockResolvedValue(null);
             const conn = em.getConnection();
             conn.execute
-                .mockResolvedValueOnce([factRow]) // diary FTS
-                .mockResolvedValueOnce([]);        // memory FTS
+                // diary FTS
+                .mockResolvedValueOnce([factRow])
+                // memory FTS
+                .mockResolvedValueOnce([]);
 
             const results = await service.searchMemories(1, 'goblin');
 

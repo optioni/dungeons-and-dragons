@@ -16,8 +16,8 @@ vi.mock('@mikro-orm/decorators/legacy', () => ({
 vi.mock('@mikro-orm/core', () => ({
     type: {},
     Type: class {},
-    Collection: class { constructor() {} },
-    OptionalProps: Symbol(),
+    Collection: class {},
+    OptionalProps: Symbol('OptionalProps'),
 }));
 
 vi.mock('@mikro-orm/postgresql', () => ({

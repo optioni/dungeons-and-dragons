@@ -1,13 +1,13 @@
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
-    BadRequestException, ForbiddenException, Injectable, NotFoundException,
+    BadRequestException, Injectable, NotFoundException,
 } from '@nestjs/common';
 
 import { CampaignService } from '../campaign/campaign.service.js';
-import { EventType, SceneType } from './session.enums.js';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';
+import { EventType, SceneType } from './session.enums.js';
 
 /**
  * Owns GameSession and GameEvent persistence. All methods are owner-scoped —

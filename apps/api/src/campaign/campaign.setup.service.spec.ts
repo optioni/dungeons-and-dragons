@@ -65,7 +65,7 @@ describe('CampaignSetupService.validateWorldSeedPayload', () => {
 
     it('rejects more than 5 locations', () => {
         const seed = minimalValidSeed();
-        seed.locations = [...Array(6)].map((_, i) => ({ name: `Loc${i}`, description: 'd' }));
+        seed.locations = Array.from({length: 6}).map((_, index) => ({ name: `Loc${index}`, description: 'd' }));
         expect(() => service.validateWorldSeedPayload(seed)).toThrow(BadRequestException);
     });
 
@@ -77,7 +77,7 @@ describe('CampaignSetupService.validateWorldSeedPayload', () => {
 
     it('rejects more than 3 factions', () => {
         const seed = minimalValidSeed();
-        seed.factions = [...Array(4)].map((_, i) => ({ name: `F${i}` }));
+        seed.factions = Array.from({length: 4}).map((_, index) => ({ name: `F${index}` }));
         expect(() => service.validateWorldSeedPayload(seed)).toThrow(BadRequestException);
     });
 
@@ -89,19 +89,19 @@ describe('CampaignSetupService.validateWorldSeedPayload', () => {
 
     it('rejects more than 5 NPCs', () => {
         const seed = minimalValidSeed();
-        seed.npcs = [...Array(6)].map((_, i) => ({ name: `NPC${i}` }));
+        seed.npcs = Array.from({length: 6}).map((_, index) => ({ name: `NPC${index}` }));
         expect(() => service.validateWorldSeedPayload(seed)).toThrow(BadRequestException);
     });
 
     it('rejects missing antagonist NPC', () => {
         const seed = minimalValidSeed();
-        seed.npcs = seed.npcs.map((n) => ({ ...n, isAntagonist: false }));
+        seed.npcs = seed.npcs.map((npc) => ({ ...npc, isAntagonist: false }));
         expect(() => service.validateWorldSeedPayload(seed)).toThrow(BadRequestException);
     });
 
     it('rejects missing antagonist world event', () => {
         const seed = minimalValidSeed();
-        seed.worldEvents = seed.worldEvents.map((e) => ({ ...e, isAntagonistEvent: false }));
+        seed.worldEvents = seed.worldEvents.map((event) => ({ ...event, isAntagonistEvent: false }));
         expect(() => service.validateWorldSeedPayload(seed)).toThrow(BadRequestException);
     });
 

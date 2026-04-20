@@ -7,9 +7,10 @@ import {
 } from 'vitest';
 
 import { User } from '../auth/entities/user.entity';
+import { CampaignSetupStatus } from '../campaign/campaign.enums';
 import { Campaign } from '../campaign/entities/campaign.entity';
-import { Character } from '../character/entities/character.entity';
 import { CharacterItem } from '../character/entities/character-item.entity';
+import { Character } from '../character/entities/character.entity';
 import { Item } from '../character/entities/item.entity';
 import { SrdClass } from '../srd/entities/srd-class.entity';
 import { SrdCondition } from '../srd/entities/srd-condition.entity';
@@ -18,18 +19,17 @@ import { SrdMonster } from '../srd/entities/srd-monster.entity';
 import { SrdRace } from '../srd/entities/srd-race.entity';
 import { SrdSpell } from '../srd/entities/srd-spell.entity';
 import { Faction } from '../world/entities/faction.entity';
-import { Location } from '../world/entities/location.entity';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity';
-import { Map } from '../world/entities/map.entity';
+import { Location } from '../world/entities/location.entity';
 import { MapLocation } from '../world/entities/map-location.entity';
-import { Npc } from '../world/entities/npc.entity';
+import { Map } from '../world/entities/map.entity';
 import { NpcItem } from '../world/entities/npc-item.entity';
 import { NpcRelationship } from '../world/entities/npc-relationship.entity';
+import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
-import { CampaignSetupStatus } from '../campaign/campaign.enums';
-import { EventType, SceneType } from './session.enums';
 import { GameEvent } from './entities/game-event.entity';
 import { GameSession } from './entities/game-session.entity';
+import { EventType, SceneType } from './session.enums';
 
 const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
 
@@ -38,10 +38,28 @@ async function createOrm(): Promise<MikroORM> {
         defineConfig({
             clientUrl: DB_URL,
             entities: [
-                User, Campaign, Character, Item, CharacterItem, SrdRace, SrdClass,
-                SrdSpell, SrdMonster, SrdEquipment, SrdCondition,
-                Location, Map, MapLocation, LocationDiscovery, Faction, WorldEvent,
-                Npc, NpcRelationship, NpcItem, GameSession, GameEvent,
+                User,
+                Campaign,
+                Character,
+                Item,
+                CharacterItem,
+                SrdRace,
+                SrdClass,
+                SrdSpell,
+                SrdMonster,
+                SrdEquipment,
+                SrdCondition,
+                Location,
+                Map,
+                MapLocation,
+                LocationDiscovery,
+                Faction,
+                WorldEvent,
+                Npc,
+                NpcRelationship,
+                NpcItem,
+                GameSession,
+                GameEvent,
             ],
         }),
     );
@@ -73,10 +91,12 @@ describe('SessionModule integration', () => {
 
     afterEach(async () => {
         const em = orm.em.fork();
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const sessions = await em.find(GameSession, { campaign: testCampaign.id });
-        for (const s of sessions) {
-            await em.nativeDelete(GameEvent, { session: s.id });
+        for (const session of sessions) {
+            await em.nativeDelete(GameEvent, { session: session.id });
         }
+
         await em.nativeDelete(GameSession, { campaign: testCampaign.id });
         await em.nativeDelete(Campaign, { userId: { $in: [testUser.id, otherUser.id] } });
         await em.nativeDelete(User, { id: { $in: [testUser.id, otherUser.id] } });
@@ -157,6 +177,7 @@ describe('SessionModule integration', () => {
             em.persist(session1);
             await em.flush();
 
+            // eslint-disable-next-line unicorn/no-array-method-this-argument
             const active = await em.find(GameSession, { campaign: testCampaign.id, endedAt: null });
             expect(active.length).toBe(1);
         });
@@ -169,17 +190,17 @@ describe('SessionModule integration', () => {
             em.persist(session);
             await em.flush();
 
-            const e1 = em.create(GameEvent, {
+            const event1 = em.create(GameEvent, {
                 session,
                 eventType: EventType.PLAYER_INPUT,
                 content: { text: 'First' },
             });
-            const e2 = em.create(GameEvent, {
+            const event2 = em.create(GameEvent, {
                 session,
                 eventType: EventType.DM_NARRATIVE,
                 content: { narrative: 'Second' },
             });
-            em.persist([e1, e2]);
+            em.persist([event1, event2]);
             await em.flush();
 
             const events = await em.find(GameEvent, { session: session.id }, { orderBy: { createdAt: 'ASC' } });

@@ -17,11 +17,11 @@ describe('QueueModule', () => {
     it('registers the world-tick queue name', () => {
         const queues: unknown[] = Reflect.getMetadata('imports', QueueModule) ?? [];
         const queueImport = queues.find(
-            (q) =>
-                q != null &&
-                typeof q === 'object' &&
-                'module' in q &&
-                (q as { module: unknown }).module === BullModule,
+            (queueItem) => queueItem !== null
+                && queueItem !== undefined
+                && typeof queueItem === 'object'
+                && 'module' in queueItem
+                && (queueItem as { module: unknown }).module === BullModule,
         );
         expect(queueImport).toBeDefined();
     });

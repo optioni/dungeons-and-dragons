@@ -25,6 +25,7 @@ export class ToolRegistry {
                 message: `Unknown tool: ${toolName}`,
             };
         }
+
         try {
             return await handler.execute(sessionId, input);
         } catch (error) {

@@ -2,12 +2,12 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
-import { Character } from '../character/entities/character.entity.js';
 import { CharacterItem } from '../character/entities/character-item.entity.js';
-import { GraphqlModule } from '../graphql/graphql.module.js';
+import { Character } from '../character/entities/character.entity.js';
 import { Item } from '../character/entities/item.entity.js';
-import { Npc } from '../world/entities/npc.entity.js';
+import { GraphqlModule } from '../graphql/graphql.module.js';
 import { Location } from '../world/entities/location.entity.js';
+import { Npc } from '../world/entities/npc.entity.js';
 import { WorldEvent } from '../world/entities/world-event.entity.js';
 import { QuestEntity } from './entities/quest-entity.entity.js';
 import { QuestObjective } from './entities/quest-objective.entity.js';

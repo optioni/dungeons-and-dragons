@@ -9,7 +9,7 @@ import { CampaignSetupStatus } from './campaign.enums';
 import { CampaignService } from './campaign.service';
 import { Campaign } from './entities/campaign.entity';
 
-function makeMockRepo(overrides: Record<string, unknown> = {}): ReturnType<typeof vi.fn> {
+function makeMockRepo(overrides: Record<string, unknown> = {}) {
     return {
         createQueryBuilder: vi.fn().mockReturnValue({
             clone: vi.fn().mockReturnThis(),
@@ -26,13 +26,18 @@ function makeMockRepo(overrides: Record<string, unknown> = {}): ReturnType<typeo
             flush: vi.fn(),
         }),
         ...overrides,
-    } as unknown as ReturnType<typeof vi.fn>;
+    };
 }
 
 describe('CampaignService', () => {
     let service: CampaignService;
     let mockRepo: ReturnType<typeof makeMockRepo>;
-    let mockEm: ReturnType<typeof vi.fn>;
+    let mockEm: {
+        findOne: ReturnType<typeof vi.fn>
+        create: ReturnType<typeof vi.fn>
+        persist: ReturnType<typeof vi.fn>
+        flush: ReturnType<typeof vi.fn>
+    };
 
     beforeEach(() => {
         mockRepo = makeMockRepo();

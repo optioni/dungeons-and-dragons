@@ -6,12 +6,18 @@ import { Type } from '@mikro-orm/core';
  */
 export class VectorType extends Type<number[] | null, string | null> {
     convertToDatabaseValue(value: number[] | null): string | null {
-        if (!value) return null;
+        if (!value) {
+            return null;
+        }
+
         return `[${value.join(',')}]`;
     }
 
     convertToJSValue(value: string | null): number[] | null {
-        if (!value) return null;
+        if (!value) {
+            return null;
+        }
+
         try {
             return JSON.parse(value) as number[];
         } catch {

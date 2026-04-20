@@ -2,10 +2,10 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { Character } from '../character/entities/character.entity.js';
-import { CharacterItem } from '../character/entities/character-item.entity.js';
-import { Item } from '../character/entities/item.entity.js';
 import { ItemType } from '../character/character.enums.js';
+import { CharacterItem } from '../character/entities/character-item.entity.js';
+import { Character } from '../character/entities/character.entity.js';
+import { Item } from '../character/entities/item.entity.js';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity.js';
 import { MapLocation } from '../world/entities/map-location.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
@@ -30,12 +30,12 @@ export class ItemService {
     async createItem(
         campaignId: number,
         fields: {
-            name: string;
-            description: string;
-            itemType: string;
-            weight?: number | null;
-            value?: number | null;
-            srdEquipmentId?: number | null;
+            name: string
+            description: string
+            itemType: string
+            weight?: number | null
+            value?: number | null
+            srdEquipmentId?: number | null
         },
     ): Promise<ItemOutcome> {
         const item = this.em.create(Item, {
@@ -60,13 +60,31 @@ export class ItemService {
         toNpcId?: number,
     ): Promise<ItemOutcome> {
         const item = await this.em.findOne(Item, { id: itemId });
-        if (!item) return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `Item ${itemId} not found` };
+        if (!item) {
+            return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `Item ${itemId} not found` };
+        }
 
         let campaignId = 0;
 
-        if (toCharacterId !== undefined) {
+        if (toCharacterId === undefined) {
+            if (toNpcId === undefined) {
+                return { success: false, errorCode: 'NO_RECIPIENT', message: 'Must specify toCharacterId or toNpcId' };
+            }
+
+            const existingNpcItem = await this.em.findOne(NpcItem, { npcId: toNpcId, itemId });
+            if (existingNpcItem) {
+                existingNpcItem.quantity += quantity;
+            } else {
+                const ni = this.em.create(NpcItem, { npcId: toNpcId, itemId, name: item.name, quantity });
+                this.em.persist(ni);
+            }
+
+            await this.em.flush();
+        } else {
             const char = await this.em.findOne(Character, { id: toCharacterId });
-            if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${toCharacterId} not found` };
+            if (!char) {
+                return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${toCharacterId} not found` };
+            }
 
             const existing = await this.em.findOne(CharacterItem, { character: toCharacterId, item: itemId });
             if (existing) {
@@ -75,6 +93,7 @@ export class ItemService {
                 const ci = this.em.create(CharacterItem, { character: char, item, quantity });
                 this.em.persist(ci);
             }
+
             await this.em.flush();
 
             campaignId = (char as unknown as { campaign?: { id?: number } }).campaign?.id ?? 0;
@@ -82,6 +101,7 @@ export class ItemService {
             // Auto-discover map locations if item has a mapId
             const itemMapId = (item as unknown as { mapId?: number | null }).mapId;
             if (itemMapId) {
+                // eslint-disable-next-line unicorn/no-array-method-this-argument
                 const mapLocations = await this.em.find(MapLocation, { mapId: itemMapId });
                 for (const ml of mapLocations) {
                     const exists = await this.em.findOne(LocationDiscovery, { campaignId, locationId: ml.locationId });
@@ -95,19 +115,9 @@ export class ItemService {
                         this.em.persist(disc);
                     }
                 }
+
                 await this.em.flush();
             }
-        } else if (toNpcId !== undefined) {
-            const existingNpcItem = await this.em.findOne(NpcItem, { npcId: toNpcId, itemId });
-            if (existingNpcItem) {
-                existingNpcItem.quantity += quantity;
-            } else {
-                const ni = this.em.create(NpcItem, { npcId: toNpcId, itemId, name: item.name, quantity });
-                this.em.persist(ni);
-            }
-            await this.em.flush();
-        } else {
-            return { success: false, errorCode: 'NO_RECIPIENT', message: 'Must specify toCharacterId or toNpcId' };
         }
 
         this.events?.emit(STATE_CHANGED_EVENT, new StateChangedEvent('GIVE_ITEM', String(itemId), campaignId));
@@ -118,15 +128,19 @@ export class ItemService {
     /** Sets the equipped slot for a CharacterItem. */
     async equipItem(characterItemId: number, slot: string): Promise<ItemOutcome> {
         const ci = await this.em.findOne(CharacterItem, { id: characterItemId });
-        if (!ci) return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `CharacterItem ${characterItemId} not found` };
+        if (!ci) {
+            return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `CharacterItem ${characterItemId} not found` };
+        }
 
         // Check if slot is occupied by another item for this character
         const occupied = await this.em.findOne(CharacterItem, {
             character: (ci as unknown as { character: { id: number } }).character.id,
-            slot,
+            slot: slot as never,
             id: { $ne: characterItemId } as never,
         });
-        if (occupied) return { success: false, errorCode: 'SLOT_OCCUPIED', message: `Slot ${slot} is already occupied` };
+        if (occupied) {
+            return { success: false, errorCode: 'SLOT_OCCUPIED', message: `Slot ${slot} is already occupied` };
+        }
 
         ci.slot = slot as never;
         await this.em.flush();
@@ -137,7 +151,9 @@ export class ItemService {
     /** Clears the equipped slot for a CharacterItem. */
     async unequipItem(characterItemId: number): Promise<ItemOutcome> {
         const ci = await this.em.findOne(CharacterItem, { id: characterItemId });
-        if (!ci) return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `CharacterItem ${characterItemId} not found` };
+        if (!ci) {
+            return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `CharacterItem ${characterItemId} not found` };
+        }
 
         ci.slot = null;
         await this.em.flush();
@@ -148,7 +164,9 @@ export class ItemService {
     /** Purchases an item from an NPC atomically. */
     async buyItem(characterId: number, npcId: number, itemId: number, quantity: number): Promise<ItemOutcome> {
         const npcItem = await this.em.findOne(NpcItem, { npcId, itemId });
-        if (!npcItem) return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `NPC ${npcId} does not carry item ${itemId}` };
+        if (!npcItem) {
+            return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `NPC ${npcId} does not carry item ${itemId}` };
+        }
 
         if (npcItem.quantity < quantity) {
             return { success: false, errorCode: 'INSUFFICIENT_STOCK', message: 'NPC has insufficient stock' };
@@ -158,7 +176,9 @@ export class ItemService {
         const totalCost = pricePerUnit * quantity;
 
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         if (char.goldPieces < totalCost) {
             return { success: false, errorCode: 'INSUFFICIENT_GOLD', message: 'Insufficient gold' };
@@ -187,7 +207,9 @@ export class ItemService {
     /** Sells an item to an NPC atomically. */
     async sellItem(characterId: number, npcId: number, itemId: number, quantity: number): Promise<ItemOutcome> {
         const ci = await this.em.findOne(CharacterItem, { character: characterId, item: itemId });
-        if (!ci) return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `Character ${characterId} does not own item ${itemId}` };
+        if (!ci) {
+            return { success: false, errorCode: 'ITEM_NOT_FOUND', message: `Character ${characterId} does not own item ${itemId}` };
+        }
 
         if (ci.quantity < quantity) {
             return { success: false, errorCode: 'INSUFFICIENT_QUANTITY', message: 'Character does not have enough of this item' };
@@ -198,7 +220,9 @@ export class ItemService {
         const totalGold = saleValuePerUnit * quantity;
 
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         char.goldPieces += totalGold;
 
@@ -226,6 +250,7 @@ export class ItemService {
         npcId: number,
         items: Array<{ itemId: number; quantity: number; priceInGold: number }>,
     ): Promise<ItemOutcome> {
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const existing = await this.em.find(NpcItem, { npcId });
         for (const ni of existing) {
             this.em.remove(ni);

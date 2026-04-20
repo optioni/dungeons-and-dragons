@@ -2,6 +2,9 @@ import {
     describe, expect, it, vi,
 } from 'vitest';
 
+import { WorldMutationService } from './world-mutation.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -25,14 +28,17 @@ vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
 }));
 vi.mock('@nestjs/event-emitter', () => ({
-    EventEmitter2: class EventEmitter2 { emit() {} },
+    EventEmitter2: class EventEmitter2 {
+        emit() {}
+    },
     InjectEventEmitter: () => () => {},
 }));
-
-import { WorldMutationService } from './world-mutation.service.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 function makeNpc(overrides: Record<string, unknown> = {}) {
-    return { id: 1, alive: true, disposition: 'neutral', partyStatus: 'NONE', nextTickInGameDate: '3', ...overrides };
+    return {
+        id: 1, alive: true, disposition: 'neutral', partyStatus: 'NONE', nextTickInGameDate: '3', ...overrides,
+    };
 }
 
 function makeWorldEvent(overrides: Record<string, unknown> = {}) {
@@ -55,25 +61,43 @@ function makeCampaign(overrides: Record<string, unknown> = {}) {
 }
 
 function makeEm(entities: {
-    npc?: unknown;
-    worldEvent?: unknown;
-    campaign?: unknown;
-    location?: unknown;
-    faction?: unknown;
-    session?: unknown;
+    npc?: unknown
+    worldEvent?: unknown
+    campaign?: unknown
+    location?: unknown
+    faction?: unknown
+    session?: unknown
 } = {}) {
     return {
         findOne: vi.fn().mockImplementation((entity: { name?: string }) => {
-            const n = entity?.name ?? '';
-            if (n === 'Npc') return Promise.resolve(entities.npc ?? null);
-            if (n === 'WorldEvent') return Promise.resolve(entities.worldEvent ?? null);
-            if (n === 'Campaign') return Promise.resolve(entities.campaign ?? null);
-            if (n === 'Location') return Promise.resolve(entities.location ?? null);
-            if (n === 'Faction') return Promise.resolve(entities.faction ?? null);
-            if (n === 'GameSession') return Promise.resolve(entities.session ?? null);
+            const entityName = entity?.name ?? '';
+            if (entityName === 'Npc') {
+                return Promise.resolve(entities.npc ?? null);
+            }
+
+            if (entityName === 'WorldEvent') {
+                return Promise.resolve(entities.worldEvent ?? null);
+            }
+
+            if (entityName === 'Campaign') {
+                return Promise.resolve(entities.campaign ?? null);
+            }
+
+            if (entityName === 'Location') {
+                return Promise.resolve(entities.location ?? null);
+            }
+
+            if (entityName === 'Faction') {
+                return Promise.resolve(entities.faction ?? null);
+            }
+
+            if (entityName === 'GameSession') {
+                return Promise.resolve(entities.session ?? null);
+            }
+
             return Promise.resolve(null);
         }),
-        create: vi.fn().mockImplementation((_e: unknown, data: unknown) => ({ ...data as object, id: 99 })),
+        create: vi.fn().mockImplementation((_error: unknown, data: unknown) => ({ ...data as object, id: 99 })),
         persist: vi.fn(),
         flush: vi.fn(),
     };
@@ -150,7 +174,7 @@ describe('WorldMutationService', () => {
             const em = makeEm({ campaign });
             const service = new WorldMutationService(em as never, null as never);
             await service.recordLore(10, 'New fact!');
-            expect((campaign.loreDocument as string)).toContain('New fact!');
+            expect(campaign.loreDocument as unknown as string).toContain('New fact!');
         });
 
         it('initializes loreDocument when null', async () => {
@@ -169,7 +193,8 @@ describe('WorldMutationService', () => {
             const service = new WorldMutationService(em as never, null as never);
             const result = await service.advanceAntagonistStage(10);
             expect(result.success).toBe(true);
-            expect((campaign.antagonistPlanState as { stages: Array<{ completed: boolean }> }).stages[0]!.completed).toBe(true);
+            interface PlanState { stages: Array<{ completed: boolean }> }
+            expect((campaign.antagonistPlanState as PlanState).stages[0]!.completed).toBe(true);
         });
     });
 });

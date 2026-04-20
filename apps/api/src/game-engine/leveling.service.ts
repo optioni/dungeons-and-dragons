@@ -19,14 +19,18 @@ export class LevelingService {
     /** Sets levelUpPending = true and returns a structured level-up payload. */
     async triggerLevelUp(sessionId: number, characterId: number): Promise<LevelingOutcome> {
         const session = await this.em.findOne(GameSession, { id: sessionId });
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         if (session.levelUpPending) {
             return { success: false, errorCode: 'LEVEL_UP_ALREADY_PENDING', message: 'A level-up is already pending' };
         }
 
         const char = await this.em.findOne(Character, { id: characterId }, { populate: ['srdClass'] as never });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         session.levelUpPending = true;
         await this.em.flush();
@@ -52,16 +56,20 @@ export class LevelingService {
         sessionId: number,
         characterId: number,
         choices: {
-            abilityScoreImprovements?: Partial<Record<keyof AbilityScores, number>>;
-            feat?: string;
+            abilityScoreImprovements?: Partial<Record<keyof AbilityScores, number>>
+            feat?: string
         },
         hitPointsRolled: number,
     ): Promise<LevelingOutcome> {
         const session = await this.em.findOne(GameSession, { id: sessionId });
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         // Validate ASI choices
         if (choices.abilityScoreImprovements) {
@@ -69,14 +77,15 @@ export class LevelingService {
             if (total > 2) {
                 return { success: false, errorCode: 'INVALID_ASI_CHOICES', message: 'ASI increments must total ≤ 2' };
             }
+
             for (const [ability, increment] of Object.entries(choices.abilityScoreImprovements)) {
-                (char.abilityScores as Record<string, number>)[ability] += increment;
+                (char.abilityScores as unknown as Record<string, number>)[ability] += increment;
             }
         }
 
         // Calculate HP increase: hitPointsRolled + CON modifier
-        const conMod = Math.floor(((char.abilityScores as Record<string, number>).CON - 10) / 2);
-        char.maxHp += hitPointsRolled + conMod;
+        const conModule = Math.floor(((char.abilityScores as unknown as Record<string, number>).CON - 10) / 2);
+        char.maxHp += hitPointsRolled + conModule;
         char.level += 1;
 
         session.levelUpPending = false;
@@ -88,9 +97,11 @@ export class LevelingService {
     /** Decrements an available spell slot. */
     async useSpellSlot(characterId: number, level: number): Promise<LevelingOutcome> {
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
-        const slot = (char.spellSlots as SpellSlot[]).find((s) => s.level === level);
+        const slot = (char.spellSlots as SpellSlot[]).find((spellSlot) => spellSlot.level === level);
         if (!slot || slot.used >= slot.total) {
             return { success: false, errorCode: 'NO_SPELL_SLOT_AVAILABLE', message: `No available level ${level} spell slots` };
         }
@@ -105,7 +116,9 @@ export class LevelingService {
     /** Replaces the character's prepared spells list. */
     async prepareSpells(characterId: number, spellIds: string[]): Promise<LevelingOutcome> {
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         char.preparedSpells = spellIds;
         await this.em.flush();

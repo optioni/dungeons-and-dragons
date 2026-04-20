@@ -2,34 +2,34 @@ import Anthropic from '@anthropic-ai/sdk';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository, MikroORM } from '@mikro-orm/postgresql';
 import {
-    BadRequestException, Injectable, InternalServerErrorException, Logger,
+    BadRequestException, Injectable, Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { Faction } from '../world/entities/faction.entity.js';
-import { Location } from '../world/entities/location.entity.js';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity.js';
-import { Map } from '../world/entities/map.entity.js';
+import { Location } from '../world/entities/location.entity.js';
 import { MapLocation } from '../world/entities/map-location.entity.js';
-import { Npc } from '../world/entities/npc.entity.js';
+import { Map } from '../world/entities/map.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { NpcRelationship } from '../world/entities/npc-relationship.entity.js';
+import { Npc } from '../world/entities/npc.entity.js';
 import { WorldEvent } from '../world/entities/world-event.entity.js';
 import { LocationDiscoverySource, NpcRelationshipType, WorldEventSource, WorldEventStatus } from '../world/world.enums.js';
 import { CampaignSetupStatus } from './campaign.enums.js';
+import { CampaignService } from './campaign.service.js';
 import { type GenerateConceptsInput } from './dto/generate-concepts.input.js';
-import { type SelectConceptInput } from './dto/select-concept.input.js';
 import { type GenerateWorldSeedInput } from './dto/generate-world-seed.input.js';
+import { type SelectConceptInput } from './dto/select-concept.input.js';
 import { type WorldSeedPayload } from './dto/world-seed.dto.js';
 import { Campaign } from './entities/campaign.entity.js';
-import { CampaignService } from './campaign.service.js';
 
 /** Injected at test time to stub Anthropic responses. */
 export interface AnthropicClientLike {
     messages: {
-        create(params: Anthropic.Messages.MessageCreateParamsNonStreaming): Promise<Anthropic.Message>;
-    };
+        create: (parameters: Anthropic.Messages.MessageCreateParamsNonStreaming) => Promise<Anthropic.Message>
+    }
 }
 
 /**
@@ -97,12 +97,12 @@ export class CampaignSetupService {
             );
         }
 
-        const hasAntagonist = seed.npcs.some((n) => n.isAntagonist);
+        const hasAntagonist = seed.npcs.some((npc) => npc.isAntagonist);
         if (!hasAntagonist) {
             throw new BadRequestException('World seed validation failed: no NPC is marked as antagonist');
         }
 
-        const hasAntagonistEvent = seed.worldEvents?.some((e) => e.isAntagonistEvent);
+        const hasAntagonistEvent = seed.worldEvents?.some((event) => event.isAntagonistEvent);
         if (!hasAntagonistEvent) {
             throw new BadRequestException('World seed validation failed: no antagonist world event found');
         }
@@ -143,6 +143,7 @@ export class CampaignSetupService {
 
         let concepts: Campaign['generatedConcepts'];
         try {
+            /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model,
                 max_tokens: 1500,
@@ -182,14 +183,15 @@ export class CampaignSetupService {
                     ],
                 }],
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
-            const toolUse = response.content.find((c) => c.type === 'tool_use');
+            const toolUse = response.content.find((content) => content.type === 'tool_use');
             if (!toolUse || toolUse.type !== 'tool_use') {
                 throw new Error('LLM did not call the expected tool');
             }
 
-            const input_data = toolUse.input as { concepts: Campaign['generatedConcepts'] };
-            concepts = input_data.concepts;
+            const inputData = toolUse.input as { concepts: Campaign['generatedConcepts'] };
+            concepts = inputData.concepts;
         } catch (error) {
             this.logger.error('Story concept generation failed', error);
             throw new BadRequestException({
@@ -300,6 +302,7 @@ export class CampaignSetupService {
     private async callLlmForWorldSeed(model: string, campaign: Campaign): Promise<WorldSeedPayload> {
         const concept = campaign.selectedConcept!;
 
+        /* eslint-disable @typescript-eslint/naming-convention */
         const response = await this.anthropic.messages.create({
             model,
             max_tokens: 4096,
@@ -455,9 +458,16 @@ export class CampaignSetupService {
                         },
                     },
                     required: [
-                        'loreDocument', 'inGameDate', 'startingLocationIndex',
-                        'openingSceneSeed', 'antagonistPlanState',
-                        'locations', 'maps', 'factions', 'npcs', 'worldEvents',
+                        'loreDocument',
+                        'inGameDate',
+                        'startingLocationIndex',
+                        'openingSceneSeed',
+                        'antagonistPlanState',
+                        'locations',
+                        'maps',
+                        'factions',
+                        'npcs',
+                        'worldEvents',
                     ],
                 },
             }],
@@ -467,7 +477,7 @@ export class CampaignSetupService {
                 content: [{
                     type: 'text',
                     text: [
-                        `Generate a complete D&D 5e campaign world seed for the following story concept:`,
+                        'Generate a complete D&D 5e campaign world seed for the following story concept:',
                         `Premise: ${concept.premise}`,
                         `Central conflict: ${concept.centralConflict}`,
                         `Antagonist hint: ${concept.antagonistHint}`,
@@ -479,8 +489,9 @@ export class CampaignSetupService {
                 }],
             }],
         });
+        /* eslint-enable @typescript-eslint/naming-convention */
 
-        const toolUse = response.content.find((c) => c.type === 'tool_use');
+        const toolUse = response.content.find((content) => content.type === 'tool_use');
         if (!toolUse || toolUse.type !== 'tool_use') {
             throw new Error('LLM did not call the expected tool');
         }
@@ -495,84 +506,81 @@ export class CampaignSetupService {
     private async persistWorldSeed(campaign: Campaign, seed: WorldSeedPayload): Promise<void> {
         await this.orm.em.transactional(async (em) => {
             // Stage 1: Create and flush locations + maps to get IDs
-            const locations = seed.locations.map((loc) =>
-                em.create(Location, {
-                    campaignId: campaign.id,
-                    name: loc.name,
-                    description: loc.description,
-                    currentState: loc.currentState ?? null,
-                    coordinates: loc.coordinates ?? null,
-                    connectedLocationIds: [] as number[], // populated after IDs are known
-                    recentEvents: [],
-                }),
-            );
+            const locations = seed.locations.map((loc) => em.create(Location, {
+                campaignId: campaign.id,
+                name: loc.name,
+                description: loc.description,
+                currentState: loc.currentState ?? null,
+                coordinates: loc.coordinates ?? null,
+                // populated after IDs are known
+                connectedLocationIds: [] as number[],
+                recentEvents: [],
+            }));
 
-            const maps = seed.maps.map((m) =>
-                em.create(Map, {
-                    campaignId: campaign.id,
-                    name: m.name,
-                    description: m.description ?? null,
-                    scale: m.scale ?? null,
-                }),
-            );
+            const maps = seed.maps.map((mapSeed) => em.create(Map, {
+                campaignId: campaign.id,
+                name: mapSeed.name,
+                description: mapSeed.description ?? null,
+                scale: mapSeed.scale ?? null,
+            }));
 
-            await em.flush(); // locations and maps now have IDs
+            // locations and maps now have IDs
+            await em.flush();
 
             // Resolve connected location IDs now that we have real IDs
-            seed.locations.forEach((loc, idx) => {
-                const location = locations[idx]!;
+            for (const [locationIndex, loc] of seed.locations.entries()) {
+                const location = locations[locationIndex]!;
                 location.connectedLocationIds = (loc.connectedLocationIndexes ?? [])
-                    .map((i) => locations[i]?.id)
+                    .map((connIndex) => locations[connIndex]?.id)
                     .filter((id): id is number => id !== undefined);
-            });
+            }
 
             // Stage 2: Map-location join rows
-            seed.maps.forEach((mapSeed, mapIdx) => {
-                mapSeed.locationIndexes.forEach((locIdx) => {
-                    const map = maps[mapIdx];
-                    const location = locations[locIdx];
+            for (const [mapIndex, mapSeed] of seed.maps.entries()) {
+                for (const locIndex of mapSeed.locationIndexes) {
+                    const map = maps[mapIndex];
+                    const location = locations[locIndex];
                     if (map && location) {
                         em.create(MapLocation, { mapId: map.id, locationId: location.id });
                     }
-                });
-            });
+                }
+            }
 
             // Stage 3: Factions
-            seed.factions.forEach((f) => {
+            for (const faction of seed.factions) {
                 em.create(Faction, {
                     campaignId: campaign.id,
-                    name: f.name,
-                    goals: f.goals ?? null,
-                    powerLevel: f.powerLevel ?? null,
-                    playerDisposition: f.playerDisposition ?? null,
-                    territory: f.territory ?? null,
+                    name: faction.name,
+                    goals: faction.goals ?? null,
+                    powerLevel: faction.powerLevel ?? null,
+                    playerDisposition: faction.playerDisposition ?? null,
+                    territory: faction.territory ?? null,
                 });
-            });
+            }
 
             // Stage 4: Create and flush NPCs to get IDs for relationships
-            const npcs = seed.npcs.map((n) =>
-                em.create(Npc, {
-                    campaignId: campaign.id,
-                    name: n.name,
-                    description: n.description ?? null,
-                    profession: n.profession ?? null,
-                    coreMotivation: n.coreMotivation ?? null,
-                    personalityTraits: n.personalityTraits ?? [],
-                    speechStyle: n.speechStyle ?? null,
-                    disposition: n.disposition ?? null,
-                    currentLocationId: n.currentLocationIndex != null
-                        ? (locations[n.currentLocationIndex]?.id ?? null)
-                        : null,
-                    hp: n.hp ?? null,
-                    maxHp: n.maxHp ?? null,
-                    agenda: n.agenda ?? null,
-                }),
-            );
+            const npcs = seed.npcs.map((npcSeed) => em.create(Npc, {
+                campaignId: campaign.id,
+                name: npcSeed.name,
+                description: npcSeed.description ?? null,
+                profession: npcSeed.profession ?? null,
+                coreMotivation: npcSeed.coreMotivation ?? null,
+                personalityTraits: npcSeed.personalityTraits ?? [],
+                speechStyle: npcSeed.speechStyle ?? null,
+                disposition: npcSeed.disposition ?? null,
+                currentLocationId: npcSeed.currentLocationIndex !== null && npcSeed.currentLocationIndex !== undefined
+                    ? (locations[npcSeed.currentLocationIndex]?.id ?? null)
+                    : null,
+                hp: npcSeed.hp ?? null,
+                maxHp: npcSeed.maxHp ?? null,
+                agenda: npcSeed.agenda ?? null,
+            }));
 
-            await em.flush(); // NPCs now have IDs
+            // NPCs now have IDs
+            await em.flush();
 
             // Stage 5: NPC relationships
-            (seed.npcRelationships ?? []).forEach((rel) => {
+            for (const rel of (seed.npcRelationships ?? [])) {
                 const source = npcs[rel.sourceIndex];
                 const target = npcs[rel.targetIndex];
                 if (source && target) {
@@ -584,10 +592,10 @@ export class CampaignSetupService {
                         disposition: rel.disposition ?? null,
                     });
                 }
-            });
+            }
 
             // Stage 6: NPC items
-            (seed.npcItems ?? []).forEach((item) => {
+            for (const item of (seed.npcItems ?? [])) {
                 const npc = npcs[item.npcIndex];
                 if (npc) {
                     em.create(NpcItem, {
@@ -597,21 +605,19 @@ export class CampaignSetupService {
                         merchantPrice: item.merchantPrice ?? null,
                     });
                 }
-            });
+            }
 
             // Stage 7: World events
-            const worldEvents = seed.worldEvents.map((e) =>
-                em.create(WorldEvent, {
-                    campaignId: campaign.id,
-                    description: e.description,
-                    locationId: e.locationIndex != null
-                        ? (locations[e.locationIndex]?.id ?? null)
-                        : null,
-                    deadlineInGameDate: e.deadlineInGameDate ?? null,
-                    source: WorldEventSource.SETUP,
-                    status: WorldEventStatus.ACTIVE,
-                }),
-            );
+            const worldEvents = seed.worldEvents.map((worldEvent) => em.create(WorldEvent, {
+                campaignId: campaign.id,
+                description: worldEvent.description,
+                locationId: worldEvent.locationIndex !== null && worldEvent.locationIndex !== undefined
+                    ? (locations[worldEvent.locationIndex]?.id ?? null)
+                    : null,
+                deadlineInGameDate: worldEvent.deadlineInGameDate ?? null,
+                source: WorldEventSource.SETUP,
+                status: WorldEventStatus.ACTIVE,
+            }));
 
             // Stage 8: Starting location discovery
             const startingLocation = locations[seed.startingLocationIndex] ?? locations[0]!;
@@ -622,8 +628,10 @@ export class CampaignSetupService {
             });
 
             // Stage 9: Campaign pointer fields and advancement
-            const antagonistNpc = npcs.find((_, idx) => seed.npcs[idx]?.isAntagonist) ?? null;
-            const antagonistEvent = worldEvents.find((_, idx) => seed.worldEvents[idx]?.isAntagonistEvent) ?? null;
+            const antagonistNpc = npcs.find((_npc, npcIndex) => seed.npcs[npcIndex]?.isAntagonist) ?? null;
+            const antagonistEvent = worldEvents.find(
+                (_event, eventIndex) => seed.worldEvents[eventIndex]?.isAntagonistEvent,
+            ) ?? null;
 
             campaign.currentLocationId = startingLocation.id;
             campaign.antagonistNpcId = antagonistNpc?.id ?? null;

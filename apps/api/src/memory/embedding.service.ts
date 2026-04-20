@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import VoyageAI from 'voyageai';
+import { VoyageAIClient } from 'voyageai';
 
 export const VOYAGE_CLIENT = Symbol('VOYAGE_CLIENT');
 
-type VoyageClient = Pick<VoyageAI, 'embed'>;
+type VoyageClient = Pick<VoyageAIClient, 'embed'>;
 
 /**
  * Generates text embeddings via the Voyage AI SDK (`voyage-3-large` model).
@@ -21,7 +21,7 @@ export class EmbeddingService {
                 input: [text],
                 model: 'voyage-3-large',
             });
-            return (result.data[0] as { embedding: number[] } | undefined)?.embedding ?? null;
+            return (result.data?.[0] as { embedding: number[] } | undefined)?.embedding ?? null;
         } catch (error) {
             this.logger.error('Voyage AI embedding failed', error);
             return null;

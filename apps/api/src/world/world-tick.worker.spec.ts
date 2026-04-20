@@ -1,17 +1,17 @@
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
 import {
-    beforeEach, describe, expect, it, vi,
+    describe, expect, it, vi,
 } from 'vitest';
 
 import { Campaign } from '../campaign/entities/campaign.entity';
 import { Npc } from './entities/npc.entity';
-import { NpcRelationship } from './entities/npc-relationship.entity';
-import { WorldEvent } from './entities/world-event.entity';
 import { WorldTickWorker } from './world-tick.worker';
-import { NpcRelationshipType, WorldEventSource, WorldEventStatus } from './world.enums';
+import { WorldEventSource, WorldEventStatus } from './world.enums';
 
-function makeRedis(overrides: Record<string, unknown> = {}): { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> } {
+function makeRedis(
+    overrides: Record<string, unknown> = {},
+): { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> } {
     return {
         set: vi.fn().mockResolvedValue('OK'),
         del: vi.fn().mockResolvedValue(1),
@@ -61,19 +61,19 @@ function makeConfig(overrides: Record<string, unknown> = {}): { get: ReturnType<
 }
 
 function makeWorker(overrides: Partial<{
-    em: Record<string, ReturnType<typeof vi.fn>>;
-    worldService: Record<string, ReturnType<typeof vi.fn>>;
-    memoryService: Record<string, ReturnType<typeof vi.fn>>;
-    redis: { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> };
-    anthropic: { messages: { create: ReturnType<typeof vi.fn> } };
-    config: { get: ReturnType<typeof vi.fn> };
+    em: Record<string, ReturnType<typeof vi.fn>>
+    worldService: Record<string, ReturnType<typeof vi.fn>>
+    memoryService: Record<string, ReturnType<typeof vi.fn>>
+    redis: { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> }
+    anthropic: { messages: { create: ReturnType<typeof vi.fn> } }
+    config: { get: ReturnType<typeof vi.fn> }
 }> = {}): {
-    worker: WorldTickWorker;
-    em: Record<string, ReturnType<typeof vi.fn>>;
-    redis: { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> };
-    worldService: Record<string, ReturnType<typeof vi.fn>>;
-    memoryService: Record<string, ReturnType<typeof vi.fn>>;
-    anthropic: { messages: { create: ReturnType<typeof vi.fn> } };
+    worker: WorldTickWorker
+    em: Record<string, ReturnType<typeof vi.fn>>
+    redis: { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> }
+    worldService: Record<string, ReturnType<typeof vi.fn>>
+    memoryService: Record<string, ReturnType<typeof vi.fn>>
+    anthropic: { messages: { create: ReturnType<typeof vi.fn> } }
 } {
     const em = overrides.em ?? makeEm();
     const worldService = overrides.worldService ?? makeWorldService();
@@ -83,8 +83,11 @@ function makeWorker(overrides: Partial<{
     const config = overrides.config ?? makeConfig();
 
     const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
-    em.findOne = vi.fn().mockImplementation((entity: unknown, where: unknown) => {
-        if (entity === Campaign) return Promise.resolve(campaign);
+    em.findOne = vi.fn().mockImplementation((entity: unknown) => {
+        if (entity === Campaign) {
+            return Promise.resolve(campaign);
+        }
+
         return Promise.resolve(null);
     });
 
@@ -122,7 +125,8 @@ describe('WorldTickWorker', () => {
 
         it('exits with no-op result when lock is already held', async () => {
             const { worker, redis, worldService } = makeWorker();
-            redis.set.mockResolvedValue(null); // null means lock already held
+            // null means lock already held
+            redis.set.mockResolvedValue(null);
 
             const result = await worker.process({ data: { campaignId: 42 } } as never);
 
@@ -172,12 +176,15 @@ describe('WorldTickWorker', () => {
             });
 
             anthropic.messages.create.mockResolvedValue({
-                content: [{ type: 'text', text: JSON.stringify({
-                    agenda: 'updated',
-                    nextTickInGameDay: 10,
-                    newLocationId: null,
-                    departureDescription: null,
-                }) }],
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        agenda: 'updated',
+                        nextTickInGameDay: 10,
+                        newLocationId: null,
+                        departureDescription: null,
+                    }),
+                }],
             });
 
             vi.spyOn(worker['em'], 'find').mockResolvedValue([]);
@@ -200,12 +207,15 @@ describe('WorldTickWorker', () => {
             anthropic.messages.create.mockImplementation(async () => {
                 callOrder.push(Date.now());
                 return {
-                    content: [{ type: 'text', text: JSON.stringify({
-                        agenda: 'updated',
-                        nextTickInGameDay: 10,
-                        newLocationId: null,
-                        departureDescription: null,
-                    }) }],
+                    content: [{
+                        type: 'text',
+                        text: JSON.stringify({
+                            agenda: 'updated',
+                            nextTickInGameDay: 10,
+                            newLocationId: null,
+                            departureDescription: null,
+                        }),
+                    }],
                 };
             });
 
@@ -229,13 +239,20 @@ describe('WorldTickWorker departure events', () => {
 
         const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
         const npc = Object.assign(new Npc(), {
-            id: 10, campaignId: 1, currentLocationId: 100, personalityTraits: [], agenda: 'travel',
+            id: 10,
+            campaignId: 1,
+            currentLocationId: 100,
+            personalityTraits: [],
+            agenda: 'travel',
             nextTickInGameDay: 3,
         });
 
         const createdEvents: unknown[] = [];
         em.findOne = vi.fn().mockImplementation((entity: unknown) => {
-            if (entity === Campaign) return Promise.resolve(campaign);
+            if (entity === Campaign) {
+                return Promise.resolve(campaign);
+            }
+
             return Promise.resolve(null);
         });
         em.find = vi.fn().mockResolvedValue([]);
@@ -248,12 +265,15 @@ describe('WorldTickWorker departure events', () => {
         worldService.getConversationPairs = vi.fn().mockResolvedValue([]);
 
         anthropic.messages.create.mockResolvedValue({
-            content: [{ type: 'text', text: JSON.stringify({
-                agenda: 'arrived at new place',
-                nextTickInGameDay: 10,
-                newLocationId: 200,
-                departureDescription: 'Gareth headed south to the forest.',
-            }) }],
+            content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    agenda: 'arrived at new place',
+                    nextTickInGameDay: 10,
+                    newLocationId: 200,
+                    departureDescription: 'Gareth headed south to the forest.',
+                }),
+            }],
         });
 
         const worker = new WorldTickWorker(
@@ -269,11 +289,10 @@ describe('WorldTickWorker departure events', () => {
         await worker.process({ data: { campaignId: 1 } } as never);
 
         const departureEvent = createdEvents.find(
-            (e: unknown) =>
-                e != null &&
-                typeof e === 'object' &&
-                'source' in e &&
-                (e as { source: string }).source === WorldEventSource.WORLD_TICK,
+            (event: unknown) => event !== null
+                && typeof event === 'object'
+                && 'source' in (event as object)
+                && (event as { source: string }).source === WorldEventSource.WORLD_TICK,
         );
         expect(departureEvent).toBeDefined();
         expect((departureEvent as { locationId: number }).locationId).toBe(100);
@@ -290,13 +309,20 @@ describe('WorldTickWorker departure events', () => {
 
         const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
         const npc = Object.assign(new Npc(), {
-            id: 10, campaignId: 1, currentLocationId: 100, personalityTraits: [], agenda: 'guard post',
+            id: 10,
+            campaignId: 1,
+            currentLocationId: 100,
+            personalityTraits: [],
+            agenda: 'guard post',
             nextTickInGameDay: 3,
         });
 
         const createdEvents: unknown[] = [];
         em.findOne = vi.fn().mockImplementation((entity: unknown) => {
-            if (entity === Campaign) return Promise.resolve(campaign);
+            if (entity === Campaign) {
+                return Promise.resolve(campaign);
+            }
+
             return Promise.resolve(null);
         });
         em.find = vi.fn().mockResolvedValue([]);
@@ -309,12 +335,15 @@ describe('WorldTickWorker departure events', () => {
         worldService.getConversationPairs = vi.fn().mockResolvedValue([]);
 
         anthropic.messages.create.mockResolvedValue({
-            content: [{ type: 'text', text: JSON.stringify({
-                agenda: 'continued guarding',
-                nextTickInGameDay: 8,
-                newLocationId: null,
-                departureDescription: null,
-            }) }],
+            content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    agenda: 'continued guarding',
+                    nextTickInGameDay: 8,
+                    newLocationId: null,
+                    departureDescription: null,
+                }),
+            }],
         });
 
         const worker = new WorldTickWorker(
@@ -330,11 +359,10 @@ describe('WorldTickWorker departure events', () => {
         await worker.process({ data: { campaignId: 1 } } as never);
 
         const worldTickEvents = createdEvents.filter(
-            (e: unknown) =>
-                e != null &&
-                typeof e === 'object' &&
-                'source' in e &&
-                (e as { source: string }).source === WorldEventSource.WORLD_TICK,
+            (event: unknown) => event !== null
+                && typeof event === 'object'
+                && 'source' in (event as object)
+                && (event as { source: string }).source === WorldEventSource.WORLD_TICK,
         );
         expect(worldTickEvents).toHaveLength(0);
     });
@@ -369,7 +397,10 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
 
         const campaign = Object.assign(new Campaign(), { id: 1, inGameDate: 'Day 5', inGameDay: 5 });
         em.findOne = vi.fn().mockImplementation((entity: unknown) => {
-            if (entity === Campaign) return Promise.resolve(campaign);
+            if (entity === Campaign) {
+                return Promise.resolve(campaign);
+            }
+
             return Promise.resolve(null);
         });
         em.find = vi.fn().mockResolvedValue([]);
@@ -386,7 +417,9 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
                 {
                     type: 'tool_use',
                     name: 'trigger_catastrophe',
+                    /* eslint-disable @typescript-eslint/naming-convention */
                     input: { description: 'A great flood engulfs the valley.', location_id: 42 },
+                    /* eslint-enable @typescript-eslint/naming-convention */
                 },
             ],
         });
@@ -404,11 +437,10 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
         await worker.rollCatastrophe(1, 'Day 5');
 
         const catastropheEvent = createdEvents.find(
-            (e: unknown) =>
-                e != null &&
-                typeof e === 'object' &&
-                'source' in e &&
-                (e as { source: string }).source === WorldEventSource.CATASTROPHE,
+            (event: unknown) => event !== null
+                && typeof event === 'object'
+                && 'source' in (event as object)
+                && (event as { source: string }).source === WorldEventSource.CATASTROPHE,
         );
         expect(catastropheEvent).toBeDefined();
         expect((catastropheEvent as { locationId: number }).locationId).toBe(42);
@@ -449,11 +481,10 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
         await worker.rollCatastrophe(1, 'Day 5');
 
         const catastropheEvent = createdEvents.find(
-            (e: unknown) =>
-                e != null &&
-                typeof e === 'object' &&
-                'source' in e &&
-                (e as { source: string }).source === WorldEventSource.CATASTROPHE,
+            (event: unknown) => event !== null
+                && typeof event === 'object'
+                && 'source' in (event as object)
+                && (event as { source: string }).source === WorldEventSource.CATASTROPHE,
         );
         expect(catastropheEvent).toBeDefined();
         expect((catastropheEvent as { locationId: unknown }).locationId).toBeNull();
@@ -467,9 +498,15 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         const targetNpc = Object.assign(new Npc(), { id: 2, agenda: 'old agenda', lastConversedAt: null });
 
         em.findOne = vi.fn().mockImplementation((_entity: unknown, where: unknown) => {
-            const w = where as { id?: number; sourceNpcId?: number; targetNpcId?: number };
-            if (w.id === 1) return Promise.resolve(sourceNpc);
-            if (w.id === 2) return Promise.resolve(targetNpc);
+            const whereClause = where as { id?: number; sourceNpcId?: number; targetNpcId?: number };
+            if (whereClause.id === 1) {
+                return Promise.resolve(sourceNpc);
+            }
+
+            if (whereClause.id === 2) {
+                return Promise.resolve(targetNpc);
+            }
+
             return Promise.resolve(null);
         });
         em.find = vi.fn().mockResolvedValue([]);
@@ -516,9 +553,15 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         const targetNpc = Object.assign(new Npc(), { id: 2, agenda: 'original', lastConversedAt: null });
 
         em.findOne = vi.fn().mockImplementation((_entity: unknown, where: unknown) => {
-            const w = where as { id?: number };
-            if (w.id === 1) return Promise.resolve(sourceNpc);
-            if (w.id === 2) return Promise.resolve(targetNpc);
+            const whereClause = where as { id?: number };
+            if (whereClause.id === 1) {
+                return Promise.resolve(sourceNpc);
+            }
+
+            if (whereClause.id === 2) {
+                return Promise.resolve(targetNpc);
+            }
+
             return Promise.resolve(null);
         });
 
@@ -562,9 +605,15 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         const agendaNpc = Object.assign(new Npc(), { id: 3, agenda: 'patrol', nextTickInGameDay: 8 });
 
         em.findOne = vi.fn().mockImplementation((_entity: unknown, where: unknown) => {
-            const w = where as { id?: number };
-            if (w.id === 1) return Promise.resolve(npc1);
-            if (w.id === 2) return Promise.resolve(npc2);
+            const whereClause = where as { id?: number };
+            if (whereClause.id === 1) {
+                return Promise.resolve(npc1);
+            }
+
+            if (whereClause.id === 2) {
+                return Promise.resolve(npc2);
+            }
+
             return Promise.resolve(null);
         });
         em.create = vi.fn().mockReturnValue({});
@@ -582,7 +631,9 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         await worker.applyOutcomes(
             {
                 agendaOutcomes: [
-                    { npcId: 3, agenda: 'updated patrol', nextTickInGameDay: 12, newLocationId: null, departureDescription: null },
+                    {
+                        npcId: 3, agenda: 'updated patrol', nextTickInGameDay: 12, newLocationId: null, departureDescription: null,
+                    },
                 ],
                 conversationOutcomes: [
                     {

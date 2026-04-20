@@ -15,7 +15,7 @@ const VALID_SCENE_TYPES = new Set<string>(Object.values(SceneType));
  * web UI can react immediately.
  */
 @Injectable()
-export class SetSceneTypeHandler implements ToolHandler, OnModuleInit {
+export class SetSceneTypeHandler implements OnModuleInit, ToolHandler {
     readonly toolName = 'set_scene_type';
 
     constructor(

@@ -1,16 +1,16 @@
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import {
     Args, ID, Mutation, Query, Resolver, Subscription,
 } from '@nestjs/graphql';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 import { type User } from '../auth/entities/user.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
+import { type DmOrchestrator } from './dm-orchestrator.service.js';
 import { DmStreamChunk } from './dto/dm-stream-chunk.dto.js';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';
 import { SessionService } from './session.service.js';
 import { StreamPublisher } from './stream-publisher.service.js';
-import { type DmOrchestrator } from './dm-orchestrator.service.js';
 
 /**
  * GraphQL resolver for session lifecycle, transcript queries, player input mutation,

@@ -1,6 +1,6 @@
 import { ArgsType } from '@nestjs/graphql';
 
-import { ConnectionArgs } from '../../graphql/relay/index.js';
+import { ConnectionArgs } from '../../graphql/relay';
 
 @ArgsType()
 export class CampaignsConnectionArgs extends ConnectionArgs {}

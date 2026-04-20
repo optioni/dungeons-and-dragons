@@ -9,11 +9,11 @@ import {
 
 import { User } from '../auth/entities/user.entity';
 import { Campaign } from '../campaign/entities/campaign.entity';
-import { Character } from '../character/entities/character.entity';
 import { CharacterItem } from '../character/entities/character-item.entity';
+import { Character } from '../character/entities/character.entity';
 import { Item } from '../character/entities/item.entity';
-import { Npc } from '../world/entities/npc.entity';
 import { Location } from '../world/entities/location.entity';
+import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
 import { QuestEntity } from './entities/quest-entity.entity';
 import { QuestObjective } from './entities/quest-objective.entity';
@@ -27,9 +27,17 @@ async function createOrm(): Promise<MikroORM> {
         defineConfig({
             clientUrl: DB_URL,
             entities: [
-                User, Campaign, Character, CharacterItem, Item,
-                Npc, Location, WorldEvent,
-                Quest, QuestObjective, QuestEntity,
+                User,
+                Campaign,
+                Character,
+                CharacterItem,
+                Item,
+                Npc,
+                Location,
+                WorldEvent,
+                Quest,
+                QuestObjective,
+                QuestEntity,
             ],
         }),
     );
@@ -62,12 +70,14 @@ describe('Quest GraphQL — integration', () => {
 
     afterEach(async () => {
         const em = orm.em.fork();
-        if (createdQuestIds.length > 0) {
-            await em.nativeDelete(QuestObjective, { quest: { id: { $in: createdQuestIds } } });
-            await em.nativeDelete(QuestEntity, { quest: { id: { $in: createdQuestIds } } });
-            await em.nativeDelete(Quest, { id: { $in: createdQuestIds } });
-            createdQuestIds.length = 0;
+        const idsToDelete = [...createdQuestIds];
+        if (idsToDelete.length > 0) {
+            await em.nativeDelete(QuestObjective, { quest: { id: { $in: idsToDelete } } });
+            await em.nativeDelete(QuestEntity, { quest: { id: { $in: idsToDelete } } });
+            await em.nativeDelete(Quest, { id: { $in: idsToDelete } });
+            createdQuestIds.splice(0);
         }
+
         await em.nativeDelete(Campaign, { id: { $in: [testCampaign.id, otherCampaign.id] } });
         await em.nativeDelete(User, { id: { $in: [testUser.id, otherUser.id] } });
         await orm.close();
@@ -98,6 +108,7 @@ describe('Quest GraphQL — integration', () => {
 
         // Query quests for testCampaign only
         const queryEm = orm.em.fork();
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const quests = await queryEm.find(Quest, { campaignId: testCampaign.id });
         expect(quests.length).toBe(1);
         expect(quests[0].title).toBe('Owner Quest');
@@ -123,10 +134,12 @@ describe('Quest GraphQL — integration', () => {
         createdQuestIds.push(activeQuest.id, completedQuest.id);
 
         const queryEm = orm.em.fork();
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const activeOnly = await queryEm.find(Quest, { campaignId: testCampaign.id, status: QuestStatus.ACTIVE });
         expect(activeOnly.length).toBe(1);
         expect(activeOnly[0].title).toBe('Active Quest');
 
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const completedOnly = await queryEm.find(Quest, { campaignId: testCampaign.id, status: QuestStatus.COMPLETED });
         expect(completedOnly.length).toBe(1);
         expect(completedOnly[0].title).toBe('Completed Quest');
@@ -147,7 +160,8 @@ describe('Quest GraphQL — integration', () => {
             }).toThrow(ForbiddenException);
         }
 
-        void campaignRepo; // satisfy linting
+        // satisfy linting
+        void campaignRepo;
     });
 
     it('persists objectives and returns them ordered', async () => {
@@ -162,10 +176,14 @@ describe('Quest GraphQL — integration', () => {
         await em.flush();
         createdQuestIds.push(quest.id);
 
-        const obj1 = em.create(QuestObjective, { quest, questId: quest.id, description: 'Step 2', type: QuestObjectiveType.MANUAL, order: 1 });
-        const obj2 = em.create(QuestObjective, { quest, questId: quest.id, description: 'Step 1', type: QuestObjectiveType.MANUAL, order: 0 });
-        em.persist(obj1);
-        em.persist(obj2);
+        const object1 = em.create(QuestObjective, {
+            quest, questId: quest.id, description: 'Step 2', type: QuestObjectiveType.MANUAL, order: 1,
+        });
+        const object2 = em.create(QuestObjective, {
+            quest, questId: quest.id, description: 'Step 1', type: QuestObjectiveType.MANUAL, order: 0,
+        });
+        em.persist(object1);
+        em.persist(object2);
         await em.flush();
 
         const queryEm = orm.em.fork();

@@ -1,64 +1,66 @@
+import type Anthropic from '@anthropic-ai/sdk';
+import type Redis from 'ioredis';
+
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type Anthropic from '@anthropic-ai/sdk';
 import { type Job } from 'bullmq';
-import type Redis from 'ioredis';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { ANTHROPIC_CLIENT, BACKGROUND_MODEL, MemoryService } from '../memory/memory.service.js';
 import { REDIS_CLIENT } from '../queue/queue.module.js';
-import { Npc } from './entities/npc.entity.js';
-import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { NpcItem } from './entities/npc-item.entity.js';
+import { NpcRelationship } from './entities/npc-relationship.entity.js';
+import { Npc } from './entities/npc.entity.js';
 import { WorldEvent } from './entities/world-event.entity.js';
-import { WorldService } from './world.service.js';
 import { NpcRelationshipType, WorldEventSource, WorldEventStatus } from './world.enums.js';
+import { WorldService } from './world.service.js';
 
 interface WorldTickJobPayload {
-    campaignId: number;
+    campaignId: number
 }
 
 interface AgendaOutcome {
-    npcId: number;
-    agenda: string;
-    nextTickInGameDay: number;
-    newLocationId?: number | null;
-    departureDescription?: string | null;
+    npcId: number
+    agenda: string
+    nextTickInGameDay: number
+    newLocationId?: number | null
+    departureDescription?: string | null
 }
 
 interface ConversationOutcome {
-    sourceNpcId: number;
-    targetNpcId: number;
+    sourceNpcId: number
+    targetNpcId: number
     relationshipChange?: {
-        type: NpcRelationshipType;
-        description: string;
-    } | null;
+        type: NpcRelationshipType
+        description: string
+    } | null
     itemExchanged?: {
-        npcItemId: number;
-        toNpcId: number;
-    } | null;
-    newAgendaSource?: string | null;
-    newAgendaTarget?: string | null;
+        npcItemId: number
+        toNpcId: number
+    } | null
+    newAgendaSource?: string | null
+    newAgendaTarget?: string | null
 }
 
 interface TickOutcomeBatch {
-    agendaOutcomes: AgendaOutcome[];
-    conversationOutcomes: ConversationOutcome[];
+    agendaOutcomes: AgendaOutcome[]
+    conversationOutcomes: ConversationOutcome[]
     departureEvents: Array<{
-        campaignId: number;
-        locationId: number;
-        description: string;
-    }>;
+        campaignId: number
+        locationId: number
+        description: string
+    }>
     catastropheEvent?: {
-        campaignId: number;
-        locationId?: number | null;
-        description: string;
-    } | null;
+        campaignId: number
+        locationId?: number | null
+        description: string
+    } | null
 }
 
-const LOCK_TTL_SECONDS = 600; // 10 minutes
+// 10 minutes
+const LOCK_TTL_SECONDS = 600;
 
 /**
  * BullMQ worker for the world-tick queue. Processes NPC agendas, conversations,
@@ -128,9 +130,9 @@ export class WorldTickWorker extends WorkerHost {
             batch.agendaOutcomes = agendaOutcomes;
 
             for (const outcome of agendaOutcomes) {
-                if (outcome.newLocationId != null && outcome.departureDescription) {
-                    const npc = dueNpcs.find((n) => n.id === outcome.npcId);
-                    if (npc?.currentLocationId != null) {
+                if (outcome.newLocationId !== null && outcome.departureDescription) {
+                    const npc = dueNpcs.find((dueNpc) => dueNpc.id === outcome.npcId);
+                    if (npc && npc.currentLocationId !== null) {
                         batch.departureEvents.push({
                             campaignId,
                             locationId: npc.currentLocationId,
@@ -153,10 +155,14 @@ export class WorldTickWorker extends WorkerHost {
         // Step 4: Catastrophe roll
         await this.rollCatastrophe(campaignId, inGameDate);
 
-        // Step 5: Diary entry (fire-and-forget)
-        this.memoryService.writeDiaryEntry(campaignId, inGameDate, []).catch((err: unknown) => {
-            this.logger.error(`Diary write failed for campaign ${campaignId}`, err);
-        });
+        // Step 5: Diary entry (fire-and-forget, errors are non-fatal)
+        void (async () => {
+            try {
+                await this.memoryService.writeDiaryEntry(campaignId, inGameDate, []);
+            } catch (error: unknown) {
+                this.logger.error(`Diary write failed for campaign ${campaignId}`, error);
+            }
+        })();
 
         return { status: 'ok' };
     }
@@ -184,7 +190,7 @@ export class WorldTickWorker extends WorkerHost {
         const parallelResults = await Promise.all(
             independentGroups.flat().map((npc) => this.evaluateSingleNpcAgenda(npc, inGameDay, campaignId)),
         );
-        outcomes.push(...parallelResults.filter((r): r is AgendaOutcome => r !== null));
+        outcomes.push(...parallelResults.filter((result): result is AgendaOutcome => result !== null));
 
         // Sequential for co-located NPCs
         for (const group of coLocatedGroups) {
@@ -212,9 +218,10 @@ export class WorldTickWorker extends WorkerHost {
                 { fields: ['id', 'name'] as never },
             );
             const locationList = locations
-                .map((l: { id: number; name: string }) => `${l.id}: ${l.name}`)
+                .map((loc: { id: number; name: string }) => `${loc.id}: ${loc.name}`)
                 .join(', ');
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 400,
@@ -242,15 +249,18 @@ Respond with JSON:
                     },
                 ],
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             const text = response.content.find((b) => b.type === 'text');
-            if (!text || text.type !== 'text') return null;
+            if (!text || text.type !== 'text') {
+                return null;
+            }
 
             const parsed = JSON.parse(text.text) as {
-                agenda: string;
-                nextTickInGameDay: number;
-                newLocationId?: number | null;
-                departureDescription?: string | null;
+                agenda: string
+                nextTickInGameDay: number
+                newLocationId?: number | null
+                departureDescription?: string | null
             };
 
             return {
@@ -297,8 +307,11 @@ Respond with JSON:
                 this.em.findOne(Npc, { id: rel.targetNpcId }),
             ]);
 
-            if (!sourceNpc || !targetNpc) return null;
+            if (!sourceNpc || !targetNpc) {
+                return null;
+            }
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 600,
@@ -323,15 +336,18 @@ Respond with JSON:
                     },
                 ],
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             const text = response.content.find((b) => b.type === 'text');
-            if (!text || text.type !== 'text') return null;
+            if (!text || text.type !== 'text') {
+                return null;
+            }
 
             const parsed = JSON.parse(text.text) as {
-                relationshipChange?: { type: NpcRelationshipType; description: string } | null;
-                itemExchanged?: { npcItemId: number; toNpcId: number } | null;
-                newAgendaSource?: string | null;
-                newAgendaTarget?: string | null;
+                relationshipChange?: { type: NpcRelationshipType; description: string } | null
+                itemExchanged?: { npcItemId: number; toNpcId: number } | null
+                newAgendaSource?: string | null
+                newAgendaTarget?: string | null
             };
 
             return {
@@ -353,27 +369,29 @@ Respond with JSON:
      * Includes NPC field updates, WorldEvent rows, and NpcRelationship changes.
      */
     async applyOutcomes(batch: TickOutcomeBatch, dueNpcs: Npc[]): Promise<void> {
-        const npcMap = new Map(dueNpcs.map((n) => [n.id, n]));
+        const npcMap = new Map(dueNpcs.map((npc) => [npc.id, npc]));
 
         // Apply agenda outcomes
         for (const outcome of batch.agendaOutcomes) {
             const npc = npcMap.get(outcome.npcId);
-            if (!npc) continue;
+            if (!npc) {
+                continue;
+            }
 
             npc.agenda = outcome.agenda;
             npc.nextTickInGameDay = outcome.nextTickInGameDay;
 
-            if (outcome.newLocationId != null) {
-                npc.currentLocationId = outcome.newLocationId;
+            if (outcome.newLocationId !== null) {
+                npc.currentLocationId = outcome.newLocationId ?? null;
             }
         }
 
         // Create departure WorldEvent rows
-        for (const evt of batch.departureEvents) {
+        for (const event of batch.departureEvents) {
             this.em.create(WorldEvent, {
-                campaignId: evt.campaignId,
-                locationId: evt.locationId,
-                description: evt.description,
+                campaignId: event.campaignId,
+                locationId: event.locationId,
+                description: event.description,
                 source: WorldEventSource.WORLD_TICK,
                 status: WorldEventStatus.ACTIVE,
             });
@@ -389,11 +407,16 @@ Respond with JSON:
 
             if (sourceNpc) {
                 sourceNpc.lastConversedAt = conversedAt;
-                if (conv.newAgendaSource) sourceNpc.agenda = conv.newAgendaSource;
+                if (conv.newAgendaSource) {
+                    sourceNpc.agenda = conv.newAgendaSource;
+                }
             }
+
             if (targetNpc) {
                 targetNpc.lastConversedAt = conversedAt;
-                if (conv.newAgendaTarget) targetNpc.agenda = conv.newAgendaTarget;
+                if (conv.newAgendaTarget) {
+                    targetNpc.agenda = conv.newAgendaTarget;
+                }
             }
 
             if (conv.relationshipChange) {
@@ -406,9 +429,12 @@ Respond with JSON:
                     rel.description = conv.relationshipChange.description;
                 }
             }
+
             if (conv.itemExchanged) {
                 const item = await this.em.findOne(NpcItem, { id: conv.itemExchanged.npcItemId });
-                if (item) item.npcId = conv.itemExchanged.toNpcId;
+                if (item) {
+                    item.npcId = conv.itemExchanged.toNpcId;
+                }
             }
         }
 
@@ -440,9 +466,10 @@ Respond with JSON:
             );
 
             const recentSummary = recentEvents
-                .map((e) => `- ${e.description}`)
+                .map((event) => `- ${event.description}`)
                 .join('\n') || 'No recent events.';
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 300,
@@ -478,16 +505,20 @@ With approximately 5% probability, trigger a catastrophic world event using the 
                     },
                 ],
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             const toolUse = response.content.find((b) => b.type === 'tool_use');
             if (!toolUse || toolUse.type !== 'tool_use' || toolUse.name !== 'trigger_catastrophe') {
                 return;
             }
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const input = toolUse.input as { description: string; location_id?: number };
+            const catastropheLocationId = input.location_id ?? null;
+            /* eslint-enable @typescript-eslint/naming-convention */
             this.em.create(WorldEvent, {
                 campaignId,
-                locationId: input.location_id ?? null,
+                locationId: catastropheLocationId,
                 description: input.description,
                 source: WorldEventSource.CATASTROPHE,
                 status: WorldEventStatus.ACTIVE,
@@ -503,10 +534,11 @@ With approximately 5% probability, trigger a catastrophic world event using the 
 function groupByLocation(npcs: Npc[]): Map<string, Npc[]> {
     const map = new Map<string, Npc[]>();
     for (const npc of npcs) {
-        const key = npc.currentLocationId != null ? String(npc.currentLocationId) : `noloc-${npc.id}`;
+        const key = npc.currentLocationId === null ? `noloc-${npc.id}` : String(npc.currentLocationId);
         const group = map.get(key) ?? [];
         group.push(npc);
         map.set(key, group);
     }
+
     return map;
 }

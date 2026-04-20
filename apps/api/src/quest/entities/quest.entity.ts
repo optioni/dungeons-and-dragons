@@ -56,10 +56,10 @@ export class Quest extends BaseEntity {
     createdAt: Opt<Date> = new Date();
 
     @Field(() => [QuestObjective])
-    @OneToMany(() => QuestObjective, (o) => o.quest, { orderBy: { order: 'ASC' } })
+    @OneToMany(() => QuestObjective, (objective) => objective.quest, { orderBy: { order: 'ASC' } })
     objectives = new Collection<QuestObjective>(this);
 
     @Field(() => [QuestEntity])
-    @OneToMany(() => QuestEntity, (e) => e.quest)
+    @OneToMany(() => QuestEntity, (entity) => entity.quest)
     entities = new Collection<QuestEntity>(this);
 }

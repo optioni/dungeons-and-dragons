@@ -4,11 +4,10 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
-import { EventType, SceneType } from '../session/session.enums';
 import { GameEvent } from '../session/entities/game-event.entity';
 import { GameSession } from '../session/entities/game-session.entity';
+import { EventType, SceneType } from '../session/session.enums';
 import { ContextLoader } from './context-loader.service';
-import { PromptModuleRegistry } from './prompt-module-registry.service';
 
 function makeMockRepo(em: Record<string, ReturnType<typeof vi.fn>>): Record<string, unknown> {
     return { getEntityManager: vi.fn().mockReturnValue(em) };
@@ -27,10 +26,12 @@ function makeMockMemoryService(entries: Array<{ inGameDate: string; content: str
 }
 
 function makeEvent(overrides: Partial<GameEvent>): GameEvent {
-    const e = new GameEvent();
+    const event = new GameEvent();
     const session = Object.assign(new GameSession(), { id: 1 });
-    Object.assign(e, { id: 1, session, eventType: EventType.PLAYER_INPUT, content: {}, createdAt: new Date(), ...overrides });
-    return e;
+    Object.assign(event, {
+        id: 1, session, eventType: EventType.PLAYER_INPUT, content: {}, createdAt: new Date(), ...overrides,
+    });
+    return event;
 }
 
 describe('ContextLoader', () => {
@@ -94,7 +95,9 @@ describe('ContextLoader', () => {
         });
 
         it('returns placeholder when no lore exists', async () => {
-            em.findOneOrFail.mockResolvedValue({ id: 1, loreDocument: null, antagonistPlanState: null, inGameDate: null });
+            em.findOneOrFail.mockResolvedValue({
+                id: 1, loreDocument: null, antagonistPlanState: null, inGameDate: null,
+            });
 
             const result = await service.loadCampaignBlock(1);
 
@@ -130,6 +133,7 @@ describe('ContextLoader', () => {
         });
 
         it('formats TOOL_CALL as assistant tool_use + user tool_result pair', () => {
+            /* eslint-disable @typescript-eslint/naming-convention */
             const event = makeEvent({
                 eventType: EventType.TOOL_CALL,
                 content: {
@@ -139,6 +143,7 @@ describe('ContextLoader', () => {
                     toolResult: { success: true },
                 },
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             const messages = service.formatEventsAsMessages([event]);
 
@@ -151,9 +156,11 @@ describe('ContextLoader', () => {
             expect(assistantContent[0].name).toBe('set_scene_type');
 
             expect(messages[1].role).toBe('user');
+            /* eslint-disable @typescript-eslint/naming-convention */
             const userContent = messages[1].content as Array<{ type: string; tool_use_id: string }>;
             expect(userContent[0].type).toBe('tool_result');
             expect(userContent[0].tool_use_id).toBe('tool_abc123');
+            /* eslint-enable @typescript-eslint/naming-convention */
         });
 
         it('preserves chronological order of mixed event types', () => {
@@ -179,7 +186,15 @@ describe('ContextLoader', () => {
                 { inGameDate: 'Day 1', content: 'The adventure began.' },
             ]);
             const repo = makeMockRepo(em);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                promptRegistry as never,
+                memoryService as never,
+            );
 
             const result = await service.loadWorldBlock(1);
 
@@ -191,7 +206,15 @@ describe('ContextLoader', () => {
         it('omits diary section without error when no entries exist', async () => {
             memoryService = makeMockMemoryService([]);
             const repo = makeMockRepo(em);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                promptRegistry as never,
+                memoryService as never,
+            );
 
             const result = await service.loadWorldBlock(1);
 
@@ -202,14 +225,30 @@ describe('ContextLoader', () => {
             const repo = makeMockRepo(em);
 
             // First call: no entries
-            memoryService = makeMockMemoryService([]);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
-            const resultBefore = await service.loadWorldBlock(1);
+            const firstMemoryService = makeMockMemoryService([]);
+            const firstService = new ContextLoader(
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                promptRegistry as never,
+                firstMemoryService as never,
+            );
+            const resultBefore = await firstService.loadWorldBlock(1);
 
             // Second call: new entry added
-            memoryService = makeMockMemoryService([{ inGameDate: 'Day 1', content: 'A new diary entry.' }]);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
-            const resultAfter = await service.loadWorldBlock(1);
+            const secondMemoryService = makeMockMemoryService([{ inGameDate: 'Day 1', content: 'A new diary entry.' }]);
+            const secondService = new ContextLoader(
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                promptRegistry as never,
+                secondMemoryService as never,
+            );
+            const resultAfter = await secondService.loadWorldBlock(1);
 
             expect(resultBefore).not.toBe(resultAfter);
             expect(resultAfter).toContain('A new diary entry.');
@@ -217,12 +256,22 @@ describe('ContextLoader', () => {
 
         it('orders diary entries oldest-first for narrative continuity', async () => {
             memoryService = makeMockMemoryService([
-                { inGameDate: 'Day 3', content: 'Third day content.' }, // newest first from DB
+                // newest first from DB
+                { inGameDate: 'Day 3', content: 'Third day content.' },
                 { inGameDate: 'Day 2', content: 'Second day content.' },
-                { inGameDate: 'Day 1', content: 'First day content.' }, // oldest
+                // oldest
+                { inGameDate: 'Day 1', content: 'First day content.' },
             ]);
             const repo = makeMockRepo(em);
-            service = new ContextLoader(repo as never, repo as never, repo as never, repo as never, repo as never, promptRegistry as never, memoryService as never);
+            service = new ContextLoader(
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                repo as never,
+                promptRegistry as never,
+                memoryService as never,
+            );
 
             const result = await service.loadWorldBlock(1);
 
@@ -248,7 +297,8 @@ describe('ContextLoader', () => {
         it('omits inventory block for an NPC at currentLocationId with zero items', async () => {
             em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
             em.find.mockResolvedValueOnce([{ id: 10, name: 'Guard Bob', profession: null, currentLocationId: 42 }]);
-            em.find.mockResolvedValueOnce([]); // no NpcItems
+            // no NpcItems
+            em.find.mockResolvedValueOnce([]);
 
             const result = await service.loadWorldBlock(1);
 
@@ -257,7 +307,8 @@ describe('ContextLoader', () => {
 
         it('produces no merchant inventory section when no NPCs at currentLocationId have items', async () => {
             em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
-            em.find.mockResolvedValueOnce([]); // no NPCs at location
+            // no NPCs at location
+            em.find.mockResolvedValueOnce([]);
 
             const result = await service.loadWorldBlock(1);
 

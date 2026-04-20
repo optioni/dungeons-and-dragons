@@ -5,9 +5,9 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
-import { EventType, SceneType } from './session.enums';
 import { GameEvent } from './entities/game-event.entity';
 import { GameSession } from './entities/game-session.entity';
+import { EventType, SceneType } from './session.enums';
 import { SessionService } from './session.service';
 
 function makeMockEm(overrides: Record<string, unknown> = {}): Record<string, ReturnType<typeof vi.fn>> {
@@ -63,11 +63,15 @@ describe('SessionService', () => {
 
     describe('startSession', () => {
         it('creates a new EXPLORATION session when no active session exists', async () => {
-            const session = Object.assign(new GameSession(), { id: sessionId, campaign, sceneType: SceneType.EXPLORATION });
-            em.findOne.mockResolvedValueOnce(null); // no existing active session
+            const session = Object.assign(
+                new GameSession(), { id: sessionId, campaign, sceneType: SceneType.EXPLORATION },
+            );
+            // no existing active session
+            em.findOne.mockResolvedValueOnce(null);
             em.create.mockReturnValue(session);
             em.flush.mockResolvedValue(undefined);
-            em.count.mockResolvedValue(1); // prior sessions exist (not first)
+            // prior sessions exist (not first)
+            em.count.mockResolvedValue(1);
 
             const result = await service.startSession(campaignId, userId);
 
@@ -102,7 +106,8 @@ describe('SessionService', () => {
             em.findOne.mockResolvedValueOnce(null);
             em.create.mockReturnValueOnce(session).mockReturnValueOnce(event);
             em.flush.mockResolvedValue(undefined);
-            em.count.mockResolvedValue(0); // no prior sessions — this is the first
+            // no prior sessions — this is the first
+            em.count.mockResolvedValue(0);
 
             await service.startSession(campaignId, userId);
 
@@ -124,7 +129,8 @@ describe('SessionService', () => {
             em.findOne.mockResolvedValueOnce(null);
             em.create.mockReturnValueOnce(session);
             em.flush.mockResolvedValue(undefined);
-            em.count.mockResolvedValue(2); // prior sessions exist
+            // prior sessions exist
+            em.count.mockResolvedValue(2);
 
             await service.startSession(campaignId, userId);
 

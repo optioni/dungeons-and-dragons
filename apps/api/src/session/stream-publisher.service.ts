@@ -3,9 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { type DmStreamChunk } from './dto/dm-stream-chunk.dto.js';
 
 interface Subscriber {
-    queue: DmStreamChunk[];
-    resolve: ((value: IteratorResult<DmStreamChunk>) => void) | null;
-    done: boolean;
+    queue: DmStreamChunk[]
+    resolve: ((value: IteratorResult<DmStreamChunk>) => void) | null
+    done: boolean
 }
 
 /**
@@ -16,6 +16,7 @@ interface Subscriber {
 @Injectable()
 export class StreamPublisher {
     private readonly subscribers = new Map<number, Set<Subscriber>>();
+
     private readonly sequences = new Map<number, number>();
 
     /** Returns an AsyncIterable that yields chunks for the given session. */
@@ -25,6 +26,7 @@ export class StreamPublisher {
         if (!this.subscribers.has(sessionId)) {
             this.subscribers.set(sessionId, new Set());
         }
+
         this.subscribers.get(sessionId)!.add(sub);
 
         const iterator: AsyncIterator<DmStreamChunk> = {
@@ -32,9 +34,11 @@ export class StreamPublisher {
                 if (sub.queue.length > 0) {
                     return Promise.resolve({ value: sub.queue.shift()!, done: false });
                 }
+
                 if (sub.done) {
                     return Promise.resolve({ value: undefined as unknown as DmStreamChunk, done: true });
                 }
+
                 return new Promise<IteratorResult<DmStreamChunk>>((resolve) => {
                     sub.resolve = resolve;
                 });
@@ -60,7 +64,10 @@ export class StreamPublisher {
 
         if (subs) {
             for (const sub of subs) {
-                if (sub.done) continue;
+                if (sub.done) {
+                    continue;
+                }
+
                 if (sub.resolve) {
                     const resolve = sub.resolve;
                     sub.resolve = null;
@@ -77,11 +84,15 @@ export class StreamPublisher {
     /** Closes all subscribers for a session (emits done). */
     complete(sessionId: number): void {
         const subs = this.subscribers.get(sessionId);
-        if (!subs) return;
+        if (!subs) {
+            return;
+        }
+
         for (const sub of subs) {
             sub.done = true;
             sub.resolve?.({ value: undefined as unknown as DmStreamChunk, done: true });
         }
+
         this.subscribers.delete(sessionId);
         this.sequences.delete(sessionId);
     }

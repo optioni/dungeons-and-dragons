@@ -1,7 +1,11 @@
 import {
-    beforeEach, describe, expect, it, vi,
+    describe, expect, it, vi,
 } from 'vitest';
 
+import { DiceService } from './dice.service.js';
+import { RestService } from './rest.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -26,9 +30,7 @@ vi.mock('@nestjs/common', () => ({
     Optional: () => () => {},
     NotFoundException: class NotFoundException extends Error {},
 }));
-
-import { RestService } from './rest.service.js';
-import { DiceService } from './dice.service.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 function makeCharacter(overrides: Record<string, unknown> = {}) {
     return {
@@ -40,16 +42,27 @@ function makeCharacter(overrides: Record<string, unknown> = {}) {
         hitDiceRemaining: 2,
         deathSaveSuccesses: 1,
         deathSaveFailures: 2,
-        abilityScores: { STR: 10, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 }, // CON +2
+        // CON +2
+        /* eslint-disable @typescript-eslint/naming-convention */
+        abilityScores: {
+            STR: 10, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10,
+        },
+        /* eslint-enable @typescript-eslint/naming-convention */
         srdClass: { hitDie: 10, index: 'fighter' },
         ...overrides,
     };
 }
 
-function makeEm(char: ReturnType<typeof makeCharacter> | null = makeCharacter(), campaign: Record<string, unknown> | null = null) {
+function makeEm(
+    char: ReturnType<typeof makeCharacter> | null = makeCharacter(),
+    campaign: Record<string, unknown> | null = null,
+) {
     return {
         findOne: vi.fn().mockImplementation((entity: unknown) => {
-            if (String(entity).includes('Campaign')) return Promise.resolve(campaign);
+            if (String(entity).includes('Campaign')) {
+                return Promise.resolve(campaign);
+            }
+
             return Promise.resolve(char);
         }),
         flush: vi.fn(),
@@ -71,7 +84,8 @@ describe('RestService', () => {
             if (result.success) {
                 expect(result.data.hitDiceSpent).toBe(2);
                 expect(char.hitDiceRemaining).toBe(1);
-                expect(char.hp).toBeGreaterThanOrEqual(10); // HP should increase
+                // HP should increase
+                expect(char.hp).toBeGreaterThanOrEqual(10);
             }
         });
 
@@ -94,7 +108,8 @@ describe('RestService', () => {
             expect(result.success).toBe(true);
             if (result.success) {
                 expect(result.data.hitDiceSpent).toBe(0);
-                expect(char.hp).toBe(10); // unchanged
+                // unchanged
+                expect(char.hp).toBe(10);
             }
         });
 
@@ -104,7 +119,8 @@ describe('RestService', () => {
             const em = makeEm(char, campaign);
             service = new RestService(em as never, DiceService.withSeed('no-date'));
             await service.takeShortRest(1, 1);
-            expect(campaign.inGameDate).toBe('Day 3'); // unchanged
+            // unchanged
+            expect(campaign.inGameDate).toBe('Day 3');
         });
     });
 

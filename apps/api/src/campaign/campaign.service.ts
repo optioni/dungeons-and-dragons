@@ -6,9 +6,9 @@ import {
 import { type Connection } from 'graphql-relay';
 
 import { GraphqlService } from '../graphql/graphql.service.js';
-import { type ConnectionArgs } from '../graphql/relay/index.js';
-import { type CreateCampaignInput } from './dto/create-campaign.input.js';
+import { type ConnectionArgs } from '../graphql/relay';
 import { CampaignSetupStatus } from './campaign.enums.js';
+import { type CreateCampaignInput } from './dto/create-campaign.input.js';
 import { Campaign } from './entities/campaign.entity.js';
 
 /**
@@ -53,7 +53,11 @@ export class CampaignService {
     /**
      * Returns all campaigns owned by the given user as a relay connection.
      */
-    async findAll(userId: number, connArgs: ConnectionArgs, graphqlService: GraphqlService): Promise<Connection<Campaign>> {
+    async findAll(
+        userId: number,
+        connArgs: ConnectionArgs,
+        graphqlService: GraphqlService,
+    ): Promise<Connection<Campaign>> {
         const qb = this.campaignRepository.createQueryBuilder();
         return graphqlService.findAndPaginate(
             qb.andWhere({ userId }),

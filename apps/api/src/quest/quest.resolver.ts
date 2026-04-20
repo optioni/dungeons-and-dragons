@@ -1,20 +1,18 @@
-import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import {
     ForbiddenException, NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityRepository, EntityManager } from '@mikro-orm/postgresql';
+import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { type Connection } from 'graphql-relay';
 
 import { type User } from '../auth/entities/user.entity.js';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
-import { ConnectionArgs, createRelayConnection } from '../graphql/relay/index.js';
-import { QuestStatus } from './quest.enums.js';
-import { QuestEntity } from './entities/quest-entity.entity.js';
-import { QuestObjective } from './entities/quest-objective.entity.js';
+import { ConnectionArgs, createRelayConnection } from '../graphql/relay';
 import { Quest } from './entities/quest.entity.js';
+import { QuestStatus } from './quest.enums.js';
 
 export const QuestConnection = createRelayConnection(Quest);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -61,7 +59,9 @@ export class QuestResolver {
         @CurrentUser() user: User,
     ): Promise<Quest> {
         const found = await this.questRepo.findOne(Number(id));
-        if (!found) throw new NotFoundException(`Quest ${id} not found`);
+        if (!found) {
+            throw new NotFoundException(`Quest ${id} not found`);
+        }
 
         await this.verifyCampaignOwnership(found.campaignId, user.id);
         await this.em.populate(found, ['objectives', 'entities']);
@@ -71,6 +71,8 @@ export class QuestResolver {
 
     private async verifyCampaignOwnership(campaignId: number, userId: number): Promise<void> {
         const campaign = await this.campaignRepo.findOne({ id: campaignId, userId });
-        if (!campaign) throw new ForbiddenException('Campaign not found or access denied');
+        if (!campaign) {
+            throw new ForbiddenException('Campaign not found or access denied');
+        }
     }
 }

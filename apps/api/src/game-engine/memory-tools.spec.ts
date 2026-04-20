@@ -2,6 +2,11 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { type ToolHandler } from '../llm/tool-registry.js';
+import { SubjectType } from '../memory/entities/memory.entity.js';
+import { GameEngineToolRegistrar } from './game-engine-tool-registrar.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -27,12 +32,11 @@ vi.mock('@nestjs/common', () => ({
     OnModuleInit: () => () => {},
     Optional: () => () => {},
     Inject: () => () => {},
-    Logger: class { error = vi.fn(); },
+    Logger: class {
+        error = vi.fn();
+    },
 }));
-
-import { type ToolHandler } from '../llm/tool-registry.js';
-import { GameEngineToolRegistrar } from './game-engine-tool-registrar.service.js';
-import { SubjectType } from '../memory/entities/memory.entity.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 function makeMemoryService() {
     return {
@@ -49,11 +53,19 @@ function makeEm(campaignDate = 'Day 3') {
     const mockCharacter = { id: 5 };
     const mockCampaign = { id: 10, inGameDate: campaignDate };
     return {
-        findOne: vi.fn().mockImplementation((Entity: { name?: string }) => {
-            const name = Entity?.name ?? '';
-            if (name === 'GameSession') return Promise.resolve(mockSession);
-            if (name === 'Campaign') return Promise.resolve(mockCampaign);
-            return Promise.resolve(mockCharacter); // Character or anything else
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        findOne: vi.fn().mockImplementation((EntityClass: { name?: string }) => {
+            const name = EntityClass?.name ?? '';
+            if (name === 'GameSession') {
+                return Promise.resolve(mockSession);
+            }
+
+            if (name === 'Campaign') {
+                return Promise.resolve(mockCampaign);
+            }
+
+            // Character or anything else
+            return Promise.resolve(mockCharacter);
         }),
         find: vi.fn().mockResolvedValue([
             { eventType: 'DM_NARRATIVE', content: { narrative: 'The quest begins.' } },
@@ -67,7 +79,7 @@ function makeRegistrar(
 ) {
     const handlers = new Map<string, ToolHandler>();
     const toolRegistry = {
-        register: (h: ToolHandler) => handlers.set(h.toolName, h),
+        register: (handler: ToolHandler) => handlers.set(handler.toolName, handler),
     };
 
     const em = makeEm();
@@ -84,6 +96,7 @@ function makeRegistrar(
         {} as never,
         {} as never,
         memoryService as never,
+        {} as never,
     );
     registrar.onModuleInit();
 
@@ -114,10 +127,12 @@ describe('memory tool handlers', () => {
             const handler = handlers.get('record_memory');
             expect(handler).toBeDefined();
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const result = await handler!.execute(1, {
                 subject_type: 'npc',
                 content: 'The goblin chief has a distinctive scar.',
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             expect(result.success).toBe(true);
             expect(memoryService.createMemory).toHaveBeenCalledWith(
@@ -131,11 +146,13 @@ describe('memory tool handlers', () => {
         it('passes subject_id when provided', async () => {
             const handler = handlers.get('record_memory');
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             await handler!.execute(1, {
                 subject_type: 'npc',
                 subject_id: 'uuid-123',
                 content: 'The goblin chief has a scar.',
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             expect(memoryService.createMemory).toHaveBeenCalledWith(
                 expect.any(Number),
@@ -149,10 +166,12 @@ describe('memory tool handlers', () => {
             memoryService.createMemory.mockRejectedValue(new Error('Invalid subjectType: badtype'));
             const handler = handlers.get('record_memory');
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const result = await handler!.execute(1, {
                 subject_type: 'badtype',
                 content: 'Some content.',
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBeDefined();
@@ -174,12 +193,14 @@ describe('memory tool handlers', () => {
         it('passes options when provided', async () => {
             const handler = handlers.get('search_memories');
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             await handler!.execute(1, {
                 query: 'goblin',
                 subject_type: 'npc',
                 subject_id: 'uuid-123',
                 limit: 3,
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             expect(memoryService.searchMemories).toHaveBeenCalledWith(
                 expect.any(Number),

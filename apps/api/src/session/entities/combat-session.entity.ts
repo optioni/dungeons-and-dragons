@@ -8,20 +8,20 @@ import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { GameSession } from './game-session.entity.js';
 
 export interface Combatant {
-    id: string;
-    type: 'CHARACTER' | 'NPC';
-    name: string;
-    initiativeRoll: number;
-    currentHp: number;
-    maxHp: number;
-    conditions: string[];
-    usedAction: boolean;
-    usedBonusAction: boolean;
-    usedReaction: boolean;
+    id: string
+    type: 'CHARACTER' | 'NPC'
+    name: string
+    initiativeRoll: number
+    currentHp: number
+    maxHp: number
+    conditions: string[]
+    usedAction: boolean
+    usedBonusAction: boolean
+    usedReaction: boolean
     /** Feet of movement used this turn. */
-    movementUsed: number;
+    movementUsed: number
     /** True if this NPC had a non-null hp before combat started (named NPC). */
-    namedNpc?: boolean;
+    namedNpc?: boolean
 }
 
 /**
@@ -31,8 +31,6 @@ export interface Combatant {
 @ObjectType()
 @Entity({ tableName: 'combat_session' })
 export class CombatSession extends BaseEntity {
-    [Symbol.for('mikro-orm:optional-props')]?: 'currentTurnIndex' | 'roundNumber';
-
     @Field(() => ID)
     @PrimaryKey({ type: 'integer', autoincrement: true })
     id!: number;

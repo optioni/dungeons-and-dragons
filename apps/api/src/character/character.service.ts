@@ -8,10 +8,10 @@ import {
 import { type User } from '../auth/entities/user.entity.js';
 import { SrdClass } from '../srd/entities/srd-class.entity.js';
 import { SrdRace } from '../srd/entities/srd-race.entity.js';
-import { AbilityScoresInput, type CreateCharacterInput } from './dto/create-character.input.js';
 import {
     type AbilityScores, EquipSlot, SKILL_NAMES, type SkillProficiencies, type SpellSlot,
 } from './character.enums.js';
+import { AbilityScoresInput, type CreateCharacterInput } from './dto/create-character.input.js';
 import { Campaign } from './entities/campaign.entity.js';
 import { CharacterItem } from './entities/character-item.entity.js';
 import { Character } from './entities/character.entity.js';
@@ -146,7 +146,7 @@ export class CharacterService {
             ac,
             spellSlots,
             skillProficiencies,
-        });
+        } as never);
 
         em.persist(character);
         await em.flush();

@@ -1,7 +1,6 @@
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import { SceneType } from '../session/session.enums.js';
 
@@ -24,10 +23,10 @@ export class PromptModuleRegistry implements OnModuleInit {
     onModuleInit(): void {
         // __dirname resolves to the compiled output directory at runtime;
         // the prompt-modules/ folder is copied there during build.
-        const dir = join(__dirname, 'prompt-modules');
+        const directory = join(__dirname, 'prompt-modules');
 
-        for (const [scene, file] of Object.entries(SCENE_FILES) as [SceneType, string][]) {
-            const text = readFileSync(join(dir, file), 'utf-8');
+        for (const [scene, file] of Object.entries(SCENE_FILES) as Array<[SceneType, string]>) {
+            const text = readFileSync(join(directory, file), 'utf8');
             this.modules.set(scene, text);
         }
     }
@@ -35,7 +34,10 @@ export class PromptModuleRegistry implements OnModuleInit {
     /** Returns the prompt module text for the given scene type. */
     getModule(sceneType: SceneType): string {
         const text = this.modules.get(sceneType);
-        if (!text) throw new Error(`No prompt module for scene type: ${sceneType}`);
+        if (!text) {
+            throw new Error(`No prompt module for scene type: ${sceneType}`);
+        }
+
         return text;
     }
 }

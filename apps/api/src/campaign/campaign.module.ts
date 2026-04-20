@@ -1,16 +1,16 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 
+import { GraphqlModule } from '../graphql/graphql.module.js';
 import { Faction } from '../world/entities/faction.entity.js';
-import { Location } from '../world/entities/location.entity.js';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity.js';
-import { Map } from '../world/entities/map.entity.js';
+import { Location } from '../world/entities/location.entity.js';
 import { MapLocation } from '../world/entities/map-location.entity.js';
-import { Npc } from '../world/entities/npc.entity.js';
+import { Map } from '../world/entities/map.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { NpcRelationship } from '../world/entities/npc-relationship.entity.js';
+import { Npc } from '../world/entities/npc.entity.js';
 import { WorldEvent } from '../world/entities/world-event.entity.js';
-import { GraphqlModule } from '../graphql/graphql.module.js';
 import { CampaignResolver } from './campaign.resolver.js';
 import { CampaignService } from './campaign.service.js';
 import { CampaignSetupService } from './campaign.setup.service.js';

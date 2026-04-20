@@ -1,29 +1,30 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/postgresql';
 import type Anthropic from '@anthropic-ai/sdk';
 
+import { EntityManager } from '@mikro-orm/postgresql';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+
+import { type GameEvent } from '../session/entities/game-event.entity.js';
 import { EventType } from '../session/session.enums.js';
-import type { GameEvent } from '../session/entities/game-event.entity.js';
+import { EmbeddingService } from './embedding.service.js';
 import { DiaryEntry } from './entities/diary-entry.entity.js';
 import { Memory, SubjectType } from './entities/memory.entity.js';
-import { EmbeddingService } from './embedding.service.js';
 
 export const ANTHROPIC_CLIENT = Symbol('ANTHROPIC_CLIENT');
 export const BACKGROUND_MODEL = Symbol('BACKGROUND_MODEL');
 
 export interface MemorySearchResult {
-    type: 'diary' | 'fact';
-    content: string;
-    score: number;
-    subjectType?: string;
-    subjectId?: string;
-    inGameDate?: string;
+    type: 'diary' | 'fact'
+    content: string
+    score: number
+    subjectType?: string
+    subjectId?: string
+    inGameDate?: string
 }
 
 interface SearchOptions {
-    subjectType?: SubjectType;
-    subjectId?: string;
-    limit?: number;
+    subjectType?: SubjectType
+    subjectId?: string
+    limit?: number
 }
 
 const VALID_SUBJECT_TYPES = new Set<string>(Object.values(SubjectType));
@@ -48,6 +49,7 @@ export class MemoryService {
 
         let content: string;
         try {
+            /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 300,
@@ -58,6 +60,7 @@ export class MemoryService {
                     },
                 ],
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
             const textBlock = response.content.find((b: { type: string }) => b.type === 'text') as
                 | { type: 'text'; text: string }
                 | undefined;
@@ -75,9 +78,10 @@ export class MemoryService {
             inGameDate,
             content: truncated,
             embedding,
-        });
+        } as never);
 
-        await this.em.persistAndFlush(entry);
+        this.em.persist(entry);
+        await this.em.flush();
     }
 
     /** Returns the N most recent diary entries for a campaign, ordered newest-first. */
@@ -108,9 +112,10 @@ export class MemoryService {
             subjectId: subjectId ?? null,
             content,
             embedding,
-        });
+        } as never);
 
-        await this.em.persistAndFlush(memory);
+        this.em.persist(memory);
+        await this.em.flush();
         return memory;
     }
 
@@ -137,7 +142,7 @@ export class MemoryService {
         let memoryRows: MemorySearchResult[] = [];
 
         if (embedding) {
-            const embeddingStr = `[${embedding.join(',')}]`;
+            const embeddingString = `[${embedding.join(',')}]`;
 
             if (!skipDiary) {
                 const diaryResults = await conn.execute<RawSearchRow[]>(
@@ -148,20 +153,21 @@ export class MemoryService {
                      WHERE campaign_id = $2 AND embedding IS NOT NULL
                      ORDER BY score ASC
                      LIMIT $3`,
-                    [embeddingStr, campaignId, effectiveLimit],
+                    [embeddingString, campaignId, effectiveLimit],
                 );
                 diaryRows = diaryResults.map(mapRow);
             }
 
-            const memoryParams: unknown[] = [embeddingStr, campaignId, effectiveLimit];
+            const memoryParameters: unknown[] = [embeddingString, campaignId, effectiveLimit];
             let memoryFilter = 'embedding IS NOT NULL';
             if (subjectType) {
-                memoryParams.push(subjectType);
-                memoryFilter += ` AND subject_type = $${memoryParams.length}`;
+                memoryParameters.push(subjectType);
+                memoryFilter += ` AND subject_type = $${memoryParameters.length}`;
             }
+
             if (subjectId) {
-                memoryParams.push(subjectId);
-                memoryFilter += ` AND subject_id = $${memoryParams.length}`;
+                memoryParameters.push(subjectId);
+                memoryFilter += ` AND subject_id = $${memoryParameters.length}`;
             }
 
             const memoryResults = await conn.execute<RawSearchRow[]>(
@@ -172,7 +178,7 @@ export class MemoryService {
                  WHERE campaign_id = $2 AND ${memoryFilter}
                  ORDER BY score ASC
                  LIMIT $3`,
-                memoryParams,
+                memoryParameters,
             );
             memoryRows = memoryResults.map(mapRow);
         }
@@ -194,7 +200,7 @@ export class MemoryService {
         const { subjectType, subjectId, limit = 5 } = options;
         const effectiveLimit = Math.min(limit, 20);
         const conn = this.em.getConnection();
-        const tsQuery = query.trim().split(/\s+/).join(' & ');
+        const tsQuery = query.trim().split(/\s+/u).join(' & ');
 
         let diaryRows: MemorySearchResult[] = [];
 
@@ -213,15 +219,16 @@ export class MemoryService {
             diaryRows = diaryResults.map(mapRow);
         }
 
-        const memoryParams: unknown[] = [tsQuery, campaignId, effectiveLimit];
+        const memoryParameters: unknown[] = [tsQuery, campaignId, effectiveLimit];
         let memoryFilter = '';
         if (subjectType) {
-            memoryParams.push(subjectType);
-            memoryFilter += ` AND subject_type = $${memoryParams.length}`;
+            memoryParameters.push(subjectType);
+            memoryFilter += ` AND subject_type = $${memoryParameters.length}`;
         }
+
         if (subjectId) {
-            memoryParams.push(subjectId);
-            memoryFilter += ` AND subject_id = $${memoryParams.length}`;
+            memoryParameters.push(subjectId);
+            memoryFilter += ` AND subject_id = $${memoryParameters.length}`;
         }
 
         const memoryResults = await conn.execute<RawSearchRow[]>(
@@ -234,7 +241,7 @@ export class MemoryService {
                ${memoryFilter}
              ORDER BY score DESC
              LIMIT $3`,
-            memoryParams,
+            memoryParameters,
         );
         const memoryRows = memoryResults.map(mapRow);
 
@@ -243,12 +250,12 @@ export class MemoryService {
 
     private formatEventsForDiary(events: GameEvent[]): string {
         const lines = events
-            .filter((e) => e.eventType === EventType.PLAYER_INPUT || e.eventType === EventType.DM_NARRATIVE)
-            .map((e) => {
-                const c = e.content as Record<string, unknown>;
-                return e.eventType === EventType.PLAYER_INPUT
-                    ? `Player: ${String(c['text'] ?? '')}`
-                    : `DM: ${String(c['narrative'] ?? '')}`;
+            .filter((event) => event.eventType === EventType.PLAYER_INPUT || event.eventType === EventType.DM_NARRATIVE)
+            .map((event) => {
+                const content = event.content as Record<string, unknown>;
+                return event.eventType === EventType.PLAYER_INPUT
+                    ? `Player: ${String(content['text'] ?? '')}`
+                    : `DM: ${String(content['narrative'] ?? '')}`;
             });
 
         return lines.length > 0 ? lines.join('\n') : '(No events recorded)';
@@ -256,13 +263,13 @@ export class MemoryService {
 }
 
 interface RawSearchRow {
-    type: string;
-    id: number;
-    content: string;
-    inGameDate: string | null;
-    subjectType: string | null;
-    subjectId: string | null;
-    score: number;
+    type: string
+    id: number
+    content: string
+    inGameDate: string | null
+    subjectType: string | null
+    subjectId: string | null
+    score: number
 }
 
 function mapRow(row: RawSearchRow): MemorySearchResult {
@@ -271,9 +278,18 @@ function mapRow(row: RawSearchRow): MemorySearchResult {
         content: row.content,
         score: Number(row.score),
     };
-    if (row.inGameDate) result.inGameDate = row.inGameDate;
-    if (row.subjectType) result.subjectType = row.subjectType;
-    if (row.subjectId) result.subjectId = row.subjectId;
+    if (row.inGameDate) {
+        result.inGameDate = row.inGameDate;
+    }
+
+    if (row.subjectType) {
+        result.subjectType = row.subjectType;
+    }
+
+    if (row.subjectId) {
+        result.subjectId = row.subjectId;
+    }
+
     return result;
 }
 

@@ -1,7 +1,11 @@
 import {
-    beforeEach, describe, expect, it, vi,
+    describe, expect, it, vi,
 } from 'vitest';
 
+import { QuestObjectiveStatus, QuestObjectiveType, QuestStatus } from './quest.enums.js';
+import { QuestService } from './quest.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -9,8 +13,14 @@ vi.mock('@mikro-orm/decorators/legacy', () => ({
     ManyToOne: () => () => {},
     OneToMany: () => () => {},
 }));
-vi.mock('@mikro-orm/core', () => ({ type: {}, OptionalProps: Symbol(), Collection: class {}, Type: class {} }));
-vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {}, EntityRepository: class {} }));
+vi.mock('@mikro-orm/core', () => ({
+    type: {},
+    OptionalProps: Symbol('OptionalProps'),
+    Collection: class {}, // eslint-disable-line @typescript-eslint/no-extraneous-class
+    Type: class {}, // eslint-disable-line @typescript-eslint/no-extraneous-class
+    EntityRepository: class {}, // eslint-disable-line @typescript-eslint/no-extraneous-class
+}));
+vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {}, EntityRepository: class {} })); // eslint-disable-line @typescript-eslint/no-extraneous-class
 vi.mock('@nestjs/graphql', () => ({
     ObjectType: () => () => {},
     Field: () => () => {},
@@ -24,14 +34,12 @@ vi.mock('@nestjs/common', () => ({
     InjectRepository: () => () => {},
 }));
 vi.mock('@mikro-orm/nestjs', () => ({ InjectRepository: () => () => {} }));
-
-import { QuestService } from './quest.service.js';
-import { QuestObjectiveStatus, QuestObjectiveType, QuestStatus } from './quest.enums.js';
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function makeEm(overrides: Record<string, unknown> = {}) {
-    const transactional = vi.fn().mockImplementation(async (cb: (em: unknown) => unknown) => {
-        return cb(makeInnerEm(overrides));
-    });
+    const transactional = vi.fn().mockImplementation(
+        async (callback: (em: unknown) => unknown) => callback(makeInnerEm(overrides)),
+    );
 
     return {
         findOne: vi.fn().mockResolvedValue(null),
@@ -46,7 +54,9 @@ function makeEm(overrides: Record<string, unknown> = {}) {
 function makeInnerEm(overrides: Record<string, unknown> = {}) {
     let idCounter = 1;
     return {
-        create: vi.fn().mockImplementation((_e: unknown, data: unknown) => ({ ...data as object, id: idCounter++ })),
+        create: vi.fn().mockImplementation(
+            (_entityClass: unknown, data: unknown) => ({ ...data as object, id: idCounter++ }),
+        ),
         persist: vi.fn(),
         flush: vi.fn(),
         findOne: vi.fn().mockResolvedValue(null),
@@ -58,7 +68,10 @@ function makeInnerEm(overrides: Record<string, unknown> = {}) {
 function makeRepo(items: unknown[] = []) {
     return {
         findOne: vi.fn().mockImplementation((id: unknown) => {
-            if (typeof id === 'number') return Promise.resolve(items.find((i) => (i as { id: number }).id === id) ?? null);
+            if (typeof id === 'number') {
+                return Promise.resolve(items.find((index) => (index as { id: number }).id === id) ?? null);
+            }
+
             return Promise.resolve(items[0] ?? null);
         }),
         find: vi.fn().mockResolvedValue(items),
@@ -68,26 +81,26 @@ function makeRepo(items: unknown[] = []) {
     };
 }
 
-function makeService(opts: {
-    quests?: unknown[];
-    objectives?: unknown[];
-    questEntities?: unknown[];
-    campaigns?: unknown[];
-    characters?: unknown[];
-    characterItems?: unknown[];
-    npcs?: unknown[];
-    emOverrides?: Record<string, unknown>;
+function makeService(options: {
+    quests?: unknown[]
+    objectives?: unknown[]
+    questEntities?: unknown[]
+    campaigns?: unknown[]
+    characters?: unknown[]
+    characterItems?: unknown[]
+    npcs?: unknown[]
+    emOverrides?: Record<string, unknown>
 } = {}) {
-    const em = makeEm(opts.emOverrides ?? {});
+    const em = makeEm(options.emOverrides ?? {});
     return new QuestService(
         em as never,
-        makeRepo(opts.quests ?? []) as never,
-        makeRepo(opts.objectives ?? []) as never,
-        makeRepo(opts.questEntities ?? []) as never,
-        makeRepo(opts.campaigns ?? []) as never,
-        makeRepo(opts.characters ?? []) as never,
-        makeRepo(opts.characterItems ?? []) as never,
-        makeRepo(opts.npcs ?? []) as never,
+        makeRepo(options.quests ?? []) as never,
+        makeRepo(options.objectives ?? []) as never,
+        makeRepo(options.questEntities ?? []) as never,
+        makeRepo(options.campaigns ?? []) as never,
+        makeRepo(options.characters ?? []) as never,
+        makeRepo(options.characterItems ?? []) as never,
+        makeRepo(options.npcs ?? []) as never,
     );
 }
 
@@ -136,11 +149,14 @@ describe('QuestService.createQuest', () => {
         let idCounter = 1;
         const createdObjectives: unknown[] = [];
         const innerEm = {
-            create: vi.fn().mockImplementation((_e: { name?: string }, data: Record<string, unknown>) => {
-                const obj = { ...data, id: idCounter++ };
-                const name = String(_e);
-                if (name.includes('QuestObjective')) createdObjectives.push(obj);
-                return obj;
+            create: vi.fn().mockImplementation((_entityClass: { name?: string }, data: Record<string, unknown>) => {
+                const object = { ...data, id: idCounter++ };
+                const name = String(_entityClass);
+                if (name.includes('QuestObjective')) {
+                    createdObjectives.push(object);
+                }
+
+                return object;
             }),
             persist: vi.fn(),
             flush: vi.fn(),
@@ -148,7 +164,7 @@ describe('QuestService.createQuest', () => {
             find: vi.fn().mockResolvedValue([]),
         };
         const em = makeEm({
-            transactional: vi.fn().mockImplementation(async (cb: (em: unknown) => unknown) => cb(innerEm)),
+            transactional: vi.fn().mockImplementation(async (callback: (em: unknown) => unknown) => callback(innerEm)),
         });
         const service = new QuestService(
             em as never,
@@ -246,11 +262,15 @@ describe('QuestService.runAutoChecker', () => {
 
     it('marks NPC_DEAD objective complete when NPC is dead', async () => {
         const quest = { id: 1, status: QuestStatus.ACTIVE, title: 'Kill quest', campaignId: 1 };
-        const objective = { id: 1, questId: 1, type: QuestObjectiveType.NPC_DEAD, status: QuestObjectiveStatus.INCOMPLETE, entityId: 5 };
+        const objective = {
+            id: 1, questId: 1, type: QuestObjectiveType.NPC_DEAD, status: QuestObjectiveStatus.INCOMPLETE, entityId: 5,
+        };
         const npc = { id: 5, alive: false };
         const campaign = { id: 1, currentLocationId: null };
 
-        const questRepo = { find: vi.fn().mockResolvedValue([quest]), count: vi.fn().mockResolvedValue(0), findOne: vi.fn() };
+        const questRepo = {
+            find: vi.fn().mockResolvedValue([quest]), count: vi.fn().mockResolvedValue(0), findOne: vi.fn(),
+        };
         const objectiveRepo = {
             find: vi.fn().mockResolvedValue([objective]),
             count: vi.fn().mockResolvedValue(0),
@@ -279,7 +299,9 @@ describe('QuestService.runAutoChecker', () => {
 
     it('does not auto-check MANUAL objectives', async () => {
         const quest = { id: 1, status: QuestStatus.ACTIVE, title: 'Manual quest', campaignId: 1 };
-        const objective = { id: 1, questId: 1, type: QuestObjectiveType.MANUAL, status: QuestObjectiveStatus.INCOMPLETE, entityId: null };
+        const objective = {
+            id: 1, questId: 1, type: QuestObjectiveType.MANUAL, status: QuestObjectiveStatus.INCOMPLETE, entityId: null,
+        };
         const campaign = { id: 1, currentLocationId: null };
 
         const questRepo = { find: vi.fn().mockResolvedValue([quest]), count: vi.fn(), findOne: vi.fn() };
@@ -309,15 +331,20 @@ describe('QuestService.runAutoChecker', () => {
 
     it('does not return questCompleted when some objectives remain incomplete', async () => {
         const quest = { id: 1, status: QuestStatus.ACTIVE, title: 'Q', campaignId: 1 };
-        const deadObjective = { id: 1, questId: 1, type: QuestObjectiveType.NPC_DEAD, status: QuestObjectiveStatus.INCOMPLETE, entityId: 5 };
-        const manualObjective = { id: 2, questId: 1, type: QuestObjectiveType.MANUAL, status: QuestObjectiveStatus.INCOMPLETE, entityId: null };
+        const deadObjective = {
+            id: 1, questId: 1, type: QuestObjectiveType.NPC_DEAD, status: QuestObjectiveStatus.INCOMPLETE, entityId: 5,
+        };
+        const manualObjective = {
+            id: 2, questId: 1, type: QuestObjectiveType.MANUAL, status: QuestObjectiveStatus.INCOMPLETE, entityId: null,
+        };
         const npc = { id: 5, alive: false };
         const campaign = { id: 1, currentLocationId: null };
 
         const questRepo = { find: vi.fn().mockResolvedValue([quest]), count: vi.fn(), findOne: vi.fn() };
         const objectiveRepo = {
             find: vi.fn().mockResolvedValue([deadObjective, manualObjective]),
-            count: vi.fn().mockResolvedValue(1), // still 1 INCOMPLETE (MANUAL one)
+            // still 1 INCOMPLETE (MANUAL one)
+            count: vi.fn().mockResolvedValue(1),
         };
         const campaignRepo = { findOne: vi.fn().mockResolvedValue(campaign) };
         const characterRepo = { findOne: vi.fn().mockResolvedValue(null) };
@@ -341,10 +368,18 @@ describe('QuestService.runAutoChecker', () => {
 
     it('marks REACH_LOCATION complete when campaign currentLocationId matches', async () => {
         const quest = { id: 1, status: QuestStatus.ACTIVE, title: 'Travel Q', campaignId: 1 };
-        const objective = { id: 1, questId: 1, type: QuestObjectiveType.REACH_LOCATION, status: QuestObjectiveStatus.INCOMPLETE, entityId: 42 };
+        const objective = {
+            id: 1,
+            questId: 1,
+            type: QuestObjectiveType.REACH_LOCATION,
+            status: QuestObjectiveStatus.INCOMPLETE,
+            entityId: 42,
+        };
         const campaign = { id: 1, currentLocationId: 42 };
 
-        const questRepo = { find: vi.fn().mockResolvedValue([quest]), count: vi.fn().mockResolvedValue(0), findOne: vi.fn() };
+        const questRepo = {
+            find: vi.fn().mockResolvedValue([quest]), count: vi.fn().mockResolvedValue(0), findOne: vi.fn(),
+        };
         const objectiveRepo = {
             find: vi.fn().mockResolvedValue([objective]),
             count: vi.fn().mockResolvedValue(0),

@@ -28,13 +28,18 @@ export class GameEngineResolver {
         @Args('hitPointsRolled', { type: () => Int }) hitPointsRolled: number,
         @Args('abilityScoreImprovements', { type: () => Object, nullable: true }) abilityScoreImprovements: Record<string, number> | null,
         @Args('feat', { nullable: true }) feat: string | null,
-        @CurrentUser() _user: User,
+        @CurrentUser() currentUser: User,
     ): Promise<boolean> {
+        void currentUser;
         const session = await this.em.findOne(GameSession, { id: Number(sessionId) }, { populate: ['campaign' as never] });
-        if (!session) throw new NotFoundException('Session not found');
+        if (!session) {
+            throw new NotFoundException('Session not found');
+        }
 
         const character = await this.em.findOne(Character, { campaign: { id: session.campaign.id } } as never);
-        if (!character) throw new NotFoundException('Character not found');
+        if (!character) {
+            throw new NotFoundException('Character not found');
+        }
 
         const result = await this.levelingService.applyLevelUp(
             Number(sessionId),
@@ -46,7 +51,10 @@ export class GameEngineResolver {
             hitPointsRolled,
         );
 
-        if (!result.success) throw new BadRequestException(result.message);
+        if (!result.success) {
+            throw new BadRequestException(result.message);
+        }
+
         return true;
     }
 }

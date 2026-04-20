@@ -7,21 +7,21 @@ import {
 } from 'vitest';
 
 import { User } from '../auth/entities/user.entity';
+import { CharacterItem } from '../character/entities/character-item.entity';
+import { Character } from '../character/entities/character.entity';
+import { Item } from '../character/entities/item.entity';
 import { SrdClass } from '../srd/entities/srd-class.entity';
 import { SrdRace } from '../srd/entities/srd-race.entity';
 import { Faction } from '../world/entities/faction.entity';
-import { Location } from '../world/entities/location.entity';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity';
-import { Map } from '../world/entities/map.entity';
+import { Location } from '../world/entities/location.entity';
 import { MapLocation } from '../world/entities/map-location.entity';
-import { Npc } from '../world/entities/npc.entity';
+import { Map } from '../world/entities/map.entity';
 import { NpcItem } from '../world/entities/npc-item.entity';
 import { NpcRelationship } from '../world/entities/npc-relationship.entity';
+import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
 import { LocationDiscoverySource } from '../world/world.enums';
-import { Character } from '../character/entities/character.entity';
-import { CharacterItem } from '../character/entities/character-item.entity';
-import { Item } from '../character/entities/item.entity';
 import { CampaignSetupStatus } from './campaign.enums';
 import { Campaign } from './entities/campaign.entity';
 
@@ -32,9 +32,22 @@ async function createOrm(): Promise<MikroORM> {
         defineConfig({
             clientUrl: DB_URL,
             entities: [
-                User, Campaign, Character, Item, CharacterItem, SrdRace, SrdClass,
-                Location, Map, MapLocation, LocationDiscovery, Faction, WorldEvent,
-                Npc, NpcRelationship, NpcItem,
+                User,
+                Campaign,
+                Character,
+                Item,
+                CharacterItem,
+                SrdRace,
+                SrdClass,
+                Location,
+                Map,
+                MapLocation,
+                LocationDiscovery,
+                Faction,
+                WorldEvent,
+                Npc,
+                NpcRelationship,
+                NpcItem,
             ],
         }),
     );
@@ -96,8 +109,9 @@ describe('CampaignModule integration', () => {
             em.persist(otherCampaign);
             await em.flush();
 
+            // eslint-disable-next-line unicorn/no-array-method-this-argument
             const userCampaigns = await em.find(Campaign, { userId: testUser.id });
-            expect(userCampaigns.every((c) => c.userId === testUser.id)).toBe(true);
+            expect(userCampaigns.every((campaign) => campaign.userId === testUser.id)).toBe(true);
 
             await em.nativeDelete(Campaign, { id: otherCampaign.id });
         });

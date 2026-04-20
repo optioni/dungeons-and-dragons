@@ -1,10 +1,10 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 
-import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { CampaignModule } from '../campaign/campaign.module.js';
-import { MemoryModule } from '../memory/memory.module.js';
+import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { Character } from '../character/entities/character.entity.js';
+import { MemoryModule } from '../memory/memory.module.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';

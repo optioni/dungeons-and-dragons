@@ -7,13 +7,13 @@ import { type Connection } from 'graphql-relay';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
-import { type ConnectionArgs } from '../graphql/relay/index.js';
+import { type ConnectionArgs } from '../graphql/relay';
 import { Faction } from './entities/faction.entity.js';
 import { Location } from './entities/location.entity.js';
 import { Map } from './entities/map.entity.js';
-import { Npc } from './entities/npc.entity.js';
 import { NpcItem } from './entities/npc-item.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
+import { Npc } from './entities/npc.entity.js';
 import { WorldEvent } from './entities/world-event.entity.js';
 import { NpcRelationshipType } from './world.enums.js';
 
@@ -146,7 +146,10 @@ export class WorldService {
      * Returns a single NPC with relationships and inventory, verifying campaign ownership.
      * @throws NotFoundException if not found or access denied.
      */
-    async findNpcById(id: number, userId: number): Promise<Npc & { relationships: NpcRelationship[]; items: NpcItem[] }> {
+    async findNpcById(
+        id: number,
+        userId: number,
+    ): Promise<Npc & { relationships: NpcRelationship[]; items: NpcItem[] }> {
         const em = this.npcRepo.getEntityManager();
         const npc = await em.findOne(Npc, { id });
 
@@ -163,15 +166,13 @@ export class WorldService {
             throw new NotFoundException('NPC not found');
         }
 
-        const relationships = await this.npcRelationshipRepo.getEntityManager().find(
-            NpcRelationship,
-            { sourceNpcId: id },
-        );
+        const relEm = this.npcRelationshipRepo.getEntityManager();
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const relationships = await relEm.find(NpcRelationship, { sourceNpcId: id });
 
-        const items = await this.npcItemRepo.getEntityManager().find(
-            NpcItem,
-            { npcId: id },
-        );
+        const itemEm = this.npcItemRepo.getEntityManager();
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const items = await itemEm.find(NpcItem, { npcId: id });
 
         return Object.assign(npc, { relationships, items });
     }
@@ -223,11 +224,15 @@ export class WorldService {
      */
     async getConversationPairs(campaignId: number): Promise<NpcRelationship[]> {
         const em = this.npcRelationshipRepo.getEntityManager();
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const allNpcs = await em.find(Npc, { campaignId });
 
         const npcByLocation: Record<number, Npc[]> = {};
         for (const npc of allNpcs) {
-            if (npc.currentLocationId == null) continue;
+            if (npc.currentLocationId === null) {
+                continue;
+            }
+
             npcByLocation[npc.currentLocationId] ??= [];
             npcByLocation[npc.currentLocationId]!.push(npc);
         }
@@ -235,12 +240,17 @@ export class WorldService {
         const coLocatedNpcIds: number[] = [];
         for (const group of Object.values(npcByLocation)) {
             if (group.length >= 2) {
-                for (const npc of group) coLocatedNpcIds.push(npc.id);
+                for (const npc of group) {
+                    coLocatedNpcIds.push(npc.id);
+                }
             }
         }
 
-        if (coLocatedNpcIds.length === 0) return [];
+        if (coLocatedNpcIds.length === 0) {
+            return [];
+        }
 
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const relationships = await em.find(NpcRelationship, {
             $or: [
                 { sourceNpcId: { $in: coLocatedNpcIds } },
@@ -248,30 +258,44 @@ export class WorldService {
             ],
         } as never);
 
-        const npcById: Record<number, Npc> = Object.fromEntries(allNpcs.map((n) => [n.id, n]));
+        const npcById: Record<number, Npc> = Object.fromEntries(allNpcs.map((npc) => [npc.id, npc]));
         const qualifyingPairs = relationships.filter((rel) => {
             const sourceNpc = npcById[rel.sourceNpcId];
             const targetNpc = npcById[rel.targetNpcId];
+            const sourceLoc = sourceNpc?.currentLocationId;
+            const targetLoc = targetNpc?.currentLocationId;
             return (
-                sourceNpc?.currentLocationId != null &&
-                targetNpc?.currentLocationId != null &&
-                sourceNpc.currentLocationId === targetNpc.currentLocationId
+                sourceLoc !== null
+                && sourceLoc !== undefined
+                && targetLoc !== null
+                && targetLoc !== undefined
+                && sourceLoc === targetLoc
             );
         });
 
         return qualifyingPairs.sort((a, b) => {
             const priority = (type: NpcRelationshipType): number => {
-                if (type === NpcRelationshipType.ENEMY || type === NpcRelationshipType.RIVAL) return 0;
+                if (type === NpcRelationshipType.ENEMY || type === NpcRelationshipType.RIVAL) {
+                    return 0;
+                }
+
                 if (
-                    type === NpcRelationshipType.ALLY ||
-                    type === NpcRelationshipType.MENTOR ||
-                    type === NpcRelationshipType.STUDENT ||
-                    type === NpcRelationshipType.FAMILY
-                ) return 1;
-                return 2; // NEUTRAL
+                    type === NpcRelationshipType.ALLY
+                    || type === NpcRelationshipType.MENTOR
+                    || type === NpcRelationshipType.STUDENT
+                    || type === NpcRelationshipType.FAMILY
+                ) {
+                    return 1;
+                }
+
+                // NEUTRAL
+                return 2;
             };
+
             const priorityDiff = priority(a.type) - priority(b.type);
-            if (priorityDiff !== 0) return priorityDiff;
+            if (priorityDiff !== 0) {
+                return priorityDiff;
+            }
 
             // Tiebreak: least-recently-conversed first
             const sourceA = npcById[a.sourceNpcId];

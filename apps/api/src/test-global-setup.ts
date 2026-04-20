@@ -1,3 +1,4 @@
+/* eslint-disable canonical/filename-match-exported */
 /**
  * Vitest global setup — runs once in the main process before any test workers start.
  *

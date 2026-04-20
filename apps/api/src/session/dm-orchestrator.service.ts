@@ -10,6 +10,7 @@ import { EventType } from './session.enums.js';
 import { SessionService } from './session.service.js';
 import { StreamPublisher } from './stream-publisher.service.js';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 /** Tool definitions exposed to the DM model. Extend as GameEngineModule lands. */
 const DM_TOOLS: Anthropic.Tool[] = [
     {
@@ -28,6 +29,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
         },
     },
 ];
+/* eslint-enable @typescript-eslint/naming-convention */
 
 /**
  * Orchestrates a single DM turn: persists player input, assembles prompt with
@@ -39,7 +41,9 @@ const DM_TOOLS: Anthropic.Tool[] = [
 @Injectable()
 export class DmOrchestrator {
     private readonly logger = new Logger(DmOrchestrator.name);
+
     private readonly anthropic: Anthropic;
+
     private readonly dmModel: string;
 
     constructor(
@@ -80,18 +84,22 @@ export class DmOrchestrator {
         if (priorHistory.length > 0) {
             const last = priorHistory[priorHistory.length - 1];
             if (typeof last.content === 'string') {
+                /* eslint-disable @typescript-eslint/naming-convention */
                 priorHistory[priorHistory.length - 1] = {
                     ...last,
                     content: [{ type: 'text', text: last.content, cache_control: { type: 'ephemeral' } }],
                 };
+                /* eslint-enable @typescript-eslint/naming-convention */
             }
         }
 
+        /* eslint-disable @typescript-eslint/naming-convention */
         const systemBlocks: Anthropic.TextBlockParam[] = [
             { type: 'text', text: baseBlock, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: campaignBlock, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: worldBlock, cache_control: { type: 'ephemeral' } },
         ];
+        /* eslint-enable @typescript-eslint/naming-convention */
 
         const messages: Anthropic.MessageParam[] = [
             ...priorHistory,
@@ -110,6 +118,7 @@ export class DmOrchestrator {
                     narrative: narrativeRef.text,
                 });
             }
+
             this.streamPublisher.publish(sessionId, { type: DmStreamChunkType.DONE });
         }
     }
@@ -124,6 +133,7 @@ export class DmOrchestrator {
         messages: Anthropic.MessageParam[],
         narrativeRef: { text: string },
     ): Promise<void> {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const stream = this.anthropic.messages.stream({
             model: this.dmModel,
             max_tokens: 2048,
@@ -131,6 +141,7 @@ export class DmOrchestrator {
             tools: DM_TOOLS,
             messages,
         });
+        /* eslint-enable @typescript-eslint/naming-convention */
 
         for await (const event of stream) {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
@@ -151,7 +162,9 @@ export class DmOrchestrator {
         const toolResults: Anthropic.ToolResultBlockParam[] = [];
 
         for (const block of finalMessage.content) {
-            if (block.type !== 'tool_use') continue;
+            if (block.type !== 'tool_use') {
+                continue;
+            }
 
             const result = await this.toolRegistry.dispatch(
                 sessionId,
@@ -172,11 +185,13 @@ export class DmOrchestrator {
                 toolResult: result,
             });
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             toolResults.push({
                 type: 'tool_result',
                 tool_use_id: block.id,
                 content: JSON.stringify(result),
             });
+            /* eslint-enable @typescript-eslint/naming-convention */
         }
 
         await this.runToolLoop(sessionId, system, [

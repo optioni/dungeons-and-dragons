@@ -29,14 +29,16 @@ export class WorldMutationService {
 
     /** Partially updates an NPC. Emits NPC_UPDATE or NPC_KILLED event. */
     async updateNpc(npcId: number, updates: Partial<{
-        alive: boolean;
-        disposition: string;
-        currentLocationId: number | null;
-        agenda: string | null;
-        nextTickInGameDate: string | null;
+        alive: boolean
+        disposition: string
+        currentLocationId: number | null
+        agenda: string | null
+        nextTickInGameDate: string | null
     }>): Promise<WorldOutcome> {
         const npc = await this.em.findOne(Npc, { id: npcId });
-        if (!npc) return { success: false, errorCode: 'NPC_NOT_FOUND', message: `NPC ${npcId} not found` };
+        if (!npc) {
+            return { success: false, errorCode: 'NPC_NOT_FOUND', message: `NPC ${npcId} not found` };
+        }
 
         Object.assign(npc, updates);
         await this.em.flush();
@@ -48,12 +50,15 @@ export class WorldMutationService {
     }
 
     /** Sets NPC partyStatus = COMPANION and clears their world tick. */
-    async addToParty(npcId: number, _campaignId: number): Promise<WorldOutcome> {
+    async addToParty(npcId: number, campaignId: number): Promise<WorldOutcome> {
+        void campaignId;
         const npc = await this.em.findOne(Npc, { id: npcId });
-        if (!npc) return { success: false, errorCode: 'NPC_NOT_FOUND', message: `NPC ${npcId} not found` };
+        if (!npc) {
+            return { success: false, errorCode: 'NPC_NOT_FOUND', message: `NPC ${npcId} not found` };
+        }
 
         npc.partyStatus = NpcPartyStatus.COMPANION;
-        npc.nextTickInGameDate = null;
+        npc.nextTickInGameDay = null;
         await this.em.flush();
 
         return { success: true, data: { npcId, partyStatus: 'COMPANION' } };
@@ -62,7 +67,9 @@ export class WorldMutationService {
     /** Sets NPC partyStatus = NONE. */
     async removeFromParty(npcId: number): Promise<WorldOutcome> {
         const npc = await this.em.findOne(Npc, { id: npcId });
-        if (!npc) return { success: false, errorCode: 'NPC_NOT_FOUND', message: `NPC ${npcId} not found` };
+        if (!npc) {
+            return { success: false, errorCode: 'NPC_NOT_FOUND', message: `NPC ${npcId} not found` };
+        }
 
         npc.partyStatus = NpcPartyStatus.NONE;
         await this.em.flush();
@@ -73,7 +80,9 @@ export class WorldMutationService {
     /** Updates Location.currentState. */
     async updateLocationState(locationId: number, state: string): Promise<WorldOutcome> {
         const location = await this.em.findOne(Location, { id: locationId });
-        if (!location) return { success: false, errorCode: 'LOCATION_NOT_FOUND', message: `Location ${locationId} not found` };
+        if (!location) {
+            return { success: false, errorCode: 'LOCATION_NOT_FOUND', message: `Location ${locationId} not found` };
+        }
 
         location.currentState = state;
         await this.em.flush();
@@ -84,7 +93,9 @@ export class WorldMutationService {
     /** Updates Faction.playerDisposition. */
     async shiftFactionDisposition(factionId: number, disposition: string): Promise<WorldOutcome> {
         const faction = await this.em.findOne(Faction, { id: factionId });
-        if (!faction) return { success: false, errorCode: 'FACTION_NOT_FOUND', message: `Faction ${factionId} not found` };
+        if (!faction) {
+            return { success: false, errorCode: 'FACTION_NOT_FOUND', message: `Faction ${factionId} not found` };
+        }
 
         faction.playerDisposition = disposition;
         await this.em.flush();
@@ -117,7 +128,9 @@ export class WorldMutationService {
     /** Sets WorldEvent.status = RESOLVED and stores outcome. */
     async resolveWorldEvent(worldEventId: number, outcome: string): Promise<WorldOutcome> {
         const event = await this.em.findOne(WorldEvent, { id: worldEventId });
-        if (!event) return { success: false, errorCode: 'EVENT_NOT_FOUND', message: `WorldEvent ${worldEventId} not found` };
+        if (!event) {
+            return { success: false, errorCode: 'EVENT_NOT_FOUND', message: `WorldEvent ${worldEventId} not found` };
+        }
 
         event.status = WorldEventStatus.RESOLVED;
         event.outcome = outcome;
@@ -148,7 +161,9 @@ export class WorldMutationService {
     /** Updates GameSession.sceneType (also handled by SetSceneTypeHandler in LlmModule). */
     async setSceneType(sessionId: number, sceneType: string): Promise<WorldOutcome> {
         const session = await this.em.findOne(GameSession, { id: sessionId });
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         session.sceneType = sceneType as never;
         await this.em.flush();
@@ -159,13 +174,19 @@ export class WorldMutationService {
     /** Advances antagonist plan to the next stage. */
     async advanceAntagonistStage(campaignId: number): Promise<WorldOutcome> {
         const campaign = await this.em.findOne(Campaign, { id: campaignId });
-        if (!campaign) return { success: false, errorCode: 'CAMPAIGN_NOT_FOUND', message: `Campaign ${campaignId} not found` };
+        if (!campaign) {
+            return { success: false, errorCode: 'CAMPAIGN_NOT_FOUND', message: `Campaign ${campaignId} not found` };
+        }
 
         const plan = campaign.antagonistPlanState as AntagonistPlanState | null;
-        if (!plan) return { success: false, errorCode: 'NO_ANTAGONIST_PLAN', message: 'No antagonist plan state' };
+        if (!plan) {
+            return { success: false, errorCode: 'NO_ANTAGONIST_PLAN', message: 'No antagonist plan state' };
+        }
 
-        const currentIndex = plan.stages.findIndex((s) => !s.completed);
-        if (currentIndex === -1) return { success: true, data: { finalStage: true } };
+        const currentIndex = plan.stages.findIndex((stage) => !stage.completed);
+        if (currentIndex === -1) {
+            return { success: true, data: { finalStage: true } };
+        }
 
         plan.stages[currentIndex]!.completed = true;
 
@@ -186,7 +207,9 @@ export class WorldMutationService {
     /** Appends a lore fact to Campaign.loreDocument. */
     async recordLore(campaignId: number, fact: string): Promise<WorldOutcome> {
         const campaign = await this.em.findOne(Campaign, { id: campaignId });
-        if (!campaign) return { success: false, errorCode: 'CAMPAIGN_NOT_FOUND', message: `Campaign ${campaignId} not found` };
+        if (!campaign) {
+            return { success: false, errorCode: 'CAMPAIGN_NOT_FOUND', message: `Campaign ${campaignId} not found` };
+        }
 
         campaign.loreDocument = campaign.loreDocument ? `${campaign.loreDocument}\n${fact}` : fact;
         await this.em.flush();

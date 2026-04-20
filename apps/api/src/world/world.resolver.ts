@@ -6,7 +6,7 @@ import { type Connection } from 'graphql-relay';
 import { type User } from '../auth/entities/user.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
-import { createRelayConnection } from '../graphql/relay/index.js';
+import { createRelayConnection } from '../graphql/relay';
 import { WorldConnectionArgs } from './args/world-connection.args.js';
 import { Faction } from './entities/faction.entity.js';
 import { Location } from './entities/location.entity.js';

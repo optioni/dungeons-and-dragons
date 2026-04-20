@@ -4,10 +4,10 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
-import { SceneType } from '../session/session.enums';
 import { DmStreamChunkType } from '../session/dto/dm-stream-chunk.dto';
-import { SetSceneTypeHandler } from './tools/set-scene-type.handler';
+import { SceneType } from '../session/session.enums';
 import { ToolRegistry } from './tool-registry.service';
+import { SetSceneTypeHandler } from './tools/set-scene-type.handler';
 
 function makeMockSessionService(): Record<string, ReturnType<typeof vi.fn>> {
     return {
@@ -80,7 +80,9 @@ describe('SetSceneTypeHandler', () => {
     });
 
     it('updates sceneType and emits STATUS chunk for valid scene', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const result = await handler.execute(sessionId, { scene_type: SceneType.COMBAT });
+        /* eslint-enable @typescript-eslint/naming-convention */
 
         expect(sessionService.updateSceneType).toHaveBeenCalledWith(sessionId, SceneType.COMBAT);
         expect(streamPublisher.publish).toHaveBeenCalledWith(sessionId, expect.objectContaining({
@@ -91,7 +93,9 @@ describe('SetSceneTypeHandler', () => {
     });
 
     it('returns structured error for invalid scene type', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const result = await handler.execute(sessionId, { scene_type: 'FLYING' });
+        /* eslint-enable @typescript-eslint/naming-convention */
 
         expect(sessionService.updateSceneType).not.toHaveBeenCalled();
         expect(result.success).toBe(false);
@@ -101,7 +105,9 @@ describe('SetSceneTypeHandler', () => {
     it('returns structured error when session does not exist', async () => {
         sessionService.updateSceneType.mockRejectedValueOnce(new Error('Session not found'));
 
+        /* eslint-disable @typescript-eslint/naming-convention */
         const result = await handler.execute(sessionId, { scene_type: SceneType.SOCIAL });
+        /* eslint-enable @typescript-eslint/naming-convention */
 
         expect(result.success).toBe(false);
         expect(result.errorCode).toBe('SESSION_NOT_FOUND');

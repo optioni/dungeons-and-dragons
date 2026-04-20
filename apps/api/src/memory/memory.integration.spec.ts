@@ -1,28 +1,28 @@
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
-import { defineConfig, EntityManager } from '@mikro-orm/postgresql';
+import { defineConfig, type EntityManager } from '@mikro-orm/postgresql';
 import {
     afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
 import { User } from '../auth/entities/user.entity';
 import { Campaign } from '../campaign/entities/campaign.entity';
+import { EmbeddingService } from './embedding.service';
 import { DiaryEntry } from './entities/diary-entry.entity';
 import { Memory, SubjectType } from './entities/memory.entity';
-import { EmbeddingService } from './embedding.service';
 import { MemoryService } from './memory.service';
 
 const DB_URL = process.env['DATABASE_URL'] ?? 'postgresql://dnd:dnd@localhost:5432/dnd';
 
 /** 1024-dim fixed embedding used so all records share the same cosine space. */
-const FIXED_EMBEDDING = Array.from({ length: 1024 }, (_, i) => (i % 10) * 0.01);
+const FIXED_EMBEDDING = Array.from({ length: 1024 }, (_, index) => (index % 10) * 0.01);
 
 function buildService(
     em: EntityManager,
-    opts: { embedding?: number[] | null } = {},
+    options: { embedding?: number[] | null } = {},
 ): MemoryService {
-    const embedding = 'embedding' in opts ? opts.embedding : FIXED_EMBEDDING;
+    const embedding = 'embedding' in options ? options.embedding : FIXED_EMBEDDING;
     const embedClient = { embed: vi.fn().mockResolvedValue({ data: [{ embedding }] }) };
     const embeddingService = new EmbeddingService(embedClient as never);
 
@@ -50,14 +50,15 @@ describe('MemoryService integration', () => {
                 entities: [User, Campaign, DiaryEntry, Memory],
             }),
         );
-        em = orm.em.fork();
+        em = orm.em.fork() as EntityManager;
 
         // Create prerequisite rows
         const user = em.create(User, {
             email: `memtest-${Date.now()}@test.com`,
             passwordHash: 'x',
         });
-        await em.persistAndFlush(user);
+        em.persist(user);
+        await em.flush();
         userId = user.id;
 
         const campaign = em.create(Campaign, {
@@ -65,7 +66,8 @@ describe('MemoryService integration', () => {
             name: 'MemoryService Integration Test Campaign',
             inGameDate: 'Day 5',
         });
-        await em.persistAndFlush(campaign);
+        em.persist(campaign);
+        await em.flush();
         campaignId = campaign.id;
     });
 
@@ -140,7 +142,7 @@ describe('MemoryService integration', () => {
             const results = await searchService.searchMemories(campaignId, 'test query', { limit: 10 });
 
             expect(results.length).toBeGreaterThanOrEqual(2);
-            const types = results.map((r) => r.type);
+            const types = results.map((result) => result.type);
             expect(types).toContain('diary');
             expect(types).toContain('fact');
         });

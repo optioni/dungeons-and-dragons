@@ -2,6 +2,9 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { EmbeddingService } from './embedding.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention */
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
     Inject: () => () => {},
@@ -9,13 +12,15 @@ vi.mock('@nestjs/common', () => ({
         error = vi.fn();
     },
 }));
-
-import { EmbeddingService } from './embedding.service.js';
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function makeClient(embedResult: unknown = null, throws = false) {
     return {
         embed: vi.fn().mockImplementation(() => {
-            if (throws) return Promise.reject(new Error('API quota exceeded'));
+            if (throws) {
+                return Promise.reject(new Error('API quota exceeded'));
+            }
+
             return Promise.resolve(embedResult);
         }),
     };
@@ -29,7 +34,7 @@ describe('EmbeddingService', () => {
     });
 
     it('returns number[] when voyage AI embed succeeds', async () => {
-        const embedding = Array.from({ length: 1024 }, (_, i) => i * 0.001);
+        const embedding = Array.from({ length: 1024 }, (_, index) => index * 0.001);
         const client = makeClient({ data: [{ embedding }] });
         service = new EmbeddingService(client as never);
 

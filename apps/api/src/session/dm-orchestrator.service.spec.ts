@@ -4,10 +4,10 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
-import { EventType, SceneType } from './session.enums';
-import { GameSession } from './entities/game-session.entity';
 import { DmOrchestrator } from './dm-orchestrator.service';
 import { DmStreamChunkType } from './dto/dm-stream-chunk.dto';
+import { GameSession } from './entities/game-session.entity';
+import { EventType, SceneType } from './session.enums';
 
 function makeSession(overrides = {}): GameSession {
     return Object.assign(new GameSession(), {
@@ -20,8 +20,10 @@ function makeSession(overrides = {}): GameSession {
 
 function makeStreamIterable(events: unknown[]): AsyncIterable<unknown> {
     return {
-        [Symbol.asyncIterator]: async function* () {
-            for (const event of events) yield event;
+        async* [Symbol.asyncIterator]() {
+            for (const event of events) {
+                yield event;
+            }
         },
     };
 }
@@ -31,10 +33,12 @@ function makeMockAnthropicStream(content: unknown[], stopReason = 'end_turn') {
     // No text deltas for simplicity in this test
     return {
         [Symbol.asyncIterator]: makeStreamIterable(streamEvents)[Symbol.asyncIterator],
+        /* eslint-disable @typescript-eslint/naming-convention */
         finalMessage: vi.fn().mockResolvedValue({
             content,
             stop_reason: stopReason,
         }),
+        /* eslint-enable @typescript-eslint/naming-convention */
     };
 }
 
@@ -85,9 +89,7 @@ describe('DmOrchestrator', () => {
             toolRegistry as never,
             streamPublisher as never,
             {
-                getOrThrow: vi.fn().mockImplementation((key: string) =>
-                    key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-sonnet-4-6',
-                ),
+                getOrThrow: vi.fn().mockImplementation((key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-sonnet-4-6')),
             } as never,
         );
 
@@ -107,6 +109,7 @@ describe('DmOrchestrator', () => {
     });
 
     it('calls ToolRegistry.dispatch when model returns tool_use block', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const toolUseBlock = {
             type: 'tool_use',
             id: 'toolu_123',
@@ -115,7 +118,7 @@ describe('DmOrchestrator', () => {
         };
 
         const mockStream = {
-            [Symbol.asyncIterator]: async function* () {},
+            async* [Symbol.asyncIterator]() {},
             finalMessage: vi.fn().mockResolvedValueOnce({
                 content: [toolUseBlock],
                 stop_reason: 'tool_use',
@@ -124,14 +127,18 @@ describe('DmOrchestrator', () => {
                 stop_reason: 'end_turn',
             }),
         };
+        /* eslint-enable @typescript-eslint/naming-convention */
         mockAnthropicMessages.stream.mockReturnValue(mockStream);
 
         await orchestrator.runTurn(sessionId, playerInput);
 
+        /* eslint-disable @typescript-eslint/naming-convention */
         expect(toolRegistry.dispatch).toHaveBeenCalledWith(sessionId, 'set_scene_type', { scene_type: 'COMBAT' });
+        /* eslint-enable @typescript-eslint/naming-convention */
     });
 
     it('persists TOOL_CALL event after dispatching a tool', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const toolUseBlock = {
             type: 'tool_use',
             id: 'toolu_abc',
@@ -140,7 +147,7 @@ describe('DmOrchestrator', () => {
         };
 
         const mockStream = {
-            [Symbol.asyncIterator]: async function* () {},
+            async* [Symbol.asyncIterator]() {},
             finalMessage: vi.fn().mockResolvedValueOnce({
                 content: [toolUseBlock],
                 stop_reason: 'tool_use',
@@ -149,11 +156,14 @@ describe('DmOrchestrator', () => {
                 stop_reason: 'end_turn',
             }),
         };
+        /* eslint-enable @typescript-eslint/naming-convention */
         mockAnthropicMessages.stream.mockReturnValue(mockStream);
 
         await orchestrator.runTurn(sessionId, playerInput);
 
-        const toolCallEvents = sessionService.appendEvent.mock.calls.filter((c: unknown[]) => c[1] === EventType.TOOL_CALL);
+        const toolCallEvents = sessionService.appendEvent.mock.calls.filter(
+            (callArgs: unknown[]) => callArgs[1] === EventType.TOOL_CALL,
+        );
         expect(toolCallEvents).toHaveLength(1);
         expect(toolCallEvents[0][2]).toMatchObject({
             toolUseId: 'toolu_abc',
@@ -162,8 +172,9 @@ describe('DmOrchestrator', () => {
     });
 
     it('persists DM_NARRATIVE event on completion', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const mockStream = {
-            [Symbol.asyncIterator]: async function* () {
+            async* [Symbol.asyncIterator]() {
                 yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'You see a door.' } };
             },
             finalMessage: vi.fn().mockResolvedValue({
@@ -171,11 +182,14 @@ describe('DmOrchestrator', () => {
                 stop_reason: 'end_turn',
             }),
         };
+        /* eslint-enable @typescript-eslint/naming-convention */
         mockAnthropicMessages.stream.mockReturnValue(mockStream);
 
         await orchestrator.runTurn(sessionId, playerInput);
 
-        const narrativeEvents = sessionService.appendEvent.mock.calls.filter((c: unknown[]) => c[1] === EventType.DM_NARRATIVE);
+        const narrativeEvents = sessionService.appendEvent.mock.calls.filter(
+            (callArgs: unknown[]) => callArgs[1] === EventType.DM_NARRATIVE,
+        );
         expect(narrativeEvents).toHaveLength(1);
         expect(narrativeEvents[0][2]).toMatchObject({ narrative: 'You see a door.' });
     });
@@ -184,7 +198,7 @@ describe('DmOrchestrator', () => {
         await orchestrator.runTurn(sessionId, playerInput);
 
         const doneChunks = (streamPublisher.publish as ReturnType<typeof vi.fn>).mock.calls
-            .filter((c: unknown[]) => (c[1] as { type: string }).type === DmStreamChunkType.DONE);
+            .filter((callArgs: unknown[]) => (callArgs[1] as { type: string }).type === DmStreamChunkType.DONE);
         expect(doneChunks.length).toBeGreaterThan(0);
     });
 });

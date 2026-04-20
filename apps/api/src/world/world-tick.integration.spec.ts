@@ -1,42 +1,54 @@
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
-import { defineConfig, EntityManager } from '@mikro-orm/postgresql';
+import { defineConfig, type EntityManager } from '@mikro-orm/postgresql';
+import Redis from 'ioredis';
 import {
     afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import Redis from 'ioredis';
 
 import { User } from '../auth/entities/user.entity';
 import { Campaign } from '../campaign/entities/campaign.entity';
+import { EmbeddingService } from '../memory/embedding.service';
 import { DiaryEntry } from '../memory/entities/diary-entry.entity';
 import { Memory } from '../memory/entities/memory.entity';
-import { EmbeddingService } from '../memory/embedding.service';
 import { MemoryService } from '../memory/memory.service';
 import { Faction } from './entities/faction.entity';
-import { Location } from './entities/location.entity';
 import { LocationDiscovery } from './entities/location-discovery.entity';
-import { Map as WorldMap } from './entities/map.entity';
+import { Location } from './entities/location.entity';
 import { MapLocation } from './entities/map-location.entity';
-import { Npc } from './entities/npc.entity';
+import { Map as WorldMap } from './entities/map.entity';
 import { NpcItem } from './entities/npc-item.entity';
 import { NpcRelationship } from './entities/npc-relationship.entity';
+import { Npc } from './entities/npc.entity';
 import { WorldEvent } from './entities/world-event.entity';
-import { WorldService } from './world.service';
 import { WorldTickWorker } from './world-tick.worker';
 import { WorldEventSource, WorldEventStatus } from './world.enums';
+import { WorldService } from './world.service';
 
 const DB_URL = process.env['DATABASE_URL'] ?? 'postgresql://dnd:dnd@localhost:5432/dnd';
 const REDIS_URL = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
 
 const ALL_ENTITIES = [
-    User, Campaign, DiaryEntry, Memory,
-    Location, WorldMap, MapLocation, LocationDiscovery,
-    Faction, WorldEvent, Npc, NpcRelationship, NpcItem,
+    User,
+    Campaign,
+    DiaryEntry,
+    Memory,
+    Location,
+    WorldMap,
+    MapLocation,
+    LocationDiscovery,
+    Faction,
+    WorldEvent,
+    Npc,
+    NpcRelationship,
+    NpcItem,
 ];
 
 function buildMemoryService(em: EntityManager): MemoryService {
-    const embedClient = { embed: vi.fn().mockResolvedValue({ data: [{ embedding: Array.from({ length: 1024 }, () => 0.01) }] }) };
+    const embedClient = {
+        embed: vi.fn().mockResolvedValue({ data: [{ embedding: Array.from({ length: 1024 }, () => 0.01) }] }),
+    };
     const embeddingService = new EmbeddingService(embedClient as never);
     const anthropicClient = {
         messages: {
@@ -49,7 +61,8 @@ function buildMemoryService(em: EntityManager): MemoryService {
 }
 
 function buildWorldService(em: EntityManager): WorldService {
-    const makeRepo = (entity: unknown) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const makeRepo = (_entity: unknown) => ({
         createQueryBuilder: vi.fn(),
         getEntityManager: () => em,
         find: (...args: unknown[]) => (em as unknown as { find: (...a: unknown[]) => unknown }).find(...args),
@@ -102,19 +115,22 @@ describe('WorldTickWorker integration', () => {
                 entities: ALL_ENTITIES,
             }),
         );
-        em = orm.em.fork();
+        em = orm.em.fork() as EntityManager;
         redis = new Redis(REDIS_URL);
 
         const user = em.create(User, { email: `ticktest-${Date.now()}@test.com`, passwordHash: 'x' });
-        await em.persistAndFlush(user);
+        em.persist(user);
+        await em.flush();
         userId = user.id;
 
         const campaign = em.create(Campaign, {
             userId,
             name: 'World Tick Integration Test',
             inGameDate: 'Day 5',
+            inGameDay: 5,
         });
-        await em.persistAndFlush(campaign);
+        em.persist(campaign);
+        await em.flush();
         campaignId = campaign.id;
     });
 
@@ -145,22 +161,25 @@ describe('WorldTickWorker integration', () => {
             name: 'Gareth',
             personalityTraits: ['brave'],
             agenda: 'gather supplies',
-            nextTickInGameDate: 'Day 3', // overdue — Day 3 ≤ Day 5
+            // overdue — Day 3 ≤ Day 5
+            nextTickInGameDay: 3,
         });
-        await workerEm.persistAndFlush(npc);
+        workerEm.persist(npc);
+        await workerEm.flush();
 
         const anthropicMessages = {
-            create: vi.fn().mockImplementation(async (opts: { tools?: unknown[] }) => {
-                if (opts.tools) {
+            create: vi.fn().mockImplementation(async (options: { tools?: unknown[] }) => {
+                if (options.tools) {
                     // catastrophe roll — don't trigger
                     return { content: [] };
                 }
+
                 return {
                     content: [{
                         type: 'text',
                         text: JSON.stringify({
                             agenda: 'escort the merchant to Millhaven',
-                            nextTickInGameDate: 'Day 9',
+                            nextTickInGameDay: 9,
                             newLocationId: null,
                             departureDescription: null,
                         }),
@@ -176,7 +195,7 @@ describe('WorldTickWorker integration', () => {
 
         const updatedNpc = await em.fork().findOne(Npc, { id: npc.id });
         expect(updatedNpc!.agenda).toBe('escort the merchant to Millhaven');
-        expect(updatedNpc!.nextTickInGameDate).toBe('Day 9');
+        expect(updatedNpc!.nextTickInGameDay).toBe(9);
 
         const diary = await em.fork().findOne(DiaryEntry, { campaign: { id: campaignId } });
         expect(diary).not.toBeNull();
@@ -217,30 +236,34 @@ describe('WorldTickWorker integration', () => {
             description: 'A dangerous woodland',
             currentState: 'ominous',
         });
-        await workerEm.persistAndFlush([location1, location2]);
+        workerEm.persist(location1);
+        workerEm.persist(location2);
+        await workerEm.flush();
 
         const npc = workerEm.create(Npc, {
             campaignId,
             name: 'Gareth',
             personalityTraits: ['secretive'],
             agenda: 'flee town',
-            nextTickInGameDate: 'Day 2',
+            nextTickInGameDay: 2,
             currentLocationId: location1.id,
         });
-        await workerEm.persistAndFlush(npc);
+        workerEm.persist(npc);
+        await workerEm.flush();
 
         const anthropicMessages = {
-            create: vi.fn().mockImplementation(async (opts: { tools?: unknown[] }) => {
-                if (opts.tools) {
+            create: vi.fn().mockImplementation(async (options: { tools?: unknown[] }) => {
+                if (options.tools) {
                     // catastrophe roll
                     return { content: [] };
                 }
+
                 return {
                     content: [{
                         type: 'text',
                         text: JSON.stringify({
                             agenda: 'hiding in the forest',
-                            nextTickInGameDate: 'Day 10',
+                            nextTickInGameDay: 10,
                             newLocationId: location2.id,
                             departureDescription: 'Gareth slipped out before dawn, heading toward the forest.',
                         }),

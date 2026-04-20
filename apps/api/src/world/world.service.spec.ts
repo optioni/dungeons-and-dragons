@@ -6,12 +6,11 @@ import {
 } from 'vitest';
 
 import { Campaign } from '../campaign/entities/campaign.entity';
-import { Location } from './entities/location.entity';
-import { Npc } from './entities/npc.entity';
 import { NpcRelationship } from './entities/npc-relationship.entity';
+import { Npc } from './entities/npc.entity';
 import { WorldService } from './world.service';
 
-function makeRepo(overrides: Record<string, unknown> = {}): ReturnType<typeof vi.fn> {
+function makeRepo(overrides: Record<string, unknown> = {}) {
     return {
         createQueryBuilder: vi.fn().mockReturnValue({
             clone: vi.fn().mockReturnThis(),
@@ -25,7 +24,7 @@ function makeRepo(overrides: Record<string, unknown> = {}): ReturnType<typeof vi
             findOne: vi.fn().mockResolvedValue(null),
         }),
         ...overrides,
-    } as unknown as ReturnType<typeof vi.fn>;
+    };
 }
 
 describe('WorldService', () => {
@@ -42,12 +41,17 @@ describe('WorldService', () => {
 
         service = new WorldService(
             locationRepo as never,
-            makeRepo() as never, // mapRepo
-            makeRepo() as never, // factionRepo
-            makeRepo() as never, // worldEventRepo
+            // mapRepo
+            makeRepo() as never,
+            // factionRepo
+            makeRepo() as never,
+            // worldEventRepo
+            makeRepo() as never,
             npcRepo as never,
-            makeRepo() as never, // npcRelationshipRepo
-            makeRepo() as never, // npcItemRepo
+            // npcRelationshipRepo
+            makeRepo() as never,
+            // npcItemRepo
+            makeRepo() as never,
             campaignRepo as never,
         );
     });
@@ -77,7 +81,8 @@ describe('WorldService', () => {
         it('throws NotFoundException when NPC belongs to another user campaign', async () => {
             const npc = Object.assign(new Npc(), { id: 1, campaignId: 5 });
             npcRepo.getEntityManager.mockReturnValue({ findOne: vi.fn().mockResolvedValue(npc) });
-            campaignRepoEm.findOne.mockResolvedValue(null); // campaign not owned by user
+            // campaign not owned by user
+            campaignRepoEm.findOne.mockResolvedValue(null);
 
             await expect(service.findNpcById(1, 42)).rejects.toThrow(NotFoundException);
         });
@@ -128,8 +133,8 @@ describe('WorldService', () => {
             });
 
             await service.getDueNpcs(1, 5, 10);
-            const whereArg = findMock.mock.calls[0][1] as Record<string, unknown>;
-            expect(whereArg).toMatchObject({
+            const whereArgument = findMock.mock.calls[0][1] as Record<string, unknown>;
+            expect(whereArgument).toMatchObject({
                 nextTickInGameDay: expect.objectContaining({ $ne: null }),
             });
         });
@@ -144,8 +149,14 @@ describe('WorldService', () => {
             const em = {
                 findOne: vi.fn().mockResolvedValue(null),
                 find: vi.fn().mockImplementation((entity: unknown) => {
-                    if (entity === Npc) return Promise.resolve([npcA, npcB]);
-                    if (entity === NpcRelationship) return Promise.resolve([rel]);
+                    if (entity === Npc) {
+                        return Promise.resolve([npcA, npcB]);
+                    }
+
+                    if (entity === NpcRelationship) {
+                        return Promise.resolve([rel]);
+                    }
+
                     return Promise.resolve([]);
                 }),
             };
@@ -179,8 +190,14 @@ describe('WorldService', () => {
             const em = {
                 findOne: vi.fn().mockResolvedValue(null),
                 find: vi.fn().mockImplementation((entity: unknown) => {
-                    if (entity === Npc) return Promise.resolve([npcA, npcB]);
-                    if (entity === NpcRelationship) return Promise.resolve([rel]);
+                    if (entity === Npc) {
+                        return Promise.resolve([npcA, npcB]);
+                    }
+
+                    if (entity === NpcRelationship) {
+                        return Promise.resolve([rel]);
+                    }
+
                     return Promise.resolve([]);
                 }),
             };
@@ -213,8 +230,14 @@ describe('WorldService', () => {
             const em = {
                 findOne: vi.fn().mockResolvedValue(null),
                 find: vi.fn().mockImplementation((entity: unknown) => {
-                    if (entity === Npc) return Promise.resolve([npcA, npcB, npcC]);
-                    if (entity === NpcRelationship) return Promise.resolve([allyRel, enemyRel]);
+                    if (entity === Npc) {
+                        return Promise.resolve([npcA, npcB, npcC]);
+                    }
+
+                    if (entity === NpcRelationship) {
+                        return Promise.resolve([allyRel, enemyRel]);
+                    }
+
                     return Promise.resolve([]);
                 }),
             };

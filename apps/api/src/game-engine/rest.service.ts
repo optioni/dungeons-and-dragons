@@ -7,14 +7,14 @@ import { Character } from '../character/entities/character.entity.js';
 import { DiceService } from './dice.service.js';
 
 export interface RestResult {
-    success: true;
-    data: Record<string, unknown>;
+    success: true
+    data: Record<string, unknown>
 }
 
 export interface RestError {
-    success: false;
-    errorCode: string;
-    message: string;
+    success: false
+    errorCode: string
+    message: string
 }
 
 type RestOutcome = RestResult | RestError;
@@ -32,18 +32,20 @@ export class RestService {
     /** Spends hit dice to restore HP. Does not advance inGameDate. */
     async takeShortRest(characterId: number, hitDiceToSpend: number): Promise<RestOutcome> {
         const char = await this.em.findOne(Character, { id: characterId }, { populate: ['srdClass'] as never });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         const toSpend = Math.min(hitDiceToSpend, char.hitDiceRemaining);
         let hpRestored = 0;
 
         const hitDie = (char as unknown as { srdClass?: { hitDie?: number } }).srdClass?.hitDie ?? 8;
-        const conMod = Math.floor(((char.abilityScores as Record<string, number>).CON - 10) / 2);
+        const conModule = Math.floor(((char.abilityScores as unknown as Record<string, number>).CON - 10) / 2);
 
-        for (let i = 0; i < toSpend; i++) {
+        for (let index = 0; index < toSpend; index++) {
             const roll = this.dice.roll(`1d${hitDie}`);
             if (roll.success) {
-                hpRestored += Math.max(1, roll.total + conMod);
+                hpRestored += Math.max(1, roll.total + conModule);
             }
         }
 
@@ -60,7 +62,9 @@ export class RestService {
      */
     async takeLongRest(characterId: number, campaignId: number): Promise<RestOutcome> {
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         const campaign = await this.em.findOne(Campaign, { id: campaignId });
 
@@ -82,17 +86,22 @@ export class RestService {
         if (campaign) {
             const current = campaign.inGameDate ?? 'Day 1';
             // Simple increment: append " (next day)" or parse if it's "Day N"
+            // eslint-disable-next-line require-unicode-regexp
             const dayMatch = /Day (\d+)/.exec(current);
             if (dayMatch) {
-                campaign.inGameDate = `Day ${parseInt(dayMatch[1]!, 10) + 1}`;
+                campaign.inGameDate = `Day ${Number.parseInt(dayMatch[1]!, 10) + 1}`;
             } else {
                 campaign.inGameDate = `${current} (next day)`;
             }
+
             campaign.inGameDay = (campaign.inGameDay ?? 1) + 1;
         }
 
         await this.em.flush();
 
-        return { success: true, data: { hp: char.hp, spellSlots: char.spellSlots, hitDiceRemaining: char.hitDiceRemaining } };
+        return {
+            success: true,
+            data: { hp: char.hp, spellSlots: char.spellSlots, hitDiceRemaining: char.hitDiceRemaining },
+        };
     }
 }

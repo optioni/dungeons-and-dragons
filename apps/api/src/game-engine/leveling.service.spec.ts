@@ -2,6 +2,9 @@ import {
     describe, expect, it, vi,
 } from 'vitest';
 
+import { LevelingService } from './leveling.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -24,8 +27,7 @@ vi.mock('@nestjs/graphql', () => ({
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
 }));
-
-import { LevelingService } from './leveling.service.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 function makeCharacter(overrides: Record<string, unknown> = {}) {
     return {
@@ -33,7 +35,12 @@ function makeCharacter(overrides: Record<string, unknown> = {}) {
         level: 3,
         maxHp: 25,
         spellSlots: [{ level: 1, total: 3, used: 0 }] as Array<{ level: number; total: number; used: number }>,
-        abilityScores: { STR: 10, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 }, // CON +2
+        // CON +2
+        /* eslint-disable @typescript-eslint/naming-convention */
+        abilityScores: {
+            STR: 10, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10,
+        },
+        /* eslint-enable @typescript-eslint/naming-convention */
         srdClass: { hitDie: 8, index: 'wizard' },
         ...overrides,
     };
@@ -47,7 +54,10 @@ function makeEm(char: ReturnType<typeof makeCharacter> | null = makeCharacter(),
     return {
         findOne: vi.fn().mockImplementation((entity: unknown) => {
             const name = String(entity);
-            if (name.includes('GameSession')) return Promise.resolve(session);
+            if (name.includes('GameSession')) {
+                return Promise.resolve(session);
+            }
+
             return Promise.resolve(char);
         }),
         flush: vi.fn(),
@@ -85,7 +95,7 @@ describe('LevelingService', () => {
             const service = new LevelingService(em as never);
             const result = await service.triggerLevelUp(1, 1);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('LEVEL_UP_ALREADY_PENDING');
+            expect((result as { errorCode: string }).errorCode).toBe('LEVEL_UP_ALREADY_PENDING');
         });
     });
 
@@ -95,11 +105,14 @@ describe('LevelingService', () => {
             const session = makeSession({ levelUpPending: true });
             const em = makeEm(char, session);
             const service = new LevelingService(em as never);
+            /* eslint-disable @typescript-eslint/naming-convention */
             const result = await service.applyLevelUp(1, 1, { abilityScoreImprovements: { STR: 2 } }, 7);
+            /* eslint-enable @typescript-eslint/naming-convention */
             expect(result.success).toBe(true);
             expect(char.level).toBe(4);
             expect((char.abilityScores as Record<string, number>).STR).toBe(12);
-            expect(char.maxHp).toBe(25 + 7 + 2); // 7 rolled + CON mod +2
+            // 7 rolled + CON mod +2
+            expect(char.maxHp).toBe(25 + 7 + 2);
             expect(session.levelUpPending).toBe(false);
         });
 
@@ -108,9 +121,11 @@ describe('LevelingService', () => {
             const session = makeSession({ levelUpPending: true });
             const em = makeEm(char, session);
             const service = new LevelingService(em as never);
+            /* eslint-disable @typescript-eslint/naming-convention */
             const result = await service.applyLevelUp(1, 1, { abilityScoreImprovements: { STR: 2, DEX: 1 } }, 5);
+            /* eslint-enable @typescript-eslint/naming-convention */
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('INVALID_ASI_CHOICES');
+            expect((result as { errorCode: string }).errorCode).toBe('INVALID_ASI_CHOICES');
         });
     });
 
@@ -130,7 +145,7 @@ describe('LevelingService', () => {
             const service = new LevelingService(em as never);
             const result = await service.useSpellSlot(1, 1);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('NO_SPELL_SLOT_AVAILABLE');
+            expect((result as { errorCode: string }).errorCode).toBe('NO_SPELL_SLOT_AVAILABLE');
         });
 
         it('returns NO_SPELL_SLOT_AVAILABLE for empty spell slots', async () => {
@@ -139,7 +154,7 @@ describe('LevelingService', () => {
             const service = new LevelingService(em as never);
             const result = await service.useSpellSlot(1, 1);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('NO_SPELL_SLOT_AVAILABLE');
+            expect((result as { errorCode: string }).errorCode).toBe('NO_SPELL_SLOT_AVAILABLE');
         });
     });
 });
