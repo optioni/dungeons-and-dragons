@@ -8,6 +8,7 @@ import { Memory } from '../../memory/entities/memory.entity.js';
 import {
     type AntagonistPlanState,
     CampaignSetupStatus,
+    CampaignStatus,
     CampaignTone,
     DeathMode,
     type OpeningSceneSeed,
@@ -33,6 +34,21 @@ export class Campaign extends BaseEntity {
     @Field()
     @Property({ type: 'text' })
     name!: string;
+
+    /** Campaign lifecycle state — permanently transitions to ENDED on campaign conclusion. */
+    @Field(() => CampaignStatus)
+    @Property({ type: 'text', default: CampaignStatus.ACTIVE })
+    status: Opt<CampaignStatus> = CampaignStatus.ACTIVE;
+
+    /** Timestamp when the campaign was ended. Null for active campaigns. */
+    @Field({ nullable: true })
+    @Property({ type: 'timestamptz', nullable: true })
+    endedAt: Date | null = null;
+
+    /** Short description of why/how the campaign ended. */
+    @Field({ nullable: true })
+    @Property({ type: 'text', nullable: true })
+    endReason: string | null = null;
 
     /** Drives the setup wizard step logic. Only advances on successful mutation completion. */
     @Field(() => CampaignSetupStatus)

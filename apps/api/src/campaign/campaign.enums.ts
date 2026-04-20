@@ -1,5 +1,10 @@
 import { registerEnumType } from '@nestjs/graphql';
 
+export enum CampaignStatus {
+    ACTIVE = 'ACTIVE',
+    ENDED = 'ENDED',
+}
+
 export enum CampaignSetupStatus {
     DRAFT = 'DRAFT',
     CONCEPTS_GENERATED = 'CONCEPTS_GENERATED',
@@ -20,6 +25,7 @@ export enum DeathMode {
     HARDCORE = 'HARDCORE',
 }
 
+registerEnumType(CampaignStatus, { name: 'CampaignStatus' });
 registerEnumType(CampaignSetupStatus, { name: 'CampaignSetupStatus' });
 registerEnumType(CampaignTone, { name: 'CampaignTone' });
 registerEnumType(DeathMode, { name: 'DeathMode' });
