@@ -21,6 +21,10 @@ The system SHALL expose a `start_combat` tool that accepts a `participants` arra
 - **WHEN** `start_combat` includes an NPC participant whose `Npc.hp` is not null
 - **THEN** the combatant entry uses the stored `Npc.hp` value as `currentHp`
 
+#### Scenario: Temporary NPC participants are accepted without database persistence
+- **WHEN** `start_combat` is called with in-memory NPC entities (not persisted to the database) as participants
+- **THEN** the `CombatSession` is created successfully using the in-memory entity data, and no attempt is made to look up the NPCs by id in the database
+
 ### Requirement: Initiative advances turn-by-turn
 The system SHALL expose an `advance_initiative` tool that accepts `sessionId` and moves the `CombatSession.currentTurnIndex` to the next combatant in initiative order. It SHALL reset the current combatant's action economy flags (`usedAction = false`, `usedBonusAction = false`, `usedReaction = false`, `movementUsed = 0`) before advancing. When the last combatant's turn ends, the index wraps back to 0 to begin a new round.
 

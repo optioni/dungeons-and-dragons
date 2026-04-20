@@ -7,7 +7,7 @@ Defines how the player character moves between locations — discovery validatio
 ## Requirements
 
 ### Requirement: Travel validates discovery before moving the player
-The system SHALL expose a `travel_to` tool that accepts `campaignId` and `locationId`. Before moving, the tool SHALL query `LocationDiscovery` for a record matching `(campaignId, locationId)`. If no record exists, the tool SHALL return `{ success: false, reason: "UNDISCOVERED_LOCATION" }` without modifying campaign state. If discovered, the tool SHALL set `Campaign.currentLocationId` to the target location and return success with the location details. After a successful move, the tool SHALL emit a `StateChangedEvent` with `type: 'TRAVEL'` and `entityId: locationId`.
+The system SHALL expose a `travel_to` tool that accepts `campaignId` and `locationId`. Before moving, the tool SHALL query `LocationDiscovery` for a record matching `(campaignId, locationId)`. If no record exists, the tool SHALL return `{ success: false, reason: "UNDISCOVERED_LOCATION" }` without modifying campaign state. If discovered, the tool SHALL set `Campaign.currentLocationId` to the target location and emit a `StateChangedEvent` with `type: 'TRAVEL'` and `entityId: locationId`. After a successful move, if `Campaign.travelEncounterEnabled` is `true`, the tool SHALL execute the encounter roll pipeline (roll, draw, combat start) before returning. The tool result SHALL always include an `encounter` field: `null` if no encounter triggered, or an object with `triggered: true`, `description`, and `monsters` if one fired.
 
 #### Scenario: Travel to a discovered location moves the player
 - **WHEN** the LLM calls `travel_to` for a location that has a `LocationDiscovery` record for this campaign
@@ -20,6 +20,14 @@ The system SHALL expose a `travel_to` tool that accepts `campaignId` and `locati
 #### Scenario: Travel emits a StateChangedEvent for quest checking
 - **WHEN** `travel_to` succeeds
 - **THEN** a `StateChangedEvent` with `type: 'TRAVEL'` and `entityId` equal to the destination `locationId` is emitted so the quest auto-checker can evaluate `REACH_LOCATION` objectives
+
+#### Scenario: Tool result includes encounter field on every successful travel
+- **WHEN** `travel_to` succeeds and no encounter is triggered
+- **THEN** the tool result contains `encounter: null`
+
+#### Scenario: Tool result includes encounter details when combat is started
+- **WHEN** `travel_to` succeeds and the encounter pipeline fires and starts combat
+- **THEN** the tool result contains `encounter: { triggered: true, description: "<narrative>", monsters: [...] }`
 
 ### Requirement: Locations are discovered via explicit tool call
 The system SHALL expose a `discover_location` tool that accepts `campaignId`, `locationId`, `source` (MAP | NPC | EXPLORATION | QUEST), and optional `sourceId`. The tool SHALL create a `LocationDiscovery` record if one does not already exist for `(campaignId, locationId)`. If the location is already discovered, the call SHALL be idempotent and return success. The system SHALL NOT auto-discover locations from narrative — all discovery is initiated by explicit LLM tool calls or by the map-item logic in `give_item`.
