@@ -1,16 +1,26 @@
-import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import type Redis from 'ioredis';
 
+import { EntityManager } from '@mikro-orm/postgresql';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+
+import { CampaignService } from '../campaign/campaign.service.js';
+import { CampaignStatus } from '../campaign/campaign.enums.js';
+import { REDIS_CLIENT } from '../queue/queue.module.js';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { type ToolResult } from '../llm/tool-registry.js';
 import { ToolRegistry } from '../llm/tool-registry.service.js';
+import { DiaryEntryType } from '../memory/entities/diary-entry.entity.js';
 import { SubjectType } from '../memory/entities/memory.entity.js';
 import { MemoryService } from '../memory/memory.service.js';
 import { QuestObjectiveStatus, QuestObjectiveType } from '../quest/quest.enums.js';
+import { Quest } from '../quest/entities/quest.entity.js';
+import { QuestStatus } from '../quest/quest.enums.js';
 import { type CreateQuestDto, type ObjectiveSpec, QuestService } from '../quest/quest.service.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
+import { type CampaignEndedChunkPayload, DmStreamChunkType } from '../session/dto/dm-stream-chunk.dto.js';
+import { StreamPublisher } from '../session/stream-publisher.service.js';
 import { CombatService } from './combat.service.js';
 import { DiceChecksService } from './dice-checks.service.js';
 import { DiceService } from './dice.service.js';
@@ -28,6 +38,8 @@ interface SessionContext {
 /** Registers all GameEngine tool handlers with the shared ToolRegistry in onModuleInit. */
 @Injectable()
 export class GameEngineToolRegistrar implements OnModuleInit {
+    private readonly logger = new Logger(GameEngineToolRegistrar.name);
+
     constructor(
         private readonly toolRegistry: ToolRegistry,
         private readonly em: EntityManager,
@@ -41,6 +53,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         private readonly world: WorldMutationService,
         private readonly memory: MemoryService,
         private readonly questService: QuestService,
+        private readonly campaignService: CampaignService,
+        private readonly streamPublisher: StreamPublisher,
+        @Inject(REDIS_CLIENT) private readonly redis: Pick<Redis, 'exists'>,
     ) {}
 
     onModuleInit(): void {
@@ -53,6 +68,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         this.registerWorldTools();
         this.registerMemoryTools();
         this.registerQuestTools();
+        this.registerCampaignTools();
     }
 
     private async loadCtx(sessionId: number): Promise<SessionContext | null> {
@@ -168,9 +184,15 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'roll_death_save',
-            execute: async (_sessionId, input): Promise<ToolResult> => combat.rollDeathSave(
-                this.num(input.character_id),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const result = await combat.rollDeathSave(this.num(input.character_id));
+                if (result.success && result.data.outcome === 'DEAD') {
+                    const campaignEnded = await this.runPermadeathSequenceIfNeeded(sessionId, result.data);
+                    return { ...result, data: { ...result.data, ...(campaignEnded ? { campaignEnded: true } : {}) } };
+                }
+
+                return result;
+            },
         });
 
         toolRegistry.register({
@@ -180,9 +202,15 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'instant_death',
-            execute: async (sessionId, input): Promise<ToolResult> => combat.instantDeath(
-                sessionId, this.num(input.character_id),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const result = await combat.instantDeath(sessionId, this.num(input.character_id));
+                if (result.success) {
+                    const campaignEnded = await this.runPermadeathSequenceIfNeeded(sessionId, {});
+                    return { ...result, data: { ...result.data as object, ...(campaignEnded ? { campaignEnded: true } : {}) } };
+                }
+
+                return result;
+            },
         });
 
         toolRegistry.register({
@@ -706,6 +734,140 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                 };
             },
         });
+    }
+
+    private registerCampaignTools(): void {
+        const { toolRegistry } = this;
+
+        toolRegistry.register({
+            toolName: 'end_campaign',
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const campaignId = this.num(input.campaign_id);
+                const reason = this.str(input.reason);
+                const epitaph = this.str(input.epitaph);
+
+                const campaign = await this.em.findOne(Campaign, { id: campaignId });
+                if (!campaign) {
+                    return { success: false, errorCode: 'CAMPAIGN_NOT_FOUND', message: `Campaign ${campaignId} not found` };
+                }
+
+                if (campaign.status === CampaignStatus.ENDED) {
+                    return {
+                        success: false,
+                        errorCode: 'CAMPAIGN_ALREADY_ENDED',
+                        message: 'The chronicle of this campaign has already been sealed.',
+                    };
+                }
+
+                await this.campaignService.endCampaign(campaignId, reason, epitaph);
+                await this.emitCampaignEndedChunk(sessionId, campaignId, epitaph);
+
+                return { success: true, data: { campaignEnded: true, epitaph } };
+            },
+        });
+    }
+
+    /**
+     * Builds and emits a CAMPAIGN_ENDED STATUS chunk with campaign stats.
+     */
+    private async emitCampaignEndedChunk(sessionId: number, campaignId: number, epitaph: string): Promise<void> {
+        const campaign = await this.em.findOne(Campaign, { id: campaignId });
+        const questsCompleted = await this.em.count(Quest, {
+            campaignId,
+            status: QuestStatus.COMPLETED,
+        } as never);
+
+        const payload: CampaignEndedChunkPayload = {
+            epitaph,
+            daysPlayed: campaign?.inGameDay ?? 1,
+            questsCompleted,
+        };
+
+        this.streamPublisher.publish(sessionId, {
+            type: DmStreamChunkType.CAMPAIGN_ENDED,
+            status: 'CAMPAIGN_ENDED',
+            toolResult: payload,
+        });
+    }
+
+    /**
+     * Checks if the campaign is in PERMADEATH mode after a character death.
+     * If so, writes a memorial diary entry, ends the campaign, and emits CAMPAIGN_ENDED.
+     * If the world-tick Redis lock is held, defers the sequence until the lock releases.
+     * Returns true if the permadeath sequence was triggered (immediately or deferred).
+     */
+    private async runPermadeathSequenceIfNeeded(
+        sessionId: number,
+        _resultData: Record<string, unknown>,
+    ): Promise<boolean> {
+        const session = await this.em.findOne(GameSession, { id: sessionId }, { populate: ['campaign' as never] });
+        if (!session) {
+            return false;
+        }
+
+        const campaign = session.campaign as Campaign;
+        if (campaign.deathMode !== 'PERMADEATH') {
+            return false;
+        }
+
+        const lockKey = `campaignLocked:${campaign.id}`;
+        const isLocked = await this.redis.exists(lockKey);
+        if (isLocked) {
+            void this.waitAndRunPermadeathSequence(lockKey, sessionId, campaign);
+            return true;
+        }
+
+        await this.executePermadeathSequence(sessionId, campaign);
+        return true;
+    }
+
+    /**
+     * Polls until the world-tick lock is released, then runs the permadeath sequence.
+     * Used when the lock is held at the moment of death to avoid racing the world tick.
+     */
+    private async waitAndRunPermadeathSequence(lockKey: string, sessionId: number, campaign: Campaign): Promise<void> {
+        const maxWaitMs = 30_000;
+        const pollIntervalMs = 500;
+        const start = Date.now();
+
+        while (Date.now() - start < maxWaitMs) {
+            // eslint-disable-next-line no-await-in-loop
+            const stillLocked = await this.redis.exists(lockKey);
+            if (!stillLocked) {
+                break;
+            }
+
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise<void>((resolve) => { setTimeout(resolve, pollIntervalMs); });
+        }
+
+        await this.executePermadeathSequence(sessionId, campaign);
+    }
+
+    /**
+     * Writes the memorial diary entry, ends the campaign, and emits the CAMPAIGN_ENDED chunk.
+     */
+    private async executePermadeathSequence(sessionId: number, campaign: Campaign): Promise<void> {
+        const character = await this.em.findOne(Character, { campaign: { id: campaign.id } } as never);
+        const events = await this.em.find(GameEvent, { session: sessionId });
+
+        try {
+            await this.memory.writeDiaryEntry(
+                campaign.id,
+                campaign.inGameDate ?? 'Unknown Date',
+                events,
+                DiaryEntryType.MEMORIAL,
+            );
+        } catch (error) {
+            this.logger.error('Memorial diary entry failed', error);
+        }
+
+        const epitaph = character
+            ? `${character.name} fell in battle. Their story has ended.`
+            : 'A brave adventurer met their fate. Their story has ended.';
+
+        await this.campaignService.endCampaign(campaign.id, 'Character death in PERMADEATH mode', epitaph);
+        await this.emitCampaignEndedChunk(sessionId, campaign.id, epitaph);
     }
 
     /** Runs the quest auto-checker and merges any questCompleted signal into the result. */

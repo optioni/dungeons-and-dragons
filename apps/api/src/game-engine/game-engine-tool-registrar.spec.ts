@@ -67,6 +67,9 @@ describe('GameEngineToolRegistrar — trigger_catastrophe exclusion', () => {
             world as never,
             memory as never,
             questService as never,
+            { endCampaign: vi.fn().mockResolvedValue({ ended: true }) } as never,
+            { publish: vi.fn() } as never,
+            { exists: vi.fn().mockResolvedValue(0) } as never,
         );
 
         registrar.onModuleInit();
@@ -195,6 +198,9 @@ describe('GameEngineToolRegistrar — auto-checker integration', () => {
             world as never,
             { writeDiaryEntry: makeMock(), createMemory: makeMock(), searchMemories: makeMock() } as never,
             questService as never,
+            { endCampaign: vi.fn().mockResolvedValue({ ended: true }) } as never,
+            { publish: vi.fn() } as never,
+            { exists: vi.fn().mockResolvedValue(0) } as never,
         );
         registrar.onModuleInit();
     });
@@ -343,6 +349,9 @@ describe('GameEngineToolRegistrar — update_campaign_settings', () => {
                 updateQuestObjective: makeMock(),
                 runAutoChecker: vi.fn().mockResolvedValue({}),
             } as never,
+            { endCampaign: vi.fn().mockResolvedValue({ ended: true }) } as never,
+            { publish: vi.fn() } as never,
+            { exists: vi.fn().mockResolvedValue(0) } as never,
         );
         registrar.onModuleInit();
     });
@@ -367,5 +376,255 @@ describe('GameEngineToolRegistrar — update_campaign_settings', () => {
         const result = await handler.get('update_campaign_settings')!.execute(1, {});
         expect(result).toMatchObject({ success: true });
         expect(travel.updateCampaignSettings).toHaveBeenCalledWith(10, {});
+    });
+});
+
+describe('GameEngineToolRegistrar — end_campaign tool', () => {
+    type HandlerMap = Map<string, { execute: (id: number, input: Record<string, unknown>) => Promise<unknown> }>;
+
+    let registry: ToolRegistry;
+    let campaignService: { endCampaign: ReturnType<typeof vi.fn> };
+    let streamPublisher: { publish: ReturnType<typeof vi.fn> };
+    let em: {
+        findOne: ReturnType<typeof vi.fn>
+        count: ReturnType<typeof vi.fn>
+        find: ReturnType<typeof vi.fn>
+        flush: ReturnType<typeof vi.fn>
+    };
+
+    const sessionId = 1;
+    const campaignId = 10;
+    const activeCampaign = { id: campaignId, status: 'ACTIVE', inGameDay: 5 };
+
+    beforeEach(() => {
+        registry = new ToolRegistry();
+
+        em = {
+            findOne: vi.fn().mockImplementation((_entity: unknown, filter: unknown) => {
+                const f = filter as Record<string, unknown>;
+                if (f['id'] === campaignId || (f as Record<string, unknown>)['campaign'] !== undefined) {
+                    return Promise.resolve(activeCampaign);
+                }
+
+                return Promise.resolve(null);
+            }),
+            count: vi.fn().mockResolvedValue(3),
+            find: vi.fn().mockResolvedValue([]),
+            flush: vi.fn(),
+        };
+
+        campaignService = { endCampaign: vi.fn().mockResolvedValue({ ended: true }) };
+        streamPublisher = { publish: vi.fn() };
+
+        const registrar = new GameEngineToolRegistrar(
+            registry,
+            em as never,
+            { checkSkill: makeMock(), checkAbility: makeMock() } as never,
+            { roll: makeMock() } as never,
+            {
+                startCombat: makeMock(), advanceInitiative: makeMock(), heal: makeMock(),
+                applyCondition: makeMock(), removeCondition: makeMock(), rollDeathSave: makeMock(),
+                stabilise: makeMock(), instantDeath: makeMock(), endCombat: makeMock(), applyDamage: makeMock(),
+            } as never,
+            { takeShortRest: makeMock(), takeLongRest: makeMock() } as never,
+            { travelTo: makeMock(), discoverLocation: makeMock(), createLocation: makeMock(), updateCampaignSettings: makeMock() } as never,
+            {
+                createItem: makeMock(), giveItem: makeMock(), equipItem: makeMock(),
+                unequipItem: makeMock(), buyItem: makeMock(), sellItem: makeMock(), restockMerchant: makeMock(),
+            } as never,
+            { triggerLevelUp: makeMock(), applyLevelUp: makeMock(), useSpellSlot: makeMock(), prepareSpells: makeMock() } as never,
+            {
+                updateNpc: makeMock(), addToParty: makeMock(), removeFromParty: makeMock(),
+                updateLocationState: makeMock(), shiftFactionDisposition: makeMock(),
+                triggerWorldEvent: makeMock(), resolveWorldEvent: makeMock(), triggerCatastrophe: makeMock(),
+                advanceAntagonistStage: makeMock(), recordLore: makeMock(), setSceneType: makeMock(),
+            } as never,
+            { writeDiaryEntry: makeMock(), createMemory: makeMock(), searchMemories: makeMock() } as never,
+            {
+                createQuest: makeMock(), completeQuest: makeMock(), failQuest: makeMock(),
+                updateQuestObjective: makeMock(), runAutoChecker: vi.fn().mockResolvedValue({}),
+            } as never,
+            campaignService as never,
+            streamPublisher as never,
+            { exists: vi.fn().mockResolvedValue(0) } as never,
+        );
+        registrar.onModuleInit();
+    });
+
+    it('ends the campaign and emits CAMPAIGN_ENDED chunk on success', async () => {
+        const handlers = registry['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const result = await handlers.get('end_campaign')!.execute(sessionId, {
+            campaign_id: campaignId,
+            reason: 'The party prevailed',
+            epitaph: 'A legend is born.',
+        });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        expect(campaignService.endCampaign).toHaveBeenCalledWith(campaignId, 'The party prevailed', 'A legend is born.');
+        expect(streamPublisher.publish).toHaveBeenCalledWith(
+            sessionId,
+            expect.objectContaining({ type: 'CAMPAIGN_ENDED' }),
+        );
+        expect(result).toMatchObject({ success: true, data: { campaignEnded: true, epitaph: 'A legend is born.' } });
+    });
+
+    it('returns structured error without calling endCampaign when campaign is already ENDED', async () => {
+        const endedCampaign = { ...activeCampaign, status: 'ENDED' };
+        em.findOne.mockResolvedValue(endedCampaign);
+
+        const handlers = registry['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const result = await handlers.get('end_campaign')!.execute(sessionId, {
+            campaign_id: campaignId,
+            reason: 'duplicate',
+            epitaph: 'ignored',
+        });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        expect(campaignService.endCampaign).not.toHaveBeenCalled();
+        expect(streamPublisher.publish).not.toHaveBeenCalled();
+        expect(result).toMatchObject({ success: false, errorCode: 'CAMPAIGN_ALREADY_ENDED' });
+    });
+
+    it('returns structured error when campaign is not found', async () => {
+        em.findOne.mockResolvedValue(null);
+
+        const handlers = registry['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const result = await handlers.get('end_campaign')!.execute(sessionId, {
+            campaign_id: 999,
+            reason: 'gone',
+            epitaph: 'nothing',
+        });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        expect(result).toMatchObject({ success: false, errorCode: 'CAMPAIGN_NOT_FOUND' });
+        expect(campaignService.endCampaign).not.toHaveBeenCalled();
+    });
+});
+
+describe('GameEngineToolRegistrar — permadeath auto-end', () => {
+    type HandlerMap = Map<string, { execute: (id: number, input: Record<string, unknown>) => Promise<unknown> }>;
+
+    const sessionId = 1;
+    const campaignId = 10;
+
+    function makeRegistrar(opts: {
+        deathMode?: string
+        rollDeathSaveResult?: unknown
+        instantDeathResult?: unknown
+        redisExists?: number
+        campaignService?: { endCampaign: ReturnType<typeof vi.fn> }
+        streamPublisher?: { publish: ReturnType<typeof vi.fn> }
+    }) {
+        const reg = new ToolRegistry();
+
+        const permadeathCampaign = { id: campaignId, deathMode: opts.deathMode ?? 'PERMADEATH', inGameDay: 3, inGameDate: 'Day 3', status: 'ACTIVE' };
+        const session = { id: sessionId, campaign: permadeathCampaign };
+
+        const em = {
+            findOne: vi.fn().mockImplementation((_entity: unknown, filter: unknown) => {
+                const f = filter as Record<string, unknown>;
+                if (typeof f['id'] === 'number' && f['id'] === sessionId) {
+                    return Promise.resolve(session);
+                }
+
+                if ((f as Record<string, unknown>)['campaign'] !== undefined) {
+                    return Promise.resolve({ id: 2, name: 'Hero', campaign: { id: campaignId } });
+                }
+
+                return Promise.resolve(permadeathCampaign);
+            }),
+            find: vi.fn().mockResolvedValue([]),
+            count: vi.fn().mockResolvedValue(0),
+            flush: vi.fn(),
+        };
+
+        const combat = {
+            rollDeathSave: vi.fn().mockResolvedValue(
+                opts.rollDeathSaveResult ?? { success: true, data: { outcome: 'DEAD' } },
+            ),
+            instantDeath: vi.fn().mockResolvedValue(
+                opts.instantDeathResult ?? { success: true, data: { isDead: true } },
+            ),
+            startCombat: makeMock(), advanceInitiative: makeMock(), heal: makeMock(),
+            applyCondition: makeMock(), removeCondition: makeMock(), stabilise: makeMock(),
+            endCombat: makeMock(), applyDamage: vi.fn().mockResolvedValue({ success: true, data: {} }),
+        };
+
+        const campaignService = opts.campaignService ?? { endCampaign: vi.fn().mockResolvedValue({ ended: true }) };
+        const streamPublisher = opts.streamPublisher ?? { publish: vi.fn() };
+        const redis = { exists: vi.fn().mockResolvedValue(opts.redisExists ?? 0) };
+
+        const registrar = new GameEngineToolRegistrar(
+            reg,
+            em as never,
+            { checkSkill: makeMock(), checkAbility: makeMock() } as never,
+            { roll: makeMock() } as never,
+            combat as never,
+            { takeShortRest: makeMock(), takeLongRest: makeMock() } as never,
+            { travelTo: makeMock(), discoverLocation: makeMock(), createLocation: makeMock(), updateCampaignSettings: makeMock() } as never,
+            { createItem: makeMock(), giveItem: makeMock(), equipItem: makeMock(), unequipItem: makeMock(), buyItem: makeMock(), sellItem: makeMock(), restockMerchant: makeMock() } as never,
+            { triggerLevelUp: makeMock(), applyLevelUp: makeMock(), useSpellSlot: makeMock(), prepareSpells: makeMock() } as never,
+            { updateNpc: makeMock(), addToParty: makeMock(), removeFromParty: makeMock(), updateLocationState: makeMock(), shiftFactionDisposition: makeMock(), triggerWorldEvent: makeMock(), resolveWorldEvent: makeMock(), triggerCatastrophe: makeMock(), advanceAntagonistStage: makeMock(), recordLore: makeMock(), setSceneType: makeMock() } as never,
+            { writeDiaryEntry: vi.fn().mockResolvedValue(undefined), createMemory: makeMock(), searchMemories: makeMock() } as never,
+            { createQuest: makeMock(), completeQuest: makeMock(), failQuest: makeMock(), updateQuestObjective: makeMock(), runAutoChecker: vi.fn().mockResolvedValue({}) } as never,
+            campaignService as never,
+            streamPublisher as never,
+            redis as never,
+        );
+        registrar.onModuleInit();
+
+        return { reg, campaignService, streamPublisher, redis };
+    }
+
+    it('ends campaign via roll_death_save when PERMADEATH and outcome is DEAD', async () => {
+        const { reg, campaignService, streamPublisher } = makeRegistrar({});
+        const handlers = reg['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const result = await handlers.get('roll_death_save')!.execute(sessionId, { character_id: 1 });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        expect(campaignService.endCampaign).toHaveBeenCalled();
+        expect(streamPublisher.publish).toHaveBeenCalledWith(sessionId, expect.objectContaining({ type: 'CAMPAIGN_ENDED' }));
+        expect(result).toMatchObject({ success: true, data: { campaignEnded: true } });
+    });
+
+    it('does NOT end campaign via roll_death_save when STORY mode', async () => {
+        const { reg, campaignService } = makeRegistrar({ deathMode: 'STORY' });
+        const handlers = reg['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        await handlers.get('roll_death_save')!.execute(sessionId, { character_id: 1 });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        expect(campaignService.endCampaign).not.toHaveBeenCalled();
+    });
+
+    it('ends campaign via instant_death when PERMADEATH', async () => {
+        const { reg, campaignService, streamPublisher } = makeRegistrar({});
+        const handlers = reg['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const result = await handlers.get('instant_death')!.execute(sessionId, { character_id: 1 });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        expect(campaignService.endCampaign).toHaveBeenCalled();
+        expect(streamPublisher.publish).toHaveBeenCalledWith(sessionId, expect.objectContaining({ type: 'CAMPAIGN_ENDED' }));
+        expect(result).toMatchObject({ success: true, data: { campaignEnded: true } });
+    });
+
+    it('defers permadeath sequence when campaign Redis lock is held', async () => {
+        const { reg, campaignService, redis } = makeRegistrar({ redisExists: 1 });
+        redis.exists.mockResolvedValueOnce(1).mockResolvedValue(0);
+
+        const handlers = reg['handlers'] as HandlerMap;
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const result = await handlers.get('roll_death_save')!.execute(sessionId, { character_id: 1 });
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        // The tool handler returns campaignEnded: true (deferred)
+        expect(result).toMatchObject({ success: true, data: { campaignEnded: true } });
+        // endCampaign is called asynchronously after lock releases — not yet when tool returns
+        expect(campaignService.endCampaign).not.toHaveBeenCalled();
     });
 });
