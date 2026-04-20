@@ -35,6 +35,32 @@ watch(
     },
 );
 
+// ── Campaign End Screen ───────────────────────────────────────────────────────
+interface CampaignEndPayload {
+    epitaph: string
+    daysPlayed: number
+    questsCompleted: number
+}
+
+const campaignEndPayload = ref<CampaignEndPayload | null>(null);
+
+const campaignEnded = computed(
+    () => campaignEndPayload.value !== null || campaign.value?.status === 'ENDED',
+);
+
+watch(
+    [() => campaignFetching.value, campaign],
+    ([fetching, camp]) => {
+        if (!fetching && camp?.status === 'ENDED' && !campaignEndPayload.value) {
+            campaignEndPayload.value = {
+                epitaph: camp.endReason ?? 'The chronicle of this campaign has been sealed.',
+                daysPlayed: 0,
+                questsCompleted: 0,
+            };
+        }
+    },
+);
+
 // ── Session ───────────────────────────────────────────────────────────────────
 const sessionId = ref<string | null>(null);
 const sceneType = ref<string>('EXPLORATION');
@@ -44,7 +70,7 @@ const combatSession = ref<CombatSession | null>(null);
 const { data: activeSessionData, executeQuery: refetchActiveSession } = useQuery({
     query: ACTIVE_SESSION_QUERY,
     variables: computed(() => ({ campaignId: campaignId.value })),
-    pause: computed(() => !campaign.value),
+    pause: computed(() => !campaign.value || campaignEnded.value),
 });
 
 const { executeMutation: startSessionMutation } = useMutation(START_SESSION_MUTATION);
@@ -126,6 +152,10 @@ watch(streamData, async (data) => {
 
         case 'SUGGESTED_ACTION':
             if (chunk.action) suggestedActions.value.push(chunk.action);
+            break;
+
+        case 'CAMPAIGN_ENDED':
+            campaignEndPayload.value = chunk.toolResult as CampaignEndPayload;
             break;
 
         case 'STATUS':
@@ -262,8 +292,16 @@ watch(
             </div>
         </div>
 
+        <!-- Campaign end screen -->
+        <session-campaign-end-screen
+            v-else-if="campaignEnded && campaignEndPayload"
+            :epitaph="campaignEndPayload.epitaph"
+            :days-played="campaignEndPayload.daysPlayed"
+            :quests-completed="campaignEndPayload.questsCompleted"
+        />
+
         <!-- Main play layout -->
-        <template v-else>
+        <template v-else-if="!campaignEnded">
             <!-- Combat panel: slides in from left when sceneType = COMBAT -->
             <transition
                 enter-active-class="transition-all duration-300 ease-out"

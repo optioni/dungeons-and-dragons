@@ -107,6 +107,9 @@ export const CAMPAIGN_QUERY_FOR_PLAY = `
       name
       setupStatus
       hasCharacter
+      status
+      endedAt
+      endReason
     }
   }
 `;

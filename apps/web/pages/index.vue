@@ -52,7 +52,7 @@
                 <u-card
                     v-for="campaign in campaigns"
                     :key="campaign.id as string"
-                    class="hover:ring-1 hover:ring-primary-500 transition-all cursor-pointer"
+                    :class="campaign.status === 'ENDED' ? 'opacity-70' : 'hover:ring-1 hover:ring-primary-500 transition-all cursor-pointer'"
                 >
                     <div class="flex items-start justify-between gap-4">
                         <div class="flex-1 min-w-0">
@@ -61,7 +61,19 @@
                             </h2>
 
                             <div class="flex items-center gap-2 mt-1">
+                                <!-- Memorial badge for ended campaigns -->
                                 <u-badge
+                                    v-if="campaign.status === 'ENDED'"
+                                    color="neutral"
+                                    variant="soft"
+                                    size="sm"
+                                    icon="i-lucide-skull"
+                                >
+                                    Ended
+                                </u-badge>
+
+                                <u-badge
+                                    v-else
                                     :color="statusColor(campaign.setupStatus as string)"
                                     variant="soft"
                                     size="sm"
@@ -76,7 +88,10 @@
                             </p>
                         </div>
 
-                        <div class="flex-shrink-0">
+                        <div
+                            v-if="campaign.status !== 'ENDED'"
+                            class="flex-shrink-0"
+                        >
                             <u-button
                                 v-if="campaign.setupStatus !== 'READY_TO_PLAY'"
                                 size="sm"
@@ -158,6 +173,7 @@ const CAMPAIGNS_QUERY = `
           id
           name
           setupStatus
+          status
           inGameDate
           createdAt
         }
