@@ -204,6 +204,30 @@ describe('SessionService', () => {
         });
     });
 
+    describe('endActiveSession', () => {
+        it('sets endedAt on the active session and flushes', async () => {
+            const session = Object.assign(new GameSession(), {
+                id: sessionId,
+                campaign: { id: campaignId },
+                endedAt: null,
+            });
+            em.findOne.mockResolvedValueOnce(session);
+            em.flush.mockResolvedValue(undefined);
+
+            await service.endActiveSession(campaignId);
+
+            expect(session.endedAt).toBeInstanceOf(Date);
+            expect(em.flush).toHaveBeenCalled();
+        });
+
+        it('no-ops when no active session exists', async () => {
+            em.findOne.mockResolvedValueOnce(null);
+
+            await expect(service.endActiveSession(campaignId)).resolves.toBeUndefined();
+            expect(em.flush).not.toHaveBeenCalled();
+        });
+    });
+
     describe('getGameEvents', () => {
         it('returns events for an owned session in chronological order', async () => {
             const session = Object.assign(new GameSession(), {

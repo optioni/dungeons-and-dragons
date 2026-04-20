@@ -124,6 +124,21 @@ export class SessionService {
     }
 
     /**
+     * Ends the active session for a campaign without requiring user interaction.
+     * No-ops if no active session exists. Called by CampaignService.endCampaign.
+     */
+    async endActiveSession(campaignId: number): Promise<void> {
+        const em = this.sessionRepository.getEntityManager();
+        const session = await em.findOne(GameSession, { campaign: campaignId, endedAt: null });
+        if (!session) {
+            return;
+        }
+
+        session.endedAt = new Date();
+        await em.flush();
+    }
+
+    /**
      * Retrieves a session and validates it belongs to the given user via campaign ownership.
      * @throws NotFoundException if the session does not exist or is unowned.
      */

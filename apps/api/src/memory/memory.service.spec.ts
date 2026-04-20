@@ -2,6 +2,7 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { DiaryEntryType } from './entities/diary-entry.entity.js';
 import { SubjectType } from './entities/memory.entity.js';
 import { type MemorySearchResult, MemoryService } from './memory.service.js';
 
@@ -58,7 +59,8 @@ function makeEm() {
             entities.push(entity);
             return entity;
         }),
-        persistAndFlush: vi.fn(),
+        persist: vi.fn(),
+        flush: vi.fn().mockResolvedValue(undefined),
         find: vi.fn().mockResolvedValue([]),
         getConnection: vi.fn().mockReturnValue({
             execute: vi.fn().mockResolvedValue([]),
@@ -101,7 +103,7 @@ describe('MemoryService', () => {
                     content: expect.any(String) as string,
                 }),
             );
-            expect(em.persistAndFlush).toHaveBeenCalledOnce();
+            expect(em.flush).toHaveBeenCalledOnce();
         });
 
         it('truncates Haiku content to 1000 characters', async () => {
@@ -123,7 +125,24 @@ describe('MemoryService', () => {
 
             const [, entityData] = em.create.mock.calls[0] as [unknown, { embedding: number[] | null }];
             expect(entityData.embedding).toBeNull();
-            expect(em.persistAndFlush).toHaveBeenCalledOnce();
+            expect(em.flush).toHaveBeenCalledOnce();
+        });
+
+        it('persists a MEMORIAL entry with entryType set to MEMORIAL', async () => {
+            await service.writeDiaryEntry(1, 'Day 5', [], DiaryEntryType.MEMORIAL);
+
+            const [, entityData] = em.create.mock.calls[0] as [unknown, { entryType: string }];
+            expect(entityData.entryType).toBe(DiaryEntryType.MEMORIAL);
+            expect(em.flush).toHaveBeenCalledOnce();
+        });
+
+        it('does not rethrow when Haiku fails for a MEMORIAL entry', async () => {
+            anthropicClient.messages.create.mockRejectedValueOnce(new Error('Haiku down'));
+
+            await expect(
+                service.writeDiaryEntry(1, 'Day 5', [], DiaryEntryType.MEMORIAL),
+            ).resolves.toBeUndefined();
+            expect(em.flush).not.toHaveBeenCalled();
         });
     });
 
@@ -181,7 +200,7 @@ describe('MemoryService', () => {
                     embedding: [0.1, 0.2],
                 }),
             );
-            expect(em.persistAndFlush).toHaveBeenCalledOnce();
+            expect(em.flush).toHaveBeenCalledOnce();
         });
 
         it('persists with null embedding when embedding service fails', async () => {
@@ -191,7 +210,7 @@ describe('MemoryService', () => {
 
             const [, entityData] = em.create.mock.calls[0] as [unknown, { embedding: number[] | null }];
             expect(entityData.embedding).toBeNull();
-            expect(em.persistAndFlush).toHaveBeenCalledOnce();
+            expect(em.flush).toHaveBeenCalledOnce();
         });
 
         it('creates without subjectId when not provided', async () => {
@@ -205,7 +224,7 @@ describe('MemoryService', () => {
             await expect(
                 service.createMemory(1, 'invalid-type' as SubjectType, 'Content.'),
             ).rejects.toThrow();
-            expect(em.persistAndFlush).not.toHaveBeenCalled();
+            expect(em.flush).not.toHaveBeenCalled();
         });
     });
 

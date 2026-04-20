@@ -9,7 +9,15 @@ export enum DmStreamChunkType {
     TOOL_RESULT = 'TOOL_RESULT',
     SUGGESTED_ACTION = 'SUGGESTED_ACTION',
     STATUS = 'STATUS',
+    CAMPAIGN_ENDED = 'CAMPAIGN_ENDED',
     DONE = 'DONE',
+}
+
+/** Payload carried by a CAMPAIGN_ENDED STATUS chunk. */
+export interface CampaignEndedChunkPayload {
+    epitaph: string
+    daysPlayed: number
+    questsCompleted: number
 }
 
 registerEnumType(DmStreamChunkType, { name: 'DmStreamChunkType' });

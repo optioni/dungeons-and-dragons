@@ -5,7 +5,7 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
-import { CampaignSetupStatus } from './campaign.enums';
+import { CampaignSetupStatus, CampaignStatus } from './campaign.enums';
 import { CampaignService } from './campaign.service';
 import { Campaign } from './entities/campaign.entity';
 
@@ -132,6 +132,80 @@ describe('CampaignService', () => {
             });
 
             expect(() => service.assertStatus(campaign, [CampaignSetupStatus.DRAFT])).toThrow(BadRequestException);
+        });
+    });
+
+    describe('findById — status fields', () => {
+        it('returns campaign with default ACTIVE status', async () => {
+            const campaign = Object.assign(new Campaign(), {
+                id: 1,
+                userId: 42,
+                name: 'Test',
+                status: CampaignStatus.ACTIVE,
+                endedAt: null,
+                endReason: null,
+            });
+
+            mockEm.findOne.mockResolvedValue(campaign);
+
+            const result = await service.findById(1, 42);
+            expect(result.status).toBe(CampaignStatus.ACTIVE);
+            expect(result.endedAt).toBeNull();
+            expect(result.endReason).toBeNull();
+        });
+    });
+
+    describe('endCampaign', () => {
+        function makeSessionService() {
+            return { endActiveSession: vi.fn().mockResolvedValue(undefined) };
+        }
+
+        it('sets status to ENDED, stamps endedAt, persists endReason', async () => {
+            const campaign = Object.assign(new Campaign(), {
+                id: 1,
+                status: CampaignStatus.ACTIVE,
+                endedAt: null,
+                endReason: null,
+            });
+
+            mockEm.findOne.mockResolvedValue(campaign);
+            const sessionService = makeSessionService();
+            service = new CampaignService(mockRepo as never, sessionService as never);
+
+            const result = await service.endCampaign(1, 'Character died', 'A hero remembered.');
+
+            expect(campaign.status).toBe(CampaignStatus.ENDED);
+            expect(campaign.endedAt).toBeInstanceOf(Date);
+            expect(campaign.endReason).toBe('Character died');
+            expect(mockEm.flush).toHaveBeenCalled();
+            expect(result).toEqual({ ended: true });
+        });
+
+        it('calls endActiveSession after persisting status', async () => {
+            const campaign = Object.assign(new Campaign(), { id: 1, status: CampaignStatus.ACTIVE });
+            mockEm.findOne.mockResolvedValue(campaign);
+            const sessionService = makeSessionService();
+            service = new CampaignService(mockRepo as never, sessionService as never);
+
+            await service.endCampaign(1, 'reason', 'epitaph');
+
+            expect(sessionService.endActiveSession).toHaveBeenCalledWith(1);
+        });
+
+        it('returns alreadyEnded when campaign is already ENDED', async () => {
+            const campaign = Object.assign(new Campaign(), {
+                id: 1,
+                status: CampaignStatus.ENDED,
+            });
+
+            mockEm.findOne.mockResolvedValue(campaign);
+            const sessionService = makeSessionService();
+            service = new CampaignService(mockRepo as never, sessionService as never);
+
+            const result = await service.endCampaign(1, 'reason', 'epitaph');
+
+            expect(result).toEqual({ alreadyEnded: true });
+            expect(sessionService.endActiveSession).not.toHaveBeenCalled();
         });
     });
 });

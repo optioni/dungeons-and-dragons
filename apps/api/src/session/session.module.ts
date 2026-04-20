@@ -1,5 +1,5 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { CampaignModule } from '../campaign/campaign.module.js';
 import { GraphqlModule } from '../graphql/graphql.module.js';
@@ -20,7 +20,7 @@ import { StreamPublisher } from './stream-publisher.service.js';
     imports: [
         GraphqlModule,
         MikroOrmModule.forFeature([GameSession, GameEvent]),
-        CampaignModule,
+        forwardRef(() => CampaignModule),
         LlmModule,
     ],
     providers: [

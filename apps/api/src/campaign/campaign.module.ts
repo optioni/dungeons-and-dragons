@@ -1,7 +1,8 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
 import { GraphqlModule } from '../graphql/graphql.module.js';
+import { SessionModule } from '../session/session.module.js';
 import { Faction } from '../world/entities/faction.entity.js';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity.js';
 import { Location } from '../world/entities/location.entity.js';
@@ -23,6 +24,7 @@ import { Campaign } from './entities/campaign.entity.js';
 @Module({
     imports: [
         GraphqlModule,
+        forwardRef(() => SessionModule),
         MikroOrmModule.forFeature([
             Campaign,
             Location,

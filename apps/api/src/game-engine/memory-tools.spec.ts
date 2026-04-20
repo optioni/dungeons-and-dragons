@@ -29,9 +29,11 @@ vi.mock('@nestjs/graphql', () => ({
 }));
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
+    Module: () => () => {},
     OnModuleInit: () => () => {},
     Optional: () => () => {},
     Inject: () => () => {},
+    forwardRef: (fn: () => unknown) => fn,
     Logger: class {
         error = vi.fn();
     },
@@ -97,6 +99,9 @@ function makeRegistrar(
         {} as never,
         memoryService as never,
         {} as never,
+        { endCampaign: vi.fn() } as never,
+        { publish: vi.fn() } as never,
+        { exists: vi.fn().mockResolvedValue(0) } as never,
     );
     registrar.onModuleInit();
 

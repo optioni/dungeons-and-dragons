@@ -1,15 +1,18 @@
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
-    BadRequestException, ForbiddenException, Injectable, NotFoundException,
+    BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException, Optional, forwardRef,
 } from '@nestjs/common';
 import { type Connection } from 'graphql-relay';
 
 import { GraphqlService } from '../graphql/graphql.service.js';
 import { type ConnectionArgs } from '../graphql/relay';
-import { CampaignSetupStatus } from './campaign.enums.js';
+import { SessionService } from '../session/session.service.js';
+import { CampaignSetupStatus, CampaignStatus } from './campaign.enums.js';
 import { type CreateCampaignInput } from './dto/create-campaign.input.js';
 import { Campaign } from './entities/campaign.entity.js';
+
+export const SESSION_SERVICE = Symbol('SESSION_SERVICE');
 
 /**
  * Core campaign lifecycle service: creation, ownership-scoped lookups,
@@ -20,6 +23,9 @@ export class CampaignService {
     constructor(
         @InjectRepository(Campaign)
         private readonly campaignRepository: EntityRepository<Campaign>,
+        @Optional()
+        @Inject(forwardRef(() => SessionService))
+        private readonly sessionService?: Pick<SessionService, 'endActiveSession'>,
     ) {}
 
     /**
@@ -92,5 +98,36 @@ export class CampaignService {
                 `This action requires campaign status to be one of: ${allowed.join(', ')}. Current: ${campaign.setupStatus}`,
             );
         }
+    }
+
+    /**
+     * Permanently marks a campaign as ENDED, stamps endedAt, persists endReason, then
+     * force-ends the active session. Returns `{ alreadyEnded: true }` if the campaign
+     * is already ENDED (structured error for LLM tool callers).
+     */
+    async endCampaign(
+        campaignId: number,
+        reason: string,
+        _epitaph: string,
+    ): Promise<{ alreadyEnded: true } | { ended: true }> {
+        const em = this.campaignRepository.getEntityManager();
+        const campaign = await em.findOne(Campaign, { id: campaignId });
+
+        if (!campaign) {
+            throw new NotFoundException('Campaign not found');
+        }
+
+        if (campaign.status === CampaignStatus.ENDED) {
+            return { alreadyEnded: true };
+        }
+
+        campaign.status = CampaignStatus.ENDED;
+        campaign.endedAt = new Date();
+        campaign.endReason = reason;
+        await em.flush();
+
+        await this.sessionService?.endActiveSession(campaignId);
+
+        return { ended: true };
     }
 }

@@ -16,12 +16,12 @@ export class QuestEntity extends BaseEntity {
     @PrimaryKey({ type: 'integer', autoincrement: true })
     id!: number;
 
-    @Field(() => ID)
-    @Property({ type: 'integer', fieldName: 'quest_id' })
-    questId!: number;
-
-    @ManyToOne(() => Quest, { fieldName: 'quest_id' })
+    @ManyToOne(() => Quest)
     quest!: Quest;
+
+    get questId(): number {
+        return this.quest.id;
+    }
 
     @Field(() => QuestEntityType)
     @Property({ type: 'text' })

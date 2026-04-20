@@ -6,7 +6,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type GameEvent } from '../session/entities/game-event.entity.js';
 import { EventType } from '../session/session.enums.js';
 import { EmbeddingService } from './embedding.service.js';
-import { DiaryEntry } from './entities/diary-entry.entity.js';
+import { DiaryEntry, DiaryEntryType } from './entities/diary-entry.entity.js';
 import { Memory, SubjectType } from './entities/memory.entity.js';
 
 export const ANTHROPIC_CLIENT = Symbol('ANTHROPIC_CLIENT');
@@ -41,11 +41,21 @@ export class MemoryService {
     ) {}
 
     /**
-     * Calls Haiku to write a diary narrative from today's game events, generates an
-     * embedding, and persists the DiaryEntry. Called by take_long_rest before world tick.
+     * Calls Haiku to write a diary narrative from today's game events (or a MEMORIAL entry
+     * on permadeath), generates an embedding, and persists the DiaryEntry.
+     * Memorial entries: failure is caught and logged — does not rethrow.
      */
-    async writeDiaryEntry(campaignId: number, inGameDate: string, gameEvents: GameEvent[]): Promise<void> {
+    async writeDiaryEntry(
+        campaignId: number,
+        inGameDate: string,
+        gameEvents: GameEvent[],
+        entryType: DiaryEntryType = DiaryEntryType.DAILY,
+    ): Promise<void> {
         const eventSummary = this.formatEventsForDiary(gameEvents);
+
+        const prompt = entryType === DiaryEntryType.MEMORIAL
+            ? `Write a memorial epitaph for this D&D character (max 150 words, third person, elegiac tone). Summarise the character's life, key deeds, and cause of death.\n\nSession transcript:\n${eventSummary}`
+            : `Summarize today's D&D session as a concise diary entry (max 150 words, first person, from the adventurer's perspective).\n\nEvents from today:\n${eventSummary}`;
 
         let content: string;
         try {
@@ -53,12 +63,7 @@ export class MemoryService {
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 300,
-                messages: [
-                    {
-                        role: 'user',
-                        content: `Summarize today's D&D session as a concise diary entry (max 150 words, first person, from the adventurer's perspective).\n\nEvents from today:\n${eventSummary}`,
-                    },
-                ],
+                messages: [{ role: 'user', content: prompt }],
             });
             /* eslint-enable @typescript-eslint/naming-convention */
             const textBlock = response.content.find((b: { type: string }) => b.type === 'text') as
@@ -67,6 +72,10 @@ export class MemoryService {
             content = textBlock?.text ?? eventSummary;
         } catch (error) {
             this.logger.error('Haiku diary generation failed', error);
+            if (entryType === DiaryEntryType.MEMORIAL) {
+                return;
+            }
+
             content = eventSummary;
         }
 
@@ -76,6 +85,7 @@ export class MemoryService {
         const entry = this.em.create(DiaryEntry, {
             campaign: { id: campaignId } as never,
             inGameDate,
+            entryType,
             content: truncated,
             embedding,
         } as never);
