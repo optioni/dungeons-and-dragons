@@ -2,7 +2,11 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { DiceChecksService } from './dice-checks.service.js';
+import { DiceService } from './dice.service.js';
+
 // ── Framework mocks ──────────────────────────────────────────────────────────
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
     PrimaryKey: () => () => {},
@@ -26,15 +30,16 @@ vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
     NotFoundException: class NotFoundException extends Error {},
 }));
-
-import { DiceService } from './dice.service.js';
-import { DiceChecksService } from './dice-checks.service.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 function makeCharacter(overrides: Record<string, unknown> = {}) {
     return {
         id: 1,
         level: 3,
-        abilityScores: { STR: 10, DEX: 16, CON: 12, INT: 8, WIS: 14, CHA: 10 },
+        /* eslint-disable @typescript-eslint/naming-convention */
+        abilityScores: {
+            STR: 10, DEX: 16, CON: 12, INT: 8, WIS: 14, CHA: 10,
+        },
         skillProficiencies: {
             Stealth: 'proficient',
             Perception: 'expert',
@@ -55,7 +60,9 @@ function makeCharacter(overrides: Record<string, unknown> = {}) {
             'Sleight of Hand': 'none',
             Survival: 'none',
         },
-        proficiencyBonus: 2, // level 3 → floor((3-1)/4)+2 = 2
+        /* eslint-enable @typescript-eslint/naming-convention */
+        // level 3 → floor((3-1)/4)+2 = 2
+        proficiencyBonus: 2,
         ...overrides,
     };
 }
@@ -68,10 +75,8 @@ function makeEm(character: ReturnType<typeof makeCharacter> | null = makeCharact
 
 describe('DiceChecksService', () => {
     let service: DiceChecksService;
-    let seededDice: DiceService;
 
     beforeEach(() => {
-        seededDice = DiceService.withSeed('test');
         service = new DiceChecksService(null as never);
     });
 
@@ -91,13 +96,14 @@ describe('DiceChecksService', () => {
             service = new DiceChecksService(null as never, new DiceService());
             const result = service.rollDice('2x6');
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('INVALID_EXPRESSION');
+            expect((result as { errorCode: string }).errorCode).toBe('INVALID_EXPRESSION');
         });
     });
 
     describe('checkSkill', () => {
         it('applies proficiency bonus for a proficient skill', async () => {
-            const char = makeCharacter(); // DEX +3, Stealth proficient
+            // DEX +3, Stealth proficient
+            const char = makeCharacter();
             const em = makeEm(char);
             service = new DiceChecksService(em as never, DiceService.withSeed('skill-prof'));
             const result = await service.checkSkill(1, 'Stealth', 15);
@@ -109,7 +115,8 @@ describe('DiceChecksService', () => {
         });
 
         it('applies double proficiency for expert skill', async () => {
-            const char = makeCharacter(); // Perception expert
+            // Perception expert
+            const char = makeCharacter();
             const em = makeEm(char);
             service = new DiceChecksService(em as never, DiceService.withSeed('expert'));
             const result = await service.checkSkill(1, 'Perception', 10);
@@ -121,7 +128,8 @@ describe('DiceChecksService', () => {
         });
 
         it('omits proficiency for non-proficient skill', async () => {
-            const char = makeCharacter(); // Persuasion 'none', CHA 10 → mod 0
+            // Persuasion 'none', CHA 10 → mod 0
+            const char = makeCharacter();
             const em = makeEm(char);
             service = new DiceChecksService(em as never, DiceService.withSeed('noprof'));
             const result = await service.checkSkill(1, 'Persuasion', 12);
@@ -136,13 +144,14 @@ describe('DiceChecksService', () => {
             service = new DiceChecksService(em as never);
             const result = await service.checkSkill(999, 'Stealth', 15);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('CHARACTER_NOT_FOUND');
+            expect((result as { errorCode: string }).errorCode).toBe('CHARACTER_NOT_FOUND');
         });
     });
 
     describe('checkAbility', () => {
         it('applies raw ability modifier without proficiency', async () => {
-            const char = makeCharacter(); // STR 10 → mod 0
+            // STR 10 → mod 0
+            const char = makeCharacter();
             const em = makeEm(char);
             service = new DiceChecksService(em as never, DiceService.withSeed('ability'));
             const result = await service.checkAbility(1, 'STR', 13);
@@ -153,7 +162,8 @@ describe('DiceChecksService', () => {
         });
 
         it('returns correct modifier for high DEX', async () => {
-            const char = makeCharacter(); // DEX 16 → mod +3
+            // DEX 16 → mod +3
+            const char = makeCharacter();
             const em = makeEm(char);
             service = new DiceChecksService(em as never, DiceService.withSeed('dex'));
             const result = await service.checkAbility(1, 'DEX', 10);
@@ -164,7 +174,8 @@ describe('DiceChecksService', () => {
         });
 
         it('does not include proficiency even when character has proficiency in a related skill', async () => {
-            const char = makeCharacter(); // Stealth proficient but check_ability uses raw DEX
+            // Stealth proficient but check_ability uses raw DEX
+            const char = makeCharacter();
             const em = makeEm(char);
             service = new DiceChecksService(em as never, DiceService.withSeed('raw-dex'));
             const result = await service.checkAbility(1, 'DEX', 10);

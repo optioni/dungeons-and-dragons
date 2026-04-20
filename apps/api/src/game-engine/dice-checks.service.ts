@@ -1,13 +1,14 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 
-import { type SkillName, SKILL_NAMES } from '../character/character.enums.js';
+import { SKILL_NAMES, type SkillName } from '../character/character.enums.js';
 import { Character } from '../character/entities/character.entity.js';
-import { type RollOutcome, DiceService } from './dice.service.js';
+import { DiceService, type RollOutcome } from './dice.service.js';
 
 export type AbilityName = 'STR' | 'DEX' | 'CON' | 'INT' | 'WIS' | 'CHA';
 
 /** Skill name → governing ability map. */
+/* eslint-disable @typescript-eslint/naming-convention */
 const SKILL_ABILITY: Record<SkillName, AbilityName> = {
     Acrobatics: 'DEX',
     'Animal Handling': 'WIS',
@@ -28,26 +29,27 @@ const SKILL_ABILITY: Record<SkillName, AbilityName> = {
     Stealth: 'DEX',
     Survival: 'WIS',
 };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function abilityModifier(score: number): number {
     return Math.floor((score - 10) / 2);
 }
 
 export interface CheckResult {
-    success: true;
+    success: true
     data: {
-        roll: number;
-        modifier: number;
-        total: number;
-        dc: number;
-        passed: boolean;
-    };
+        roll: number
+        modifier: number
+        total: number
+        dc: number
+        passed: boolean
+    }
 }
 
 export interface CheckError {
-    success: false;
-    errorCode: string;
-    message: string;
+    success: false
+    errorCode: string
+    message: string
 }
 
 /**
@@ -88,16 +90,19 @@ export class DiceChecksService {
 
         const skillName = skill as SkillName;
         const ability = SKILL_ABILITY[skillName];
-        const abilityScore = (character.abilityScores as Record<string, number>)[ability] ?? 10;
-        const abilityMod = abilityModifier(abilityScore);
+        const abilityScore = (character.abilityScores as unknown as Record<string, number>)[ability] ?? 10;
+        const abilityModule = abilityModifier(abilityScore);
         const proficiency = character.skillProficiencies[skillName];
         const profBonus = character.proficiencyBonus;
 
         let profMultiplier = 0;
-        if (proficiency === 'proficient') profMultiplier = 1;
-        else if (proficiency === 'expert') profMultiplier = 2;
+        if (proficiency === 'proficient') {
+            profMultiplier = 1;
+        } else if (proficiency === 'expert') {
+            profMultiplier = 2;
+        }
 
-        const modifier = abilityMod + profBonus * profMultiplier;
+        const modifier = abilityModule + profBonus * profMultiplier;
         const roll = this.dice.d20();
         const total = roll + modifier;
 
@@ -126,7 +131,7 @@ export class DiceChecksService {
             return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
         }
 
-        const abilityScore = (character.abilityScores as Record<string, number>)[ability] ?? 10;
+        const abilityScore = (character.abilityScores as unknown as Record<string, number>)[ability] ?? 10;
         const modifier = abilityModifier(abilityScore);
         const roll = this.dice.d20();
         const total = roll + modifier;

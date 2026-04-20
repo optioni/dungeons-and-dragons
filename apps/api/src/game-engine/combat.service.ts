@@ -3,26 +3,26 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { Character } from '../character/entities/character.entity.js';
-import { CombatSession, type Combatant } from '../session/entities/combat-session.entity.js';
+import { type Combatant, CombatSession } from '../session/entities/combat-session.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
-import { STATE_CHANGED_EVENT, StateChangedEvent } from './events/state-changed.event.js';
 import { DiceService } from './dice.service.js';
+import { STATE_CHANGED_EVENT, StateChangedEvent } from './events/state-changed.event.js';
 
 export interface CombatResult {
-    success: true;
-    data: Record<string, unknown>;
+    success: true
+    data: Record<string, unknown>
 }
 
 export interface CombatError {
-    success: false;
-    errorCode: string;
-    message: string;
+    success: false
+    errorCode: string
+    message: string
 }
 
 type CombatOutcome = CombatResult | CombatError;
 
-const COMBAT_ONLY_CONDITIONS = new Set(['PRONE', 'RESTRAINED', 'GRAPPLED']);
+const COMBAT_ONLY_CONDITIONS = new Set(['GRAPPLED', 'PRONE', 'RESTRAINED']);
 
 /**
  * Implements all combat-related LLM tool logic: initiative, damage, healing,
@@ -43,33 +43,42 @@ export class CombatService {
     /** Creates a CombatSession for the given session with provided participants. */
     async startCombat(
         sessionId: number,
-        participants: Array<{ type: 'CHARACTER' | 'NPC'; id: string; initiativeRoll?: number }>,
+        participants: Array<{ type: 'CHARACTER' | 'NPC'; id: string; initiativeRoll?: number; npcData?: { hp: number; maxHp: number; name: string } }>,
     ): Promise<CombatOutcome> {
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
-        if (session.combatSession) return { success: false, errorCode: 'COMBAT_ALREADY_ACTIVE', message: 'Combat already active' };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
-        const combatants: Combatant[] = await Promise.all(participants.map(async (p) => {
-            const roll = p.initiativeRoll ?? this.dice.d20();
+        if (session.combatSession) {
+            return { success: false, errorCode: 'COMBAT_ALREADY_ACTIVE', message: 'Combat already active' };
+        }
+
+        const combatants: Combatant[] = await Promise.all(participants.map(async (participant) => {
+            const roll = participant.initiativeRoll ?? this.dice.d20();
             let hp = 0;
             let maxHp = 0;
             let namedNpc = false;
 
-            if (p.type === 'CHARACTER') {
-                const char = await this.em.findOne(Character, { id: parseInt(p.id, 10) });
+            if (participant.type === 'CHARACTER') {
+                const char = await this.em.findOne(Character, { id: Number.parseInt(participant.id, 10) });
                 hp = char?.hp ?? 0;
                 maxHp = char?.maxHp ?? 0;
+            } else if (participant.npcData) {
+                hp = participant.npcData.hp;
+                maxHp = participant.npcData.maxHp;
+                namedNpc = false;
             } else {
-                const npc = await this.em.findOne(Npc, { id: parseInt(p.id, 10) });
+                const npc = await this.em.findOne(Npc, { id: Number.parseInt(participant.id, 10) });
                 hp = npc?.hp ?? 10;
                 maxHp = npc?.maxHp ?? hp;
                 namedNpc = npc?.hp !== null;
             }
 
             return {
-                id: p.id,
-                type: p.type,
-                name: p.id,
+                id: participant.id,
+                type: participant.type,
+                name: participant.npcData?.name ?? participant.id,
                 initiativeRoll: roll,
                 currentHp: hp,
                 maxHp,
@@ -99,8 +108,13 @@ export class CombatService {
     /** Advances initiative to the next combatant, resetting the previous combatant's action economy. */
     async advanceInitiative(sessionId: number): Promise<CombatOutcome> {
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
-        if (!session.combatSession) return { success: false, errorCode: 'NO_ACTIVE_COMBAT', message: 'No active combat' };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
+
+        if (!session.combatSession) {
+            return { success: false, errorCode: 'NO_ACTIVE_COMBAT', message: 'No active combat' };
+        }
 
         const cs = session.combatSession;
         const total = cs.combatants.length;
@@ -117,7 +131,9 @@ export class CombatService {
         const nextIndex = cs.currentTurnIndex + 1;
         const isNewRound = nextIndex >= total;
         cs.currentTurnIndex = isNewRound ? 0 : nextIndex;
-        if (isNewRound) cs.roundNumber += 1;
+        if (isNewRound) {
+            cs.roundNumber += 1;
+        }
 
         await this.em.flush();
 
@@ -136,25 +152,33 @@ export class CombatService {
         sessionId: number,
         targetId: string,
         amount: number,
-        _damageType: string,
+        damageType: string,
     ): Promise<CombatOutcome> {
+        void damageType;
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         const cs = session.combatSession;
-        const combatant = cs?.combatants.find((c) => c.id === targetId);
+        const combatant = cs?.combatants.find((fighter) => fighter.id === targetId);
 
         let newHp: number;
         let maxHpForMassive: number;
 
         if (combatant?.type === 'CHARACTER') {
-            const char = await this.em.findOne(Character, { id: parseInt(targetId, 10) });
-            if (!char) return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Character ${targetId} not found` };
+            const char = await this.em.findOne(Character, { id: Number.parseInt(targetId, 10) });
+            if (!char) {
+                return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Character ${targetId} not found` };
+            }
 
             maxHpForMassive = char.maxHp;
             newHp = Math.max(0, char.hp - amount);
             char.hp = newHp;
-            if (combatant) combatant.currentHp = newHp;
+            if (combatant) {
+                combatant.currentHp = newHp;
+            }
+
             await this.em.flush();
         } else if (combatant?.type === 'NPC' && cs) {
             maxHpForMassive = combatant.maxHp;
@@ -176,22 +200,30 @@ export class CombatService {
     /** Heals a character or NPC combatant. */
     async heal(sessionId: number, targetId: string, amount: number): Promise<CombatOutcome> {
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         const cs = session.combatSession;
-        const combatant = cs?.combatants.find((c) => c.id === targetId);
+        const combatant = cs?.combatants.find((fighter) => fighter.id === targetId);
 
         if (combatant?.type === 'CHARACTER') {
-            const char = await this.em.findOne(Character, { id: parseInt(targetId, 10) });
-            if (!char) return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Character ${targetId} not found` };
+            const char = await this.em.findOne(Character, { id: Number.parseInt(targetId, 10) });
+            if (!char) {
+                return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Character ${targetId} not found` };
+            }
 
             const wasDown = char.hp === 0;
             char.hp = Math.min(char.maxHp, char.hp + amount);
-            if (combatant) combatant.currentHp = char.hp;
+            if (combatant) {
+                combatant.currentHp = char.hp;
+            }
+
             if (wasDown) {
                 char.deathSaveSuccesses = 0;
                 char.deathSaveFailures = 0;
             }
+
             await this.em.flush();
             this.events?.emit(STATE_CHANGED_EVENT, new StateChangedEvent('DAMAGE', targetId, session.campaignId));
             return { success: true, data: { newHp: char.hp } };
@@ -210,20 +242,25 @@ export class CombatService {
     /** Applies a condition to a combatant (idempotent). */
     async applyCondition(sessionId: number, targetId: string, condition: string): Promise<CombatOutcome> {
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         const cs = session.combatSession;
-        const combatant = cs?.combatants.find((c) => c.id === targetId);
-        if (!combatant) return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Target ${targetId} not found` };
+        const combatant = cs?.combatants.find((fighter) => fighter.id === targetId);
+        if (!combatant) {
+            return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Target ${targetId} not found` };
+        }
 
         if (!combatant.conditions.includes(condition)) {
             combatant.conditions.push(condition);
             if (combatant.type === 'CHARACTER') {
-                const char = await this.em.findOne(Character, { id: parseInt(targetId, 10) });
+                const char = await this.em.findOne(Character, { id: Number.parseInt(targetId, 10) });
                 if (char && !char.conditions.includes(condition)) {
                     char.conditions = [...char.conditions, condition];
                 }
             }
+
             await this.em.flush();
         }
 
@@ -233,19 +270,24 @@ export class CombatService {
     /** Removes a condition from a combatant (idempotent). */
     async removeCondition(sessionId: number, targetId: string, condition: string): Promise<CombatOutcome> {
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
 
         const cs = session.combatSession;
-        const combatant = cs?.combatants.find((c) => c.id === targetId);
-        if (!combatant) return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Target ${targetId} not found` };
+        const combatant = cs?.combatants.find((fighter) => fighter.id === targetId);
+        if (!combatant) {
+            return { success: false, errorCode: 'TARGET_NOT_FOUND', message: `Target ${targetId} not found` };
+        }
 
-        combatant.conditions = combatant.conditions.filter((c) => c !== condition);
+        combatant.conditions = combatant.conditions.filter((cond) => cond !== condition);
         if (combatant.type === 'CHARACTER') {
-            const char = await this.em.findOne(Character, { id: parseInt(targetId, 10) });
+            const char = await this.em.findOne(Character, { id: Number.parseInt(targetId, 10) });
             if (char) {
-                char.conditions = char.conditions.filter((c: string) => c !== condition);
+                char.conditions = char.conditions.filter((cond: string) => cond !== condition);
             }
         }
+
         await this.em.flush();
 
         return { success: true, data: { conditions: combatant.conditions } };
@@ -253,11 +295,13 @@ export class CombatService {
 
     /** Rolls a death save for a character. */
     async rollDeathSave(characterId: number): Promise<{
-        success: true;
-        data: { outcome: 'ONGOING' | 'STABILISED' | 'DEAD'; successes?: number; failures?: number; natural20?: boolean };
+        success: true
+        data: { outcome: 'ONGOING' | 'STABILISED' | 'DEAD'; successes?: number; failures?: number; natural20?: boolean }
     } | CombatError> {
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         const roll = this.dice.d20();
 
@@ -305,7 +349,9 @@ export class CombatService {
     /** Sets hp = 1 and resets death save counters. */
     async stabilise(characterId: number): Promise<CombatOutcome> {
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         char.hp = 1;
         char.deathSaveSuccesses = 0;
@@ -319,7 +365,9 @@ export class CombatService {
     async instantDeath(sessionId: number, characterId: number): Promise<CombatOutcome> {
         const session = await this.em.findOne(GameSession, { id: sessionId });
         const char = await this.em.findOne(Character, { id: characterId });
-        if (!char) return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        if (!char) {
+            return { success: false, errorCode: 'CHARACTER_NOT_FOUND', message: `Character ${characterId} not found` };
+        }
 
         char.isDead = true;
         char.hp = 0;
@@ -335,15 +383,20 @@ export class CombatService {
     /** Ends combat: persists NPC HP, syncs character conditions, deletes CombatSession. */
     async endCombat(sessionId: number): Promise<CombatOutcome> {
         const session = await this.loadSession(sessionId);
-        if (!session) return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
-        if (!session.combatSession) return { success: false, errorCode: 'NO_ACTIVE_COMBAT', message: 'No active combat' };
+        if (!session) {
+            return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+        }
+
+        if (!session.combatSession) {
+            return { success: false, errorCode: 'NO_ACTIVE_COMBAT', message: 'No active combat' };
+        }
 
         const cs = session.combatSession;
 
         // Persist final HP for named NPCs
         for (const combatant of cs.combatants) {
             if (combatant.type === 'NPC' && combatant.namedNpc) {
-                const npc = await this.em.findOne(Npc, { id: parseInt(combatant.id, 10) });
+                const npc = await this.em.findOne(Npc, { id: Number.parseInt(combatant.id, 10) });
                 if (npc) {
                     npc.hp = combatant.currentHp;
                 }
@@ -353,9 +406,9 @@ export class CombatService {
         // Sync character conditions (remove combat-only conditions)
         for (const combatant of cs.combatants) {
             if (combatant.type === 'CHARACTER') {
-                const char = await this.em.findOne(Character, { id: parseInt(combatant.id, 10) });
+                const char = await this.em.findOne(Character, { id: Number.parseInt(combatant.id, 10) });
                 if (char) {
-                    char.conditions = combatant.conditions.filter((c) => !COMBAT_ONLY_CONDITIONS.has(c));
+                    char.conditions = combatant.conditions.filter((cond) => !COMBAT_ONLY_CONDITIONS.has(cond));
                 }
             }
         }

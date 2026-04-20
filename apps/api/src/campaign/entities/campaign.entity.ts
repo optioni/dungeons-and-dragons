@@ -5,7 +5,6 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { DiaryEntry } from '../../memory/entities/diary-entry.entity.js';
 import { Memory } from '../../memory/entities/memory.entity.js';
-
 import {
     type AntagonistPlanState,
     CampaignSetupStatus,
@@ -92,6 +91,11 @@ export class Campaign extends BaseEntity {
     @Property({ type: 'integer', default: 1 })
     inGameDay: Opt<number> = 1;
 
+    /** When false, travel_to skips the random encounter roll entirely. */
+    @Field()
+    @Property({ type: 'boolean', default: true })
+    travelEncounterEnabled: Opt<boolean> = true;
+
     /** Narrative facts about the world — not canonical state read by tool calls. */
     @Field({ nullable: true })
     @Property({ type: 'text', nullable: true })
@@ -101,9 +105,9 @@ export class Campaign extends BaseEntity {
     @Property({ type: 'date', onCreate: () => new Date() })
     createdAt: Opt<Date> = new Date();
 
-    @OneToMany(() => DiaryEntry, (e) => e.campaign)
+    @OneToMany(() => DiaryEntry, (diaryEntry) => diaryEntry.campaign)
     diaryEntries = new Collection<DiaryEntry>(this);
 
-    @OneToMany(() => Memory, (e) => e.campaign)
+    @OneToMany(() => Memory, (memory) => memory.campaign)
     memories = new Collection<Memory>(this);
 }

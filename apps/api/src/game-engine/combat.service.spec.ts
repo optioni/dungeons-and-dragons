@@ -2,6 +2,10 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { CombatService } from './combat.service.js';
+import { DiceService } from './dice.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, @typescript-eslint/no-useless-constructor, symbol-description */
 // ── Framework mocks ──────────────────────────────────────────────────────────
 vi.mock('@mikro-orm/decorators/legacy', () => ({
     Entity: () => () => {},
@@ -11,7 +15,14 @@ vi.mock('@mikro-orm/decorators/legacy', () => ({
     OneToOne: () => () => {},
     OneToMany: () => () => {},
 }));
-vi.mock('@mikro-orm/core', () => ({ type: {}, OptionalProps: Symbol(), Collection: class { constructor() {} }, Type: class {} }));
+vi.mock('@mikro-orm/core', () => ({
+    type: {},
+    OptionalProps: Symbol(),
+    Collection: class {
+        constructor() {}
+    },
+    Type: class {},
+}));
 vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {} }));
 vi.mock('@nestjs/graphql', () => ({
     ObjectType: () => () => {},
@@ -25,15 +36,21 @@ vi.mock('@nestjs/graphql', () => ({
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
     NotFoundException: class NotFoundException extends Error {},
-    Logger: class Logger { log() {} warn() {} error() {} },
+    Logger: class Logger {
+        log() {}
+
+        warn() {}
+
+        error() {}
+    },
 }));
 vi.mock('@nestjs/event-emitter', () => ({
-    EventEmitter2: class EventEmitter2 { emit() {} },
+    EventEmitter2: class EventEmitter2 {
+        emit() {}
+    },
     InjectEventEmitter: () => () => {},
 }));
-
-import { DiceService } from './dice.service.js';
-import { CombatService } from './combat.service.js';
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, @typescript-eslint/no-useless-constructor, symbol-description */
 
 function makeCharacter(overrides: Record<string, unknown> = {}) {
     return {
@@ -45,7 +62,11 @@ function makeCharacter(overrides: Record<string, unknown> = {}) {
         deathSaveFailures: 0,
         isDead: false,
         level: 3,
-        abilityScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+        /* eslint-disable @typescript-eslint/naming-convention */
+        abilityScores: {
+            STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10,
+        },
+        /* eslint-enable @typescript-eslint/naming-convention */
         ...overrides,
     };
 }
@@ -88,10 +109,19 @@ function makeSession(combatSession: ReturnType<typeof makeCombatSession> | null 
 
 function makeEm(entities: { character?: unknown; session?: unknown; combatSession?: unknown } = {}) {
     return {
-        findOne: vi.fn().mockImplementation((entity: unknown, query: Record<string, unknown>) => {
-            if (String(entity).includes('Character') || entity === Object) return Promise.resolve(entities.character ?? null);
-            if (String(entity).includes('GameSession')) return Promise.resolve(entities.session ?? null);
-            if (String(entity).includes('CombatSession')) return Promise.resolve(entities.combatSession ?? null);
+        findOne: vi.fn().mockImplementation((entity: unknown) => {
+            if (String(entity).includes('Character') || entity === Object) {
+                return Promise.resolve(entities.character ?? null);
+            }
+
+            if (String(entity).includes('GameSession')) {
+                return Promise.resolve(entities.session ?? null);
+            }
+
+            if (String(entity).includes('CombatSession')) {
+                return Promise.resolve(entities.combatSession ?? null);
+            }
+
             return Promise.resolve(null);
         }),
         create: vi.fn().mockImplementation((_entity: unknown, data: unknown) => ({ ...data as object, id: 99 })),
@@ -118,8 +148,11 @@ describe('CombatService', () => {
             const cs = makeCombatSession(combatants, { currentTurnIndex: 0 });
             const session = makeSession(cs);
             const em = makeEm({ session });
-            em.findOne.mockImplementation((_e: unknown, q: Record<string, unknown>) => {
-                if (q && 'id' in q && q.id === 1) return Promise.resolve(session);
+            em.findOne.mockImplementation((_entity: unknown, queryArgument: Record<string, unknown>) => {
+                if (queryArgument && 'id' in queryArgument && queryArgument.id === 1) {
+                    return Promise.resolve(session);
+                }
+
                 return Promise.resolve(null);
             });
             service = new CombatService(em as never, DiceService.withSeed('adv'), null as never);
@@ -155,7 +188,7 @@ describe('CombatService', () => {
             service = new CombatService(em as never, DiceService.withSeed('nocom'), null as never);
             const result = await service.advanceInitiative(1);
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('NO_ACTIVE_COMBAT');
+            expect((result as { errorCode: string }).errorCode).toBe('NO_ACTIVE_COMBAT');
         });
     });
 
@@ -167,7 +200,10 @@ describe('CombatService', () => {
             const session = makeSession(cs);
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
             service = new CombatService(em as never, DiceService.withSeed('dmg'), null as never);
@@ -186,7 +222,10 @@ describe('CombatService', () => {
             const session = makeSession(cs);
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
             service = new CombatService(em as never, DiceService.withSeed('clamp'), null as never);
@@ -205,7 +244,10 @@ describe('CombatService', () => {
             const session = makeSession(cs);
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
             service = new CombatService(em as never, DiceService.withSeed('massive'), null as never);
@@ -226,7 +268,7 @@ describe('CombatService', () => {
             const result = await service.rollDeathSave(1);
             expect(result.success).toBe(true);
             if (result.success) {
-                expect(result.data.outcome).toMatch(/^(ONGOING|STABILISED|DEAD)$/);
+                expect(result.data.outcome).toMatch(/^(ONGOING|STABILISED|DEAD)$/u);
             }
         });
 
@@ -235,12 +277,9 @@ describe('CombatService', () => {
             const em = makeEm({ character: char });
             // Force a success roll (10+) by using a seed that produces >= 10
             // Seed 'ds-success' should roll high enough
-            let callCount = 0;
             service = new CombatService(em as never, {
-                d20: () => {
-                    callCount++;
-                    return 15; // always 15 = success
-                },
+                // always 15 = success
+                d20: () => 15,
             } as DiceService, null as never);
             em.findOne.mockResolvedValue(char);
             const result = await service.rollDeathSave(1);
@@ -253,7 +292,8 @@ describe('CombatService', () => {
         it('kills after 3 failures', async () => {
             const char = makeCharacter({ hp: 0, deathSaveSuccesses: 0, deathSaveFailures: 2 });
             service = new CombatService({ findOne: vi.fn().mockResolvedValue(char), flush: vi.fn() } as never, {
-                d20: () => 5, // failure (< 10)
+                // failure (< 10)
+                d20: () => 5,
             } as DiceService, null as never);
             const result = await service.rollDeathSave(1);
             expect(result.success).toBe(true);
@@ -296,7 +336,10 @@ describe('CombatService', () => {
             const session = makeSession(makeCombatSession([combatant]));
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
             service = new CombatService(em as never, DiceService.withSeed('evt-dmg'), { emit: emitMock } as never);
@@ -315,7 +358,10 @@ describe('CombatService', () => {
             const session = makeSession(makeCombatSession([combatant]));
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
             service = new CombatService(em as never, DiceService.withSeed('evt-heal'), { emit: emitMock } as never);
@@ -333,7 +379,10 @@ describe('CombatService', () => {
             const session = makeSession(null);
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
             service = new CombatService(em as never, DiceService.withSeed('evt-death'), { emit: emitMock } as never);
@@ -350,10 +399,17 @@ describe('CombatService', () => {
             const session = makeSession(makeCombatSession([combatant]));
             const em = makeEm({ character: char, session });
             em.findOne.mockImplementation((entity: unknown) => {
-                if (String(entity).includes('Character')) return Promise.resolve(char);
+                if (String(entity).includes('Character')) {
+                    return Promise.resolve(char);
+                }
+
                 return Promise.resolve(session);
             });
-            const throwingEmitter = { emit: vi.fn().mockImplementation(() => { throw new Error('emitter error'); }) };
+            const throwingEmitter = {
+                emit: vi.fn().mockImplementation(() => {
+                    throw new Error('emitter error');
+                }),
+            };
             service = new CombatService(em as never, DiceService.withSeed('evt-throw'), throwingEmitter as never);
             // Should not throw — ToolRegistry.dispatch catches errors, but service itself should handle it
             // The EventEmitter2?.emit() call uses optional chaining so it won't throw if emitter is null
