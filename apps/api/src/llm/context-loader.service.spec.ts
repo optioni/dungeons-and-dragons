@@ -334,4 +334,21 @@ describe('ContextLoader', () => {
             expect(result).toContain('Healing Potion x3 — 50 gp');
         });
     });
+
+    describe('loadWorldBlock — npc memories at current location', () => {
+        it('includes an NPC knowledge section when memories are provided', async () => {
+            const result = await service.loadWorldBlock(1, undefined, 'Aldric remembers: The bridge is trapped.');
+
+            expect(result).toContain('## NPC Knowledge');
+            expect(result).toContain('Aldric remembers: The bridge is trapped.');
+        });
+
+        it('omits the NPC knowledge section when npcMemories is absent or empty', async () => {
+            const withoutMemories = await service.loadWorldBlock(1);
+            const withEmptyMemories = await service.loadWorldBlock(1, undefined, '   ');
+
+            expect(withoutMemories).not.toContain('## NPC Knowledge');
+            expect(withEmptyMemories).not.toContain('## NPC Knowledge');
+        });
+    });
 });

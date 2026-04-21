@@ -13,6 +13,7 @@ import { EmbeddingService } from '../memory/embedding.service';
 import { DiaryEntry } from '../memory/entities/diary-entry.entity';
 import { Memory } from '../memory/entities/memory.entity';
 import { MemoryService } from '../memory/memory.service';
+import { NpcMemory } from './entities/npc-memory.entity';
 import { Faction } from './entities/faction.entity';
 import { LocationDiscovery } from './entities/location-discovery.entity';
 import { Location } from './entities/location.entity';
@@ -21,6 +22,7 @@ import { Map as WorldMap } from './entities/map.entity';
 import { NpcItem } from './entities/npc-item.entity';
 import { NpcRelationship } from './entities/npc-relationship.entity';
 import { Npc } from './entities/npc.entity';
+import { NpcMemoryService } from './npc-memory.service';
 import { WorldEvent } from './entities/world-event.entity';
 import { WorldTickWorker } from './world-tick.worker';
 import { WorldEventSource, WorldEventStatus } from './world.enums';
@@ -41,6 +43,7 @@ const ALL_ENTITIES = [
     Faction,
     WorldEvent,
     Npc,
+    NpcMemory,
     NpcRelationship,
     NpcItem,
 ];
@@ -88,12 +91,17 @@ function buildWorker(
 ): WorldTickWorker {
     const worldService = buildWorldService(em);
     const memoryService = buildMemoryService(em.fork());
+    const embedClient = {
+        embed: vi.fn().mockResolvedValue({ data: [{ embedding: Array.from({ length: 1024 }, () => 0.01) }] }),
+    };
+    const npcMemoryService = new NpcMemoryService(em.fork(), new EmbeddingService(embedClient as never));
     const config = { get: vi.fn().mockReturnValue(10) };
 
     return new WorldTickWorker(
         em,
         worldService,
         memoryService,
+        npcMemoryService,
         redis,
         { messages: anthropicMessages } as never,
         'stub-model',
@@ -140,6 +148,7 @@ describe('WorldTickWorker integration', () => {
 
         const conn = em.getConnection();
         await conn.execute('DELETE FROM diary_entry WHERE campaign_id = $1', [campaignId]);
+        await conn.execute('DELETE FROM npc_memory WHERE npc_id IN (SELECT id FROM npc WHERE campaign_id = $1)', [campaignId]);
         await conn.execute('DELETE FROM npc_item WHERE npc_id IN (SELECT id FROM npc WHERE campaign_id = $1)', [campaignId]);
         await conn.execute('DELETE FROM npc_relationship WHERE source_npc_id IN (SELECT id FROM npc WHERE campaign_id = $1)', [campaignId]);
         await conn.execute('DELETE FROM npc WHERE campaign_id = $1', [campaignId]);

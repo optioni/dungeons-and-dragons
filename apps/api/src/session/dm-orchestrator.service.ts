@@ -1,10 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { ContextLoader } from '../llm/context-loader.service.js';
 import { ToolRegistry } from '../llm/tool-registry.service.js';
+import { Npc } from '../world/entities/npc.entity.js';
+import { NpcMemoryService } from '../world/npc-memory.service.js';
 import { DmStreamChunkType } from './dto/dm-stream-chunk.dto.js';
 import { EventType } from './session.enums.js';
 import { SessionService } from './session.service.js';
@@ -13,6 +17,24 @@ import { StreamPublisher } from './stream-publisher.service.js';
 /* eslint-disable @typescript-eslint/naming-convention */
 /** Tool definitions exposed to the DM model. Extend as GameEngineModule lands. */
 const DM_TOOLS: Anthropic.Tool[] = [
+    {
+        name: 'record_npc_memory',
+        description: 'Records a notable event or learned fact from an NPC perspective for future recall.',
+        input_schema: {
+            type: 'object' as const,
+            properties: {
+                npc_id: {
+                    type: 'number',
+                    description: 'The NPC who witnessed or learned the information',
+                },
+                content: {
+                    type: 'string',
+                    description: 'A concise memory statement to persist for that NPC',
+                },
+            },
+            required: ['npc_id', 'content'],
+        },
+    },
     {
         name: 'set_scene_type',
         description: 'Changes the active scene type for the current session, affecting prompt module and UI mode.',
@@ -51,6 +73,8 @@ export class DmOrchestrator {
         private readonly contextLoader: ContextLoader,
         private readonly toolRegistry: ToolRegistry,
         private readonly streamPublisher: StreamPublisher,
+        private readonly em: EntityManager,
+        private readonly npcMemoryService: NpcMemoryService,
         private readonly configService: ConfigService<EnvironmentConfig>,
     ) {
         this.anthropic = new Anthropic({
@@ -70,10 +94,11 @@ export class DmOrchestrator {
         const session = await this.sessionService.findSessionWithCampaign(sessionId);
         const campaignId = session.campaign.id;
         const sceneType = session.sceneType;
+        const npcMemories = await this.loadSceneNpcMemories(campaignId, playerInput);
 
         const baseBlock = this.contextLoader.loadBaseBlock(sceneType);
         const campaignBlock = await this.contextLoader.loadCampaignBlock(campaignId);
-        const worldBlock = await this.contextLoader.loadWorldBlock(campaignId);
+        const worldBlock = await this.contextLoader.loadWorldBlock(campaignId, undefined, npcMemories);
         const historyMessages = await this.contextLoader.loadHistoryBlock(sessionId);
 
         // historyMessages includes the player input we just persisted as the last item;
@@ -199,5 +224,46 @@ export class DmOrchestrator {
             { role: 'assistant', content: finalMessage.content },
             { role: 'user', content: toolResults },
         ], narrativeRef);
+    }
+
+    /**
+     * Loads relevant NPC memories for the current campaign location, capped across all NPCs.
+     */
+    private async loadSceneNpcMemories(campaignId: number, playerInput: string): Promise<string | undefined> {
+        const campaign = await this.em.findOne(Campaign, { id: campaignId });
+        if (!campaign?.currentLocationId) {
+            return undefined;
+        }
+
+        const limit = this.configService.get<number>('NPC_MEMORY_SCENE_LIMIT', 10) ?? 10;
+        const npcs = await this.em.find(Npc, {
+            campaignId,
+            currentLocationId: campaign.currentLocationId,
+        });
+        if (npcs.length === 0) {
+            return undefined;
+        }
+
+        const lines: string[] = [];
+        for (const npc of npcs) {
+            if (lines.length >= limit) {
+                break;
+            }
+
+            const memories = await this.npcMemoryService.searchNpcMemories(
+                npc.id,
+                playerInput,
+                limit - lines.length,
+            );
+
+            for (const memory of memories) {
+                lines.push(`${npc.name} remembers: ${memory.content}`);
+                if (lines.length >= limit) {
+                    break;
+                }
+            }
+        }
+
+        return lines.length > 0 ? lines.join('\n') : undefined;
     }
 }

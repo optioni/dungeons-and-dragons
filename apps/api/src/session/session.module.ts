@@ -4,6 +4,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { CampaignModule } from '../campaign/campaign.module.js';
 import { GraphqlModule } from '../graphql/graphql.module.js';
 import { LlmModule } from '../llm/llm.module.js';
+import { WorldModule } from '../world/world.module.js';
 import { DmOrchestrator } from './dm-orchestrator.service.js';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';
@@ -22,6 +23,7 @@ import { StreamPublisher } from './stream-publisher.service.js';
         MikroOrmModule.forFeature([GameSession, GameEvent]),
         forwardRef(() => CampaignModule),
         LlmModule,
+        WorldModule,
     ],
     providers: [
         SessionService,

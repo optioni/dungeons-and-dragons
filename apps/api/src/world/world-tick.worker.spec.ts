@@ -45,6 +45,14 @@ function makeMemoryService(overrides: Record<string, unknown> = {}): Record<stri
     };
 }
 
+function makeNpcMemoryService(overrides: Record<string, unknown> = {}): Record<string, ReturnType<typeof vi.fn>> {
+    return {
+        createNpcMemory: vi.fn().mockResolvedValue({ id: 1 }),
+        searchNpcMemories: vi.fn().mockResolvedValue([]),
+        ...overrides,
+    };
+}
+
 function makeAnthropicClient(): { messages: { create: ReturnType<typeof vi.fn> } } {
     return {
         messages: {
@@ -55,7 +63,21 @@ function makeAnthropicClient(): { messages: { create: ReturnType<typeof vi.fn> }
 
 function makeConfig(overrides: Record<string, unknown> = {}): { get: ReturnType<typeof vi.fn> } {
     return {
-        get: vi.fn().mockReturnValue(10),
+        get: vi.fn().mockImplementation((key: string) => {
+            if (key === 'MAX_NPCS_PER_TICK') {
+                return 10;
+            }
+
+            if (key === 'NPC_MEMORY_AGENDA_LIMIT') {
+                return 5;
+            }
+
+            if (key === 'NPC_MEMORY_CONVERSATION_LIMIT') {
+                return 3;
+            }
+
+            return 10;
+        }),
         ...overrides,
     };
 }
@@ -64,6 +86,7 @@ function makeWorker(overrides: Partial<{
     em: Record<string, ReturnType<typeof vi.fn>>
     worldService: Record<string, ReturnType<typeof vi.fn>>
     memoryService: Record<string, ReturnType<typeof vi.fn>>
+    npcMemoryService: Record<string, ReturnType<typeof vi.fn>>
     redis: { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> }
     anthropic: { messages: { create: ReturnType<typeof vi.fn> } }
     config: { get: ReturnType<typeof vi.fn> }
@@ -73,11 +96,13 @@ function makeWorker(overrides: Partial<{
     redis: { set: ReturnType<typeof vi.fn>; del: ReturnType<typeof vi.fn> }
     worldService: Record<string, ReturnType<typeof vi.fn>>
     memoryService: Record<string, ReturnType<typeof vi.fn>>
+    npcMemoryService: Record<string, ReturnType<typeof vi.fn>>
     anthropic: { messages: { create: ReturnType<typeof vi.fn> } }
 } {
     const em = overrides.em ?? makeEm();
     const worldService = overrides.worldService ?? makeWorldService();
     const memoryService = overrides.memoryService ?? makeMemoryService();
+    const npcMemoryService = overrides.npcMemoryService ?? makeNpcMemoryService();
     const redis = overrides.redis ?? makeRedis();
     const anthropic = overrides.anthropic ?? makeAnthropicClient();
     const config = overrides.config ?? makeConfig();
@@ -95,6 +120,7 @@ function makeWorker(overrides: Partial<{
         em as never,
         worldService as never,
         memoryService as never,
+        npcMemoryService as never,
         redis as never,
         anthropic as never,
         'claude-haiku-test',
@@ -102,7 +128,7 @@ function makeWorker(overrides: Partial<{
     );
 
     return {
-        worker, em, redis, worldService, memoryService, anthropic,
+        worker, em, redis, worldService, memoryService, npcMemoryService, anthropic,
     };
 }
 
@@ -153,6 +179,7 @@ describe('WorldTickWorker', () => {
                 em as never,
                 makeWorldService() as never,
                 makeMemoryService() as never,
+                makeNpcMemoryService() as never,
                 redis as never,
                 makeAnthropicClient() as never,
                 'claude-haiku-test',
@@ -233,6 +260,7 @@ describe('WorldTickWorker departure events', () => {
         const em = makeEm();
         const worldService = makeWorldService();
         const memoryService = makeMemoryService();
+        const npcMemoryService = makeNpcMemoryService();
         const redis = makeRedis();
         const anthropic = makeAnthropicClient();
         const config = makeConfig();
@@ -280,6 +308,7 @@ describe('WorldTickWorker departure events', () => {
             em as never,
             worldService as never,
             memoryService as never,
+            npcMemoryService as never,
             redis as never,
             anthropic as never,
             'claude-haiku-test',
@@ -303,6 +332,7 @@ describe('WorldTickWorker departure events', () => {
         const em = makeEm();
         const worldService = makeWorldService();
         const memoryService = makeMemoryService();
+        const npcMemoryService = makeNpcMemoryService();
         const redis = makeRedis();
         const anthropic = makeAnthropicClient();
         const config = makeConfig();
@@ -350,6 +380,7 @@ describe('WorldTickWorker departure events', () => {
             em as never,
             worldService as never,
             memoryService as never,
+            npcMemoryService as never,
             redis as never,
             anthropic as never,
             'claude-haiku-test',
@@ -428,6 +459,7 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
             em as never,
             worldService as never,
             memoryService as never,
+            makeNpcMemoryService() as never,
             redis as never,
             anthropic as never,
             'claude-haiku-test',
@@ -472,6 +504,7 @@ describe('WorldTickWorker catastrophe (trigger_catastrophe)', () => {
             em as never,
             makeWorldService() as never,
             makeMemoryService() as never,
+            makeNpcMemoryService() as never,
             makeRedis() as never,
             anthropic as never,
             'claude-haiku-test',
@@ -516,6 +549,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
             em as never,
             makeWorldService() as never,
             makeMemoryService() as never,
+            makeNpcMemoryService() as never,
             makeRedis() as never,
             makeAnthropicClient() as never,
             'claude-haiku-test',
@@ -533,6 +567,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
                         newAgendaTarget: 'warn the guild',
                         relationshipChange: null,
                         itemExchanged: null,
+                        sharedMemories: [],
                     },
                 ],
                 departureEvents: [],
@@ -569,6 +604,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
             em as never,
             makeWorldService() as never,
             makeMemoryService() as never,
+            makeNpcMemoryService() as never,
             makeRedis() as never,
             makeAnthropicClient() as never,
             'claude-haiku-test',
@@ -586,6 +622,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
                         newAgendaTarget: null,
                         relationshipChange: null,
                         itemExchanged: null,
+                        sharedMemories: [],
                     },
                 ],
                 departureEvents: [],
@@ -622,6 +659,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
             em as never,
             makeWorldService() as never,
             makeMemoryService() as never,
+            makeNpcMemoryService() as never,
             makeRedis() as never,
             makeAnthropicClient() as never,
             'claude-haiku-test',
@@ -643,6 +681,7 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
                         newAgendaTarget: 'new agenda 2',
                         relationshipChange: null,
                         itemExchanged: null,
+                        sharedMemories: [],
                     },
                 ],
                 departureEvents: [],
@@ -651,5 +690,239 @@ describe('WorldTickWorker applyOutcomes — conversation outcome merging', () =>
         );
 
         expect(em.flush).toHaveBeenCalledTimes(1);
+    });
+
+    it('creates npc memories for shared conversation memories', async () => {
+        const em = makeEm();
+        const npcMemoryService = makeNpcMemoryService();
+        const sourceNpc = Object.assign(new Npc(), { id: 1, agenda: 'original', lastConversedAt: null });
+        const targetNpc = Object.assign(new Npc(), { id: 2, agenda: 'original', lastConversedAt: null });
+
+        em.findOne = vi.fn().mockImplementation((_entity: unknown, where: unknown) => {
+            const whereClause = where as { id?: number };
+            if (whereClause.id === 1) {
+                return Promise.resolve(sourceNpc);
+            }
+
+            if (whereClause.id === 2) {
+                return Promise.resolve(targetNpc);
+            }
+
+            return Promise.resolve(null);
+        });
+
+        const worker = new WorldTickWorker(
+            em as never,
+            makeWorldService() as never,
+            makeMemoryService() as never,
+            npcMemoryService as never,
+            makeRedis() as never,
+            makeAnthropicClient() as never,
+            'claude-haiku-test',
+            makeConfig() as never,
+        );
+
+        await worker.applyOutcomes(
+            {
+                agendaOutcomes: [],
+                conversationOutcomes: [
+                    {
+                        sourceNpcId: 1,
+                        targetNpcId: 2,
+                        newAgendaSource: null,
+                        newAgendaTarget: null,
+                        relationshipChange: null,
+                        itemExchanged: null,
+                        sharedMemories: [
+                            { receiverNpcId: 2, content: 'Aldric heard about the hidden vault.', senderNpcId: 1 },
+                            { receiverNpcId: 1, content: 'Mira warned about the cursed bridge.', senderNpcId: 2 },
+                        ],
+                    },
+                ],
+                departureEvents: [],
+            },
+            [],
+        );
+
+        expect(npcMemoryService.createNpcMemory).toHaveBeenCalledTimes(2);
+        expect(npcMemoryService.createNpcMemory).toHaveBeenNthCalledWith(
+            1,
+            2,
+            'Aldric heard about the hidden vault.',
+            undefined,
+            1,
+            { flush: false },
+        );
+        expect(npcMemoryService.createNpcMemory).toHaveBeenNthCalledWith(
+            2,
+            1,
+            'Mira warned about the cursed bridge.',
+            undefined,
+            2,
+            { flush: false },
+        );
+        expect(em.flush).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('WorldTickWorker NPC memory prompt enrichment', () => {
+    it('includes recent memories in the agenda prompt when memories exist', async () => {
+        const { worker, anthropic, npcMemoryService } = makeWorker();
+        const npc = Object.assign(new Npc(), {
+            id: 1,
+            campaignId: 1,
+            currentLocationId: 10,
+            personalityTraits: ['suspicious'],
+            agenda: 'track the thief',
+            name: 'Aldric',
+        });
+
+        npcMemoryService.searchNpcMemories.mockResolvedValue([
+            { content: 'The adventurer fled toward the old mill.' },
+        ]);
+        anthropic.messages.create.mockResolvedValue({
+            content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    agenda: 'updated',
+                    nextTickInGameDay: 10,
+                    newLocationId: null,
+                    departureDescription: null,
+                }),
+            }],
+        });
+
+        vi.spyOn(worker['em'], 'find').mockResolvedValue([]);
+        await worker['evaluateSingleNpcAgenda'](npc, 5, 1);
+
+        const prompt = anthropic.messages.create.mock.calls[0]?.[0]?.messages?.[0]?.content as string;
+        expect(prompt).toContain('## Recent Memories');
+        expect(prompt).toContain('The adventurer fled toward the old mill.');
+        expect(npcMemoryService.searchNpcMemories).toHaveBeenCalledWith(1, 'track the thief', 5);
+    });
+
+    it('omits the agenda memory section when no memories exist', async () => {
+        const { worker, anthropic, npcMemoryService } = makeWorker();
+        const npc = Object.assign(new Npc(), {
+            id: 1,
+            campaignId: 1,
+            currentLocationId: 10,
+            personalityTraits: [],
+            agenda: 'stand guard',
+            name: 'Aldric',
+        });
+
+        npcMemoryService.searchNpcMemories.mockResolvedValue([]);
+        anthropic.messages.create.mockResolvedValue({
+            content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    agenda: 'updated',
+                    nextTickInGameDay: 10,
+                    newLocationId: null,
+                    departureDescription: null,
+                }),
+            }],
+        });
+
+        vi.spyOn(worker['em'], 'find').mockResolvedValue([]);
+        await worker['evaluateSingleNpcAgenda'](npc, 5, 1);
+
+        const prompt = anthropic.messages.create.mock.calls[0]?.[0]?.messages?.[0]?.content as string;
+        expect(prompt).not.toContain('## Recent Memories');
+    });
+
+    it('caps agenda memory retrieval at NPC_MEMORY_AGENDA_LIMIT', async () => {
+        const config = makeConfig({
+            get: vi.fn().mockImplementation((key: string) => {
+                if (key === 'NPC_MEMORY_AGENDA_LIMIT') {
+                    return 2;
+                }
+
+                return 10;
+            }),
+        });
+        const { worker, anthropic, npcMemoryService } = makeWorker({ config });
+        const npc = Object.assign(new Npc(), {
+            id: 1,
+            campaignId: 1,
+            currentLocationId: 10,
+            personalityTraits: [],
+            agenda: 'stand guard',
+            name: 'Aldric',
+        });
+
+        anthropic.messages.create.mockResolvedValue({
+            content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    agenda: 'updated',
+                    nextTickInGameDay: 10,
+                    newLocationId: null,
+                    departureDescription: null,
+                }),
+            }],
+        });
+
+        vi.spyOn(worker['em'], 'find').mockResolvedValue([]);
+        await worker['evaluateSingleNpcAgenda'](npc, 5, 1);
+
+        expect(npcMemoryService.searchNpcMemories).toHaveBeenCalledWith(1, 'stand guard', 2);
+    });
+
+    it('includes conversation memory sections and parses sharedMemories', async () => {
+        const { worker, anthropic, npcMemoryService, em } = makeWorker();
+        const sourceNpc = Object.assign(new Npc(), {
+            id: 1, name: 'Aldric', profession: 'merchant', personalityTraits: [], speechStyle: 'measured',
+        });
+        const targetNpc = Object.assign(new Npc(), {
+            id: 2, name: 'Mira', profession: 'scout', personalityTraits: [], speechStyle: 'brisk',
+        });
+
+        em.findOne = vi.fn().mockImplementation((_entity: unknown, where: { id?: number }) => {
+            if (where.id === 1) {
+                return Promise.resolve(sourceNpc);
+            }
+
+            if (where.id === 2) {
+                return Promise.resolve(targetNpc);
+            }
+
+            return Promise.resolve(null);
+        });
+
+        npcMemoryService.searchNpcMemories
+            .mockResolvedValueOnce([{ content: 'Aldric remembers the caravan robbery.' }])
+            .mockResolvedValueOnce([{ content: 'Mira remembers the ruined watchtower.' }]);
+        anthropic.messages.create.mockResolvedValue({
+            content: [{
+                type: 'text',
+                text: JSON.stringify({
+                    newAgendaSource: null,
+                    newAgendaTarget: null,
+                    relationshipChange: null,
+                    itemExchanged: null,
+                    sharedMemories: [
+                        { receiverNpcId: 2, content: 'Aldric shares the robbery details.', senderNpcId: 1 },
+                    ],
+                }),
+            }],
+        });
+
+        const outcome = await worker['runSingleConversation']({
+            sourceNpcId: 1,
+            targetNpcId: 2,
+            type: 'ACQUAINTANCE',
+            description: 'They trade rumors',
+        } as never);
+
+        const prompt = anthropic.messages.create.mock.calls[0]?.[0]?.messages?.[0]?.content as string;
+        expect(prompt).toContain('Recent memories for Aldric');
+        expect(prompt).toContain('Aldric remembers the caravan robbery.');
+        expect(prompt).toContain('Recent memories for Mira');
+        expect(prompt).toContain('Mira remembers the ruined watchtower.');
+        expect(outcome?.sharedMemories).toEqual([
+            { receiverNpcId: 2, content: 'Aldric shares the robbery details.', senderNpcId: 1 },
+        ]);
     });
 });

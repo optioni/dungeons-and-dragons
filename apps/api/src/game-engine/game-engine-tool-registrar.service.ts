@@ -21,6 +21,8 @@ import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { type CampaignEndedChunkPayload, DmStreamChunkType } from '../session/dto/dm-stream-chunk.dto.js';
 import { StreamPublisher } from '../session/stream-publisher.service.js';
+import { Npc } from '../world/entities/npc.entity.js';
+import { NpcMemoryService } from '../world/npc-memory.service.js';
 import { CombatService } from './combat.service.js';
 import { DiceChecksService } from './dice-checks.service.js';
 import { DiceService } from './dice.service.js';
@@ -52,6 +54,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         private readonly leveling: LevelingService,
         private readonly world: WorldMutationService,
         private readonly memory: MemoryService,
+        private readonly npcMemory: NpcMemoryService,
         private readonly questService: QuestService,
         private readonly campaignService: CampaignService,
         private readonly streamPublisher: StreamPublisher,
@@ -881,7 +884,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
     }
 
     private registerMemoryTools(): void {
-        const { toolRegistry, memory } = this;
+        const {
+            toolRegistry, memory, npcMemory,
+        } = this;
 
         toolRegistry.register({
             toolName: 'record_memory',
@@ -935,6 +940,42 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                     return {
                         success: false,
                         errorCode: 'MEMORY_SEARCH_FAILED',
+                        message: error instanceof Error ? error.message : String(error),
+                    };
+                }
+            },
+        });
+
+        toolRegistry.register({
+            toolName: 'record_npc_memory',
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const context = await this.loadCtx(sessionId);
+                if (!context) {
+                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                }
+
+                const npcId = this.num(input.npc_id);
+                const npc = await this.em.findOne(Npc, { id: npcId, campaignId: context.campaignId });
+                if (!npc) {
+                    return {
+                        success: false,
+                        errorCode: 'NPC_NOT_FOUND',
+                        message: `NPC ${npcId} not found in campaign ${context.campaignId}`,
+                    };
+                }
+
+                try {
+                    const campaign = await this.em.findOne(Campaign, { id: context.campaignId });
+                    const record = await npcMemory.createNpcMemory(
+                        npcId,
+                        this.str(input.content),
+                        campaign?.inGameDate ?? undefined,
+                    );
+                    return { success: true, data: { id: record.id } };
+                } catch (error) {
+                    return {
+                        success: false,
+                        errorCode: 'NPC_MEMORY_CREATE_FAILED',
                         message: error instanceof Error ? error.message : String(error),
                     };
                 }

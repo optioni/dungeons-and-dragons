@@ -94,7 +94,7 @@ export class ContextLoader {
      * Merchant inventory is rebuilt from DB each turn; Anthropic content-based caching handles freshness
      * after buy_item, sell_item, or restock_merchant mutations — no explicit invalidation hook is needed.
      */
-    async loadWorldBlock(campaignId: number, characterId?: number): Promise<string> {
+    async loadWorldBlock(campaignId: number, characterId?: number, npcMemories?: string): Promise<string> {
         const parts: string[] = [];
 
         if (characterId) {
@@ -153,6 +153,10 @@ export class ContextLoader {
                 .map((entry: DiaryEntry) => `**${entry.inGameDate}**\n${entry.content}`)
                 .join('\n\n');
             parts.push(`## Recent Diary\n${formatted}`);
+        }
+
+        if (npcMemories?.trim()) {
+            parts.push(`## NPC Knowledge\n${npcMemories.trim()}`);
         }
 
         return parts.join('\n\n') || '## World State\n(No character data yet)';

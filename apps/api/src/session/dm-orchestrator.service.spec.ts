@@ -4,6 +4,8 @@ import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
+import { Campaign } from '../campaign/entities/campaign.entity';
+import { Npc } from '../world/entities/npc.entity';
 import { DmOrchestrator } from './dm-orchestrator.service';
 import { DmStreamChunkType } from './dto/dm-stream-chunk.dto';
 import { GameSession } from './entities/game-session.entity';
@@ -51,6 +53,8 @@ describe('DmOrchestrator', () => {
     let toolRegistry: Record<string, ReturnType<typeof vi.fn>>;
     let streamPublisher: Record<string, ReturnType<typeof vi.fn>>;
     let mockAnthropicMessages: Record<string, ReturnType<typeof vi.fn>>;
+    let em: Record<string, ReturnType<typeof vi.fn>>;
+    let npcMemoryService: Record<string, ReturnType<typeof vi.fn>>;
     let orchestrator: DmOrchestrator;
 
     beforeEach(() => {
@@ -78,6 +82,36 @@ describe('DmOrchestrator', () => {
             publish: vi.fn(),
         };
 
+        em = {
+            findOne: vi.fn().mockImplementation((entity: unknown) => {
+                if (entity === Campaign) {
+                    return Promise.resolve({ id: 10, currentLocationId: 42 });
+                }
+
+                if (entity === Npc) {
+                    return Promise.resolve(null);
+                }
+
+                return Promise.resolve(null);
+            }),
+            find: vi.fn().mockImplementation((entity: unknown) => {
+                if (entity === Npc) {
+                    return Promise.resolve([
+                        { id: 101, name: 'Aldric', currentLocationId: 42, campaignId: 10 },
+                        { id: 102, name: 'Mira', currentLocationId: 42, campaignId: 10 },
+                    ]);
+                }
+
+                return Promise.resolve([]);
+            }),
+        };
+
+        npcMemoryService = {
+            searchNpcMemories: vi.fn()
+                .mockResolvedValueOnce([{ content: 'The bridge is trapped.' }])
+                .mockResolvedValueOnce([{ content: 'The reeve fears smugglers.' }]),
+        };
+
         const mockStream = makeMockAnthropicStream([{ type: 'text', text: 'The room is quiet.' }]);
         mockAnthropicMessages = {
             stream: vi.fn().mockReturnValue(mockStream),
@@ -88,8 +122,11 @@ describe('DmOrchestrator', () => {
             contextLoader as never,
             toolRegistry as never,
             streamPublisher as never,
+            em as never,
+            npcMemoryService as never,
             {
                 getOrThrow: vi.fn().mockImplementation((key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-sonnet-4-6')),
+                get: vi.fn().mockImplementation((key: string) => (key === 'NPC_MEMORY_SCENE_LIMIT' ? 10 : undefined)),
             } as never,
         );
 
@@ -200,5 +237,62 @@ describe('DmOrchestrator', () => {
         const doneChunks = (streamPublisher.publish as ReturnType<typeof vi.fn>).mock.calls
             .filter((callArgs: unknown[]) => (callArgs[1] as { type: string }).type === DmStreamChunkType.DONE);
         expect(doneChunks.length).toBeGreaterThan(0);
+    });
+
+    it('passes aggregated NPC memories into loadWorldBlock', async () => {
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        expect(npcMemoryService.searchNpcMemories).toHaveBeenCalledTimes(2);
+        expect(contextLoader.loadWorldBlock).toHaveBeenCalledWith(
+            10,
+            undefined,
+            [
+                'Aldric remembers: The bridge is trapped.',
+                'Mira remembers: The reeve fears smugglers.',
+            ].join('\n'),
+        );
+    });
+
+    it('caps aggregated NPC memories at NPC_MEMORY_SCENE_LIMIT across all NPCs', async () => {
+        npcMemoryService.searchNpcMemories = vi.fn()
+            .mockResolvedValueOnce([
+                { content: 'Memory A1' },
+                { content: 'Memory A2' },
+            ])
+            .mockResolvedValueOnce([
+                { content: 'Memory B1' },
+                { content: 'Memory B2' },
+            ]);
+        orchestrator = new DmOrchestrator(
+            sessionService as never,
+            contextLoader as never,
+            toolRegistry as never,
+            streamPublisher as never,
+            em as never,
+            npcMemoryService as never,
+            {
+                getOrThrow: vi.fn().mockImplementation((key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-sonnet-4-6')),
+                get: vi.fn().mockImplementation((key: string) => (key === 'NPC_MEMORY_SCENE_LIMIT' ? 3 : undefined)),
+            } as never,
+        );
+        (orchestrator as unknown as Record<string, unknown>)['anthropic'] = {
+            messages: mockAnthropicMessages,
+        };
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        expect(contextLoader.loadWorldBlock).toHaveBeenCalledWith(
+            10,
+            undefined,
+            ['Aldric remembers: Memory A1', 'Aldric remembers: Memory A2', 'Mira remembers: Memory B1'].join('\n'),
+        );
+    });
+
+    it('omits NPC memory context when no NPCs are at the location', async () => {
+        em.find.mockResolvedValue([]);
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        expect(contextLoader.loadWorldBlock).toHaveBeenCalledWith(10, undefined, undefined);
     });
 });

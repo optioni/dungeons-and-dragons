@@ -14,8 +14,10 @@ import { Location } from './entities/location.entity.js';
 import { MapLocation } from './entities/map-location.entity.js';
 import { Map } from './entities/map.entity.js';
 import { NpcItem } from './entities/npc-item.entity.js';
+import { NpcMemory } from './entities/npc-memory.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { Npc } from './entities/npc.entity.js';
+import { NpcMemoryService } from './npc-memory.service.js';
 import { WorldEvent } from './entities/world-event.entity.js';
 import { WorldTickWorker } from './world-tick.worker.js';
 import { WorldResolver } from './world.resolver.js';
@@ -39,12 +41,14 @@ import { WorldService } from './world.service.js';
             Npc,
             NpcRelationship,
             NpcItem,
+            NpcMemory,
         ]),
         MemoryModule,
         QueueModule,
     ],
     providers: [
         WorldService,
+        NpcMemoryService,
         WorldResolver,
         WorldTickWorker,
         {
@@ -58,6 +62,6 @@ import { WorldService } from './world.service.js';
             inject: [ConfigService],
         },
     ],
-    exports: [WorldService],
+    exports: [WorldService, NpcMemoryService],
 })
 export class WorldModule {}

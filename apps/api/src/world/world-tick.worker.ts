@@ -8,11 +8,13 @@ import { ConfigService } from '@nestjs/config';
 import { type Job } from 'bullmq';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
+import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { ANTHROPIC_CLIENT, BACKGROUND_MODEL, MemoryService } from '../memory/memory.service.js';
 import { REDIS_CLIENT } from '../queue/queue.module.js';
 import { NpcItem } from './entities/npc-item.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { Npc } from './entities/npc.entity.js';
+import { NpcMemoryService } from './npc-memory.service.js';
 import { WorldEvent } from './entities/world-event.entity.js';
 import { NpcRelationshipType, WorldEventSource, WorldEventStatus } from './world.enums.js';
 import { WorldService } from './world.service.js';
@@ -42,6 +44,11 @@ interface ConversationOutcome {
     } | null
     newAgendaSource?: string | null
     newAgendaTarget?: string | null
+    sharedMemories: Array<{
+        receiverNpcId: number
+        content: string
+        senderNpcId: number
+    }>
 }
 
 interface TickOutcomeBatch {
@@ -74,10 +81,11 @@ export class WorldTickWorker extends WorkerHost {
         private readonly em: EntityManager,
         private readonly worldService: WorldService,
         private readonly memoryService: MemoryService,
+        private readonly npcMemoryService: NpcMemoryService,
         @Inject(REDIS_CLIENT) private readonly redis: Redis,
         @Inject(ANTHROPIC_CLIENT) private readonly anthropic: Pick<Anthropic, 'messages'>,
         @Inject(BACKGROUND_MODEL) private readonly backgroundModel: string,
-        private readonly config: ConfigService,
+        private readonly config: ConfigService<EnvironmentConfig>,
     ) {
         super();
     }
@@ -212,6 +220,10 @@ export class WorldTickWorker extends WorkerHost {
         campaignId: number,
     ): Promise<AgendaOutcome | null> {
         try {
+            const memoryLimit = this.config.get<number>('NPC_MEMORY_AGENDA_LIMIT', 5) ?? 5;
+            const relevantMemories = npc.agenda?.trim()
+                ? await this.npcMemoryService.searchNpcMemories(npc.id, npc.agenda, memoryLimit)
+                : [];
             const locations = await this.em.find(
                 (await import('./entities/location.entity.js')).Location,
                 { campaignId },
@@ -220,6 +232,9 @@ export class WorldTickWorker extends WorkerHost {
             const locationList = locations
                 .map((loc: { id: number; name: string }) => `${loc.id}: ${loc.name}`)
                 .join(', ');
+            const recentMemoriesSection = relevantMemories.length > 0
+                ? `\n\n## Recent Memories\n${relevantMemories.map((memory) => `- ${memory.content}`).join('\n')}`
+                : '';
 
             /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
@@ -236,6 +251,7 @@ Profession: ${npc.profession ?? 'unknown'}
 Personality: ${(npc.personalityTraits as string[]).join(', ')}
 Current agenda: ${npc.agenda ?? 'none'}
 Current location ID: ${npc.currentLocationId ?? 'unknown'}
+${recentMemoriesSection}
 
 Available locations: ${locationList}
 
@@ -311,6 +327,18 @@ Respond with JSON:
                 return null;
             }
 
+            const memoryLimit = this.config.get<number>('NPC_MEMORY_CONVERSATION_LIMIT', 3) ?? 3;
+            const [sourceMemories, targetMemories] = await Promise.all([
+                this.npcMemoryService.searchNpcMemories(sourceNpc.id, targetNpc.name, memoryLimit),
+                this.npcMemoryService.searchNpcMemories(targetNpc.id, sourceNpc.name, memoryLimit),
+            ]);
+            const sourceMemorySection = sourceMemories.length > 0
+                ? `\nRecent memories for ${sourceNpc.name}:\n${sourceMemories.map((memory) => `- ${memory.content}`).join('\n')}`
+                : '';
+            const targetMemorySection = targetMemories.length > 0
+                ? `\nRecent memories for ${targetNpc.name}:\n${targetMemories.map((memory) => `- ${memory.content}`).join('\n')}`
+                : '';
+
             /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
@@ -324,6 +352,7 @@ Respond with JSON:
 NPC A (${sourceNpc.name}): ${sourceNpc.profession ?? 'unknown'}, personality: ${(sourceNpc.personalityTraits as string[]).join(', ')}, speech style: ${sourceNpc.speechStyle ?? 'normal'}
 NPC B (${targetNpc.name}): ${targetNpc.profession ?? 'unknown'}, personality: ${(targetNpc.personalityTraits as string[]).join(', ')}, speech style: ${targetNpc.speechStyle ?? 'normal'}
 Relationship: ${rel.type} — ${rel.description ?? 'no description'}
+${sourceMemorySection}${targetMemorySection}
 
 Respond with JSON:
 {
@@ -331,7 +360,8 @@ Respond with JSON:
   "relationshipChange": {"type": "<NpcRelationshipType or null>", "description": "..."} | null,
   "itemExchanged": {"npcItemId": <number>, "toNpcId": <number>} | null,
   "newAgendaSource": "<new agenda for ${sourceNpc.name} or null>",
-  "newAgendaTarget": "<new agenda for ${targetNpc.name} or null>"
+  "newAgendaTarget": "<new agenda for ${targetNpc.name} or null>",
+  "sharedMemories": [{"receiverNpcId": <number>, "content": "...", "senderNpcId": <number>}]
 }`,
                     },
                 ],
@@ -348,6 +378,7 @@ Respond with JSON:
                 itemExchanged?: { npcItemId: number; toNpcId: number } | null
                 newAgendaSource?: string | null
                 newAgendaTarget?: string | null
+                sharedMemories?: Array<{ receiverNpcId: number; content: string; senderNpcId: number }>
             };
 
             return {
@@ -357,6 +388,7 @@ Respond with JSON:
                 itemExchanged: parsed.itemExchanged ?? null,
                 newAgendaSource: parsed.newAgendaSource ?? null,
                 newAgendaTarget: parsed.newAgendaTarget ?? null,
+                sharedMemories: parsed.sharedMemories ?? [],
             };
         } catch (error) {
             this.logger.error(`Conversation failed for NPCs ${rel.sourceNpcId}/${rel.targetNpcId}`, error);
@@ -435,6 +467,16 @@ Respond with JSON:
                 if (item) {
                     item.npcId = conv.itemExchanged.toNpcId;
                 }
+            }
+
+            for (const sharedMemory of conv.sharedMemories) {
+                await this.npcMemoryService.createNpcMemory(
+                    sharedMemory.receiverNpcId,
+                    sharedMemory.content,
+                    undefined,
+                    sharedMemory.senderNpcId,
+                    { flush: false },
+                );
             }
         }
 

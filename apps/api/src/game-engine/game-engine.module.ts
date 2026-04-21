@@ -20,8 +20,10 @@ import { LocationDiscovery } from '../world/entities/location-discovery.entity.j
 import { Location } from '../world/entities/location.entity.js';
 import { MapLocation } from '../world/entities/map-location.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
+import { NpcMemory } from '../world/entities/npc-memory.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { WorldEvent } from '../world/entities/world-event.entity.js';
+import { WorldModule } from '../world/world.module.js';
 import { CombatService } from './combat.service.js';
 import { DiceChecksService } from './dice-checks.service.js';
 import { DiceService } from './dice.service.js';
@@ -53,6 +55,7 @@ import { WorldMutationService } from './world-mutation.service.js';
             MapLocation,
             Npc,
             NpcItem,
+            NpcMemory,
             Quest,
             WorldEvent,
         ]),
@@ -60,6 +63,7 @@ import { WorldMutationService } from './world-mutation.service.js';
         MemoryModule,
         QueueModule,
         QuestModule,
+        WorldModule,
         forwardRef(() => CampaignModule),
         forwardRef(() => SessionModule),
     ],

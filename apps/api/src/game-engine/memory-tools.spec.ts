@@ -50,13 +50,20 @@ function makeMemoryService() {
     };
 }
 
+function makeNpcMemoryService() {
+    return {
+        createNpcMemory: vi.fn().mockResolvedValue({ id: 77 }),
+    };
+}
+
 function makeEm(campaignDate = 'Day 3') {
     const mockSession = { id: 1, campaign: { id: 10 } };
     const mockCharacter = { id: 5 };
     const mockCampaign = { id: 10, inGameDate: campaignDate };
+    const mockNpc = { id: 42, campaignId: 10, name: 'Aldric' };
     return {
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        findOne: vi.fn().mockImplementation((EntityClass: { name?: string }) => {
+        findOne: vi.fn().mockImplementation((EntityClass: { name?: string }, where?: { id?: number; campaignId?: number }) => {
             const name = EntityClass?.name ?? '';
             if (name === 'GameSession') {
                 return Promise.resolve(mockSession);
@@ -64,6 +71,14 @@ function makeEm(campaignDate = 'Day 3') {
 
             if (name === 'Campaign') {
                 return Promise.resolve(mockCampaign);
+            }
+
+            if (name === 'Npc') {
+                if (where?.id === 42 && where.campaignId === 10) {
+                    return Promise.resolve(mockNpc);
+                }
+
+                return Promise.resolve(null);
             }
 
             // Character or anything else
@@ -77,6 +92,7 @@ function makeEm(campaignDate = 'Day 3') {
 
 function makeRegistrar(
     memoryService: ReturnType<typeof makeMemoryService>,
+    npcMemoryService: ReturnType<typeof makeNpcMemoryService> = makeNpcMemoryService(),
     restService: ReturnType<typeof makeRestService> = makeRestService(),
 ) {
     const handlers = new Map<string, ToolHandler>();
@@ -98,6 +114,7 @@ function makeRegistrar(
         {} as never,
         {} as never,
         memoryService as never,
+        npcMemoryService as never,
         {} as never,
         { endCampaign: vi.fn() } as never,
         { publish: vi.fn() } as never,
@@ -118,13 +135,15 @@ function makeRestService() {
 describe('memory tool handlers', () => {
     let handlers: Map<string, ToolHandler>;
     let memoryService: ReturnType<typeof makeMemoryService>;
+    let npcMemoryService: ReturnType<typeof makeNpcMemoryService>;
     let restService: ReturnType<typeof makeRestService>;
 
     beforeEach(() => {
         vi.clearAllMocks();
         memoryService = makeMemoryService();
+        npcMemoryService = makeNpcMemoryService();
         restService = makeRestService();
-        ({ handlers } = makeRegistrar(memoryService, restService));
+        ({ handlers } = makeRegistrar(memoryService, npcMemoryService, restService));
     });
 
     describe('record_memory', () => {
@@ -222,6 +241,42 @@ describe('memory tool handlers', () => {
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBeDefined();
+        });
+    });
+
+    describe('record_npc_memory', () => {
+        it('creates memory and returns id on success', async () => {
+            const handler = handlers.get('record_npc_memory');
+            expect(handler).toBeDefined();
+
+            /* eslint-disable @typescript-eslint/naming-convention */
+            const result = await handler!.execute(1, {
+                npc_id: 42,
+                content: 'The adventurer paid for the broken cartwheel.',
+            });
+            /* eslint-enable @typescript-eslint/naming-convention */
+
+            expect(result).toEqual({ success: true, data: { id: 77 } });
+            expect(npcMemoryService.createNpcMemory).toHaveBeenCalledWith(
+                42,
+                'The adventurer paid for the broken cartwheel.',
+                'Day 3',
+            );
+        });
+
+        it('returns NPC_NOT_FOUND without throwing for an unknown npc_id', async () => {
+            const handler = handlers.get('record_npc_memory');
+
+            /* eslint-disable @typescript-eslint/naming-convention */
+            const result = await handler!.execute(1, {
+                npc_id: 999,
+                content: 'This should not be recorded.',
+            });
+            /* eslint-enable @typescript-eslint/naming-convention */
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('NPC_NOT_FOUND');
+            expect(npcMemoryService.createNpcMemory).not.toHaveBeenCalled();
         });
     });
 
