@@ -58,8 +58,8 @@
 | 5 ✓ | `merchant-stock-context` | session-and-llm, world-system |
 | 6 ✓ | `quest-system` | game-engine, campaign-setup, character-system |
 | 6 ✓ | `random-encounters` | game-engine, world-system, srd-seed |
-| 6 | `permadeath-campaign-end` | game-engine, session-and-llm, memory-system |
-| 6 | `npc-episodic-memory` | world-system, memory-system |
+| 6 ✓ | `permadeath-campaign-end` | game-engine, session-and-llm, memory-system |
+| 6 ✓ | `npc-episodic-memory` | world-system, memory-system |
 | 7 | `dungeon-system` | quest-system, world-system, game-engine |
 | 7 | `interactive-stream-signals` | session-and-llm, game-engine, permadeath-campaign-end |
 | 7 | `web-game-view` | session-and-llm, game-engine |

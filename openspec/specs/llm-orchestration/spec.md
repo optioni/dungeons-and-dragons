@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines how the DM turn is orchestrated — context assembly, prompt caching strategy, scene module loading, tool execution contract, streaming over SSE, and stream resumability.
-
 ## Requirements
-
 ### Requirement: DM turn orchestration assembles deterministic runtime context
 The system SHALL orchestrate one Claude DM call per accepted player turn. Before invoking the model, the system SHALL assemble context for the active session in a deterministic order consisting of:
 1. base system prompt and tool definitions (including `search_memories` and `record_memory`)
@@ -37,9 +35,9 @@ The system SHALL orchestrate one Claude DM call per accepted player turn. Before
 
 ### Requirement: Prompt caching follows the four breakpoint strategy
 The system SHALL implement prompt caching around the four breakpoint groups defined for DM sessions:
-1. system prompt, tool definitions (including `search_memories` and `record_memory`), and active scene modules
+1. system prompt, tool definitions (including `search_memories`, `record_memory`, and `record_npc_memory`), and active scene modules
 2. campaign state
-3. character state, world state, and the last 7 diary entries for the active campaign
+3. character state, world state, last 7 diary entries, and NPC memories for NPCs at the current location
 4. historical session events prior to the latest input
 
 The runtime SHALL structure prompt assembly so these boundaries can be cached and invalidated independently.
@@ -55,6 +53,10 @@ The runtime SHALL structure prompt assembly so these boundaries can be cached an
 #### Scenario: New diary entry invalidates breakpoint 3 cache
 - **WHEN** `take_long_rest` creates a new `DiaryEntry` for the campaign
 - **THEN** the next DM turn rebuilds the cache layer at breakpoint 3 to include the new diary content
+
+#### Scenario: New NpcMemory at the current location invalidates breakpoint 3 cache
+- **WHEN** a new `NpcMemory` row is created for an NPC present at the current session location
+- **THEN** the next DM turn rebuilds the cache layer at breakpoint 3 to include the updated NPC memory content
 
 ### Requirement: Scene prompt modules are loaded by session scene type
 The system SHALL store prompt modules for `EXPLORATION`, `COMBAT`, `SOCIAL`, `SETTLEMENT`, and `REST` as application-managed text assets. The DM runtime SHALL load the module set corresponding to the active `GameSession.sceneType` for each turn.
@@ -114,3 +116,4 @@ The stream publisher SHALL include enough per-session sequencing information for
 #### Scenario: Finalized narrative survives disconnect
 - **WHEN** the SSE connection drops after the player input has been accepted but before the UI receives the final chunk
 - **THEN** the completed `DM_NARRATIVE` event remains queryable in the persisted session transcript once the turn finishes
+
