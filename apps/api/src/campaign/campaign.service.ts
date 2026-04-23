@@ -108,8 +108,9 @@ export class CampaignService {
     async endCampaign(
         campaignId: number,
         reason: string,
-        _epitaph: string,
+        epitaph: string,
     ): Promise<{ alreadyEnded: true } | { ended: true }> {
+        void epitaph;
         const em = this.campaignRepository.getEntityManager();
         const campaign = await em.findOne(Campaign, { id: campaignId });
 

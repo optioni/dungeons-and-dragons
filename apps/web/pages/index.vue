@@ -128,7 +128,6 @@
                         <u-input
                             v-model="newCampaignName"
                             placeholder="The Shadow of Valdris..."
-                            autofocus
                             @input="createError = ''"
                         />
                     </u-form-field>

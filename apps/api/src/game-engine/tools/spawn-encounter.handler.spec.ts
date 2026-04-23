@@ -55,7 +55,9 @@ describe('SpawnEncounterHandler', () => {
         let npcId = 1;
         em = {
             findOne: vi.fn(),
-            create: vi.fn().mockImplementation((_entity: unknown, data: Record<string, unknown>) => ({ id: npcId++, ...data })),
+            create: vi.fn().mockImplementation(
+                (_entity: unknown, data: Record<string, unknown>) => ({ id: npcId++, ...data }),
+            ),
             persist: vi.fn(),
             flush: vi.fn(),
             remove: vi.fn(),
@@ -103,11 +105,21 @@ describe('SpawnEncounterHandler', () => {
             srdMonsterRepo: makeRepo({ findOne: vi.fn().mockResolvedValue(srdMonster) }),
         });
 
-        const result = await new SpawnEncounterHandler(em as never, dungeonService).execute(1, { roomId: 4 });
+        const result = await new SpawnEncounterHandler(em as never, dungeonService).execute(1, {
+            roomId: 4,
+        });
 
         expect(result).toMatchObject({ success: true, data: { npcIds: [1, 2], source: 'ROOM' } });
-        expect(em.create).toHaveBeenNthCalledWith(1, expect.anything(), expect.objectContaining({ name: 'Goblin 1', hp: 7 }));
-        expect(em.create).toHaveBeenNthCalledWith(2, expect.anything(), expect.objectContaining({ name: 'Goblin 2', hp: 7 }));
+        expect(em.create).toHaveBeenNthCalledWith(
+            1,
+            expect.anything(),
+            expect.objectContaining({ name: 'Goblin 1', hp: 7 }),
+        );
+        expect(em.create).toHaveBeenNthCalledWith(
+            2,
+            expect.anything(),
+            expect.objectContaining({ name: 'Goblin 2', hp: 7 }),
+        );
     });
 
     it('spawns wandering encounters from the dungeon table', async () => {
@@ -120,7 +132,10 @@ describe('SpawnEncounterHandler', () => {
             dungeonRepo: makeRepo({ findOne: vi.fn().mockResolvedValue(dungeon) }),
         });
 
-        const result = await new SpawnEncounterHandler(em as never, dungeonService).execute(1, { dungeonId: 7, fromTable: true });
+        const result = await new SpawnEncounterHandler(em as never, dungeonService).execute(1, {
+            dungeonId: 7,
+            fromTable: true,
+        });
 
         expect(result).toMatchObject({ success: true, data: { npcIds: [1], source: 'WANDERING' } });
     });

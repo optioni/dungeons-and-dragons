@@ -1,90 +1,3 @@
-<script setup lang="ts">
-export interface Combatant {
-    id: string;
-    type: 'CHARACTER' | 'NPC';
-    name: string;
-    initiativeRoll: number;
-    currentHp: number;
-    maxHp: number;
-    conditions: string[];
-    usedAction: boolean;
-    usedBonusAction: boolean;
-    usedReaction: boolean;
-    movementUsed: number;
-}
-
-export interface CombatSession {
-    id: string;
-    combatants: Combatant[];
-    currentTurnIndex: number;
-    roundNumber: number;
-}
-
-export interface SpellSlot {
-    level: number;
-    total: number;
-    used: number;
-}
-
-interface Props {
-    combatSession: CombatSession;
-    characterId?: string;
-    spellSlots?: SpellSlot[];
-    isStreaming?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    characterId: undefined,
-    spellSlots: () => [],
-    isStreaming: false,
-});
-
-const emit = defineEmits<{
-    action: [text: string];
-}>();
-
-const quickActions = [
-    { label: 'Attack', text: 'I attack with my weapon.' },
-    { label: 'Cast Spell', text: 'I cast a spell.' },
-    { label: 'Dash', text: 'I use my action to Dash.' },
-    { label: 'Dodge', text: 'I take the Dodge action.' },
-    { label: 'Other', text: 'I take an action: ' },
-];
-
-function hpPercent(combatant: Combatant): number {
-    if (combatant.maxHp === 0) return 0;
-    return Math.round((combatant.currentHp / combatant.maxHp) * 100);
-}
-
-function hpBarColor(percent: number): string {
-    if (percent > 50) return 'bg-green-500';
-    if (percent > 25) return 'bg-yellow-500';
-    return 'bg-red-500';
-}
-
-const activeCombatant = computed(() =>
-    props.combatSession.combatants[props.combatSession.currentTurnIndex] ?? null,
-);
-
-const playerCombatant = computed(() =>
-    props.characterId
-        ? props.combatSession.combatants.find((c) => c.type === 'CHARACTER' && c.id === props.characterId) ?? null
-        : null,
-);
-
-const hasSpellSlots = computed(() =>
-    (props.spellSlots ?? []).some((s) => s.total > 0),
-);
-
-const activeSpellSlots = computed(() =>
-    (props.spellSlots ?? []).filter((s) => s.total > 0),
-);
-
-function handleQuickAction(text: string): void {
-    emit('action', text);
-}
-</script>
-
 <template>
     <div class="w-72 flex-shrink-0 flex flex-col bg-gray-900 border-r border-gray-800 overflow-y-auto">
         <!-- Header -->
@@ -113,6 +26,7 @@ function handleQuickAction(text: string): void {
                             v-if="index === combatSession.currentTurnIndex"
                             class="w-1.5 h-1.5 rounded-full bg-primary-400"
                         />
+
                         <span
                             v-else
                             class="w-1.5 h-1.5 rounded-full bg-gray-600"
@@ -146,7 +60,8 @@ function handleQuickAction(text: string): void {
                 </div>
 
                 <!-- Conditions -->
-                <div v-if="combatant.conditions.length" class="flex flex-wrap gap-0.5 mt-1">
+                <div v-if="combatant.conditions.length"
+                    class="flex flex-wrap gap-0.5 mt-1">
                     <u-badge
                         v-for="cond in combatant.conditions"
                         :key="cond"
@@ -210,7 +125,8 @@ function handleQuickAction(text: string): void {
         </div>
 
         <!-- Spell slot pips -->
-        <div v-if="hasSpellSlots" class="px-3 py-2 border-t border-gray-800">
+        <div v-if="hasSpellSlots"
+            class="px-3 py-2 border-t border-gray-800">
             <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Spell Slots</p>
 
             <div class="space-y-1.5">
@@ -253,3 +169,90 @@ function handleQuickAction(text: string): void {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+export interface Combatant {
+    id: string
+    type: 'CHARACTER' | 'NPC'
+    name: string
+    initiativeRoll: number
+    currentHp: number
+    maxHp: number
+    conditions: string[]
+    usedAction: boolean
+    usedBonusAction: boolean
+    usedReaction: boolean
+    movementUsed: number
+}
+
+export interface CombatSession {
+    id: string
+    combatants: Combatant[]
+    currentTurnIndex: number
+    roundNumber: number
+}
+
+export interface SpellSlot {
+    level: number
+    total: number
+    used: number
+}
+
+interface Props {
+    combatSession: CombatSession
+    characterId?: string
+    spellSlots?: SpellSlot[]
+    isStreaming?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    characterId: undefined,
+    spellSlots: () => [],
+    isStreaming: false,
+});
+
+const emit = defineEmits<{
+    action: [text: string]
+}>();
+
+const quickActions = [
+    { label: 'Attack', text: 'I attack with my weapon.' },
+    { label: 'Cast Spell', text: 'I cast a spell.' },
+    { label: 'Dash', text: 'I use my action to Dash.' },
+    { label: 'Dodge', text: 'I take the Dodge action.' },
+    { label: 'Other', text: 'I take an action: ' },
+];
+
+function hpPercent(combatant: Combatant): number {
+    if (combatant.maxHp === 0) return 0;
+    return Math.round((combatant.currentHp / combatant.maxHp) * 100);
+}
+
+function hpBarColor(percent: number): string {
+    if (percent > 50) return 'bg-green-500';
+    if (percent > 25) return 'bg-yellow-500';
+    return 'bg-red-500';
+}
+
+const activeCombatant = computed(() =>
+    props.combatSession.combatants[props.combatSession.currentTurnIndex] ?? null,
+);
+
+const playerCombatant = computed(() =>
+    props.characterId
+        ? props.combatSession.combatants.find((c) => c.type === 'CHARACTER' && c.id === props.characterId) ?? null
+        : null,
+);
+
+const hasSpellSlots = computed(() =>
+    (props.spellSlots ?? []).some((s) => s.total > 0),
+);
+
+const activeSpellSlots = computed(() =>
+    (props.spellSlots ?? []).filter((s) => s.total > 0),
+);
+
+function handleQuickAction(text: string): void {
+    emit('action', text);
+}
+</script>

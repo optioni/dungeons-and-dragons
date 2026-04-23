@@ -225,7 +225,13 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                 const result = await combat.instantDeath(sessionId, this.num(input.character_id));
                 if (result.success) {
                     const campaignEnded = await this.runPermadeathSequenceIfNeeded(sessionId, {});
-                    return { ...result, data: { ...result.data as object, ...(campaignEnded ? { campaignEnded: true } : {}) } };
+                    return {
+                        ...result,
+                        data: {
+                            ...result.data as object,
+                            ...(campaignEnded ? { campaignEnded: true } : {}),
+                        },
+                    };
                 }
 
                 return result;
@@ -902,8 +908,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
      */
     private async runPermadeathSequenceIfNeeded(
         sessionId: number,
-        _resultData: Record<string, unknown>,
+        resultData: Record<string, unknown>,
     ): Promise<boolean> {
+        void resultData;
         const session = await this.em.findOne(GameSession, { id: sessionId }, { populate: ['campaign' as never] });
         if (!session) {
             return false;
@@ -953,6 +960,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
      */
     private async executePermadeathSequence(sessionId: number, campaign: Campaign): Promise<void> {
         const character = await this.em.findOne(Character, { campaign: { id: campaign.id } } as never);
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const events = await this.em.find(GameEvent, { session: sessionId });
 
         try {

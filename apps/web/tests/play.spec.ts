@@ -1,5 +1,8 @@
+import { useMutation, useQuery, useSubscription } from '@urql/vue';
 import { flushPromises, mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    beforeEach, describe, expect, it, vi,
+} from 'vitest';
 import { ref } from 'vue';
 
 import PlayPage from '../pages/campaign/[id]/play.vue';
@@ -23,12 +26,10 @@ vi.mock('~/graphql/session', () => ({
     SPELL_OPTIONS_QUERY: 'SPELL_OPTIONS_QUERY',
 }));
 
-import { useQuery, useMutation, useSubscription } from '@urql/vue';
-
 interface SessionOverrides {
-    sceneType?: string;
-    levelUpPending?: boolean;
-    combatSession?: object | null;
+    sceneType?: string
+    levelUpPending?: boolean
+    combatSession?: object | null
 }
 
 /** Configure useQuery/useMutation/useSubscription mocks for one component mount. */
@@ -94,13 +95,13 @@ function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutatio
             executeQuery: vi.fn().mockResolvedValue({}),
         } as any);
 
-    const mockMutationFn = vi.fn().mockResolvedValue({ data: null, error: null });
+    const mockMutationFunction = vi.fn().mockResolvedValue({ data: null, error: null });
 
     vi.mocked(useMutation)
-        .mockReturnValueOnce({ executeMutation: mockMutationFn } as any) // START_SESSION_MUTATION
-        .mockReturnValueOnce({ executeMutation: mockMutationFn } as any) // SEND_PLAYER_INPUT_MUTATION
-        .mockReturnValueOnce({ executeMutation: levelUpMutation ?? mockMutationFn } as any) // APPLY_LEVEL_UP_MUTATION
-        .mockReturnValueOnce({ executeMutation: mockMutationFn } as any); // PREPARE_SPELLS_MUTATION
+        .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any) // START_SESSION_MUTATION
+        .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any) // SEND_PLAYER_INPUT_MUTATION
+        .mockReturnValueOnce({ executeMutation: levelUpMutation ?? mockMutationFunction } as any) // APPLY_LEVEL_UP_MUTATION
+        .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any); // PREPARE_SPELLS_MUTATION
 
     vi.mocked(useSubscription).mockReturnValue({ data: ref(null) } as any);
 }
@@ -232,8 +233,8 @@ describe('play page — level-up panel open/close', () => {
         expect(wrapper.text()).toContain('Level Up!');
 
         const buttons = wrapper.findAll('button');
-        const confirmBtn = buttons.find((b) => b.text().includes('Confirm Level Up'));
-        await confirmBtn!.trigger('click');
+        const confirmButton = buttons.find((b) => b.text().includes('Confirm Level Up'));
+        await confirmButton!.trigger('click');
         await flushPromises();
 
         expect(wrapper.text()).not.toContain('Level Up!');

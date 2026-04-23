@@ -44,12 +44,20 @@ export class MoveToRoomHandler {
         }
 
         if (campaign.currentLocationId !== null && campaign.currentLocationId !== roomId) {
-            const currentRoom = await this.em.findOne(Location, { id: campaign.currentLocationId }, { populate: ['dungeon'] });
-            if (currentRoom?.dungeon?.id === session.activeDungeon.id && !currentRoom.connectedLocationIds.includes(roomId)) {
+            const currentRoom = await this.em.findOne(
+                Location,
+                { id: campaign.currentLocationId },
+                { populate: ['dungeon'] },
+            );
+            if (
+                currentRoom?.dungeon?.id === session.activeDungeon.id
+                && !currentRoom.connectedLocationIds.includes(roomId)
+            ) {
                 return {
                     success: false,
                     errorCode: 'ROOM_NOT_CONNECTED',
-                    message: `Room ${roomId} is not connected to current room ${currentRoom.id}`,
+                    message:
+                        `Room ${roomId} is not connected to current room ${currentRoom.id}`,
                 };
             }
         }

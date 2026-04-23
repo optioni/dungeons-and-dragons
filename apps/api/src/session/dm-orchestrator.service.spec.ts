@@ -248,7 +248,10 @@ describe('DmOrchestrator', () => {
             action: 'Listen at the door',
         });
 
-        const secondStreamArgs = mockAnthropicMessages.stream.mock.calls[1]?.[0] as { messages: Array<{ role: string; content: unknown }> };
+        const secondStreamArgs = mockAnthropicMessages.stream.mock.calls[1]?.[0] as {
+            messages: Array<{ role: string; content: unknown }>
+        };
+        /* eslint-disable @typescript-eslint/naming-convention */
         expect(secondStreamArgs.messages.at(-1)).toEqual({
             role: 'user',
             content: [{
@@ -257,6 +260,7 @@ describe('DmOrchestrator', () => {
                 content: JSON.stringify({ success: true, data: { newLevel: 4 } }),
             }],
         });
+        /* eslint-enable @typescript-eslint/naming-convention */
     });
 
     it('emits LEVEL_UP_PENDING after a successful trigger_level_up dispatch and skips it on error', async () => {
@@ -297,6 +301,7 @@ describe('DmOrchestrator', () => {
         mockAnthropicMessages.stream.mockClear();
         toolRegistry.dispatch.mockClear();
         npcMemoryService.searchNpcMemories = vi.fn().mockResolvedValue([]);
+        /* eslint-disable @typescript-eslint/naming-convention */
         const errorStream = {
             async* [Symbol.asyncIterator]() {},
             finalMessage: vi.fn().mockResolvedValueOnce({
@@ -307,6 +312,7 @@ describe('DmOrchestrator', () => {
                 stop_reason: 'end_turn',
             }),
         };
+        /* eslint-enable @typescript-eslint/naming-convention */
         mockAnthropicMessages.stream.mockReturnValue(errorStream);
         toolRegistry.dispatch.mockResolvedValueOnce({ success: false, errorCode: 'LEVEL_UP_ALREADY_PENDING' });
 

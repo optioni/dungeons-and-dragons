@@ -93,10 +93,12 @@ const DM_TOOLS: Anthropic.Tool[] = [
 export class DmOrchestrator {
     private readonly logger = new Logger(DmOrchestrator.name);
 
-    private static readonly TOOL_SUCCESS_STATUSES: Record<string, string> = {
+    /* eslint-disable @typescript-eslint/naming-convention */
+    private static readonly toolSuccessStatuses: Record<string, string> = {
         trigger_level_up: 'LEVEL_UP_PENDING',
         trigger_spell_prep: 'SPELL_PREP_PENDING',
     };
+    /* eslint-enable @typescript-eslint/naming-convention */
 
     private readonly anthropic: Anthropic;
 
@@ -226,13 +228,16 @@ export class DmOrchestrator {
             }
 
             if (block.name === 'suggest_actions') {
-                const result = this.handleSuggestActions(sessionId, block.input as Record<string, unknown>);
+                const suggestActionsResult = this.handleSuggestActions(
+                    sessionId,
+                    block.input as Record<string, unknown>,
+                );
 
                 await this.sessionService.appendEvent(sessionId, EventType.TOOL_CALL, {
                     toolUseId: block.id,
                     toolName: block.name,
                     toolInput: block.input,
-                    toolResult: result,
+                    toolResult: suggestActionsResult,
                 });
 
                 continue;
@@ -295,6 +300,7 @@ export class DmOrchestrator {
         }
 
         const limit = this.configService.get<number>('NPC_MEMORY_SCENE_LIMIT', 10) ?? 10;
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
         const npcs = await this.em.find(Npc, {
             campaignId,
             currentLocationId: campaign.currentLocationId,
@@ -330,7 +336,10 @@ export class DmOrchestrator {
      * Converts `suggest_actions` into one chunk per action without replaying a tool
      * result into the model. Invalid payloads return a structured error envelope.
      */
-    private handleSuggestActions(sessionId: number, input: Record<string, unknown>): { success: boolean; data?: { count: number }; errorCode?: string; message?: string } {
+    private handleSuggestActions(
+        sessionId: number,
+        input: Record<string, unknown>,
+    ): { success: boolean; data?: { count: number }; errorCode?: string; message?: string } {
         const rawActions = input.actions;
         if (!Array.isArray(rawActions)) {
             return {
@@ -371,6 +380,6 @@ export class DmOrchestrator {
             return undefined;
         }
 
-        return DmOrchestrator.TOOL_SUCCESS_STATUSES[toolName];
+        return DmOrchestrator.toolSuccessStatuses[toolName];
     }
 }

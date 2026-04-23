@@ -1,46 +1,3 @@
-<script setup lang="ts">
-interface SpellSlot {
-    level: number;
-    total: number;
-    used: number;
-}
-
-interface Character {
-    id: string;
-    name: string;
-    level: number;
-    hp: number;
-    maxHp: number;
-    ac: number;
-    conditions: string[];
-    spellSlots: SpellSlot[];
-}
-
-interface Props {
-    character: Character | null;
-    fetching?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    fetching: false,
-});
-
-const hasSpells = computed(() =>
-    props.character?.spellSlots?.some((s) => s.total > 0) ?? false,
-);
-
-const hpPercentage = computed(() => {
-    if (!props.character) return 0;
-    return Math.round((props.character.hp / props.character.maxHp) * 100);
-});
-
-const hpColor = computed(() => {
-    if (hpPercentage.value > 50) return 'bg-green-500';
-    if (hpPercentage.value > 25) return 'bg-yellow-500';
-    return 'bg-red-500';
-});
-</script>
-
 <template>
     <div class="bg-gray-900 rounded-xl p-4 space-y-4 min-w-48">
         <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Character</h3>
@@ -122,6 +79,51 @@ const hpColor = computed(() => {
         </template>
 
         <p v-else
-            class="text-xs text-gray-500 italic">No character</p>
+            class="text-xs text-gray-500 italic">
+            No character
+        </p>
     </div>
 </template>
+
+<script setup lang="ts">
+interface SpellSlot {
+    level: number
+    total: number
+    used: number
+}
+
+interface Character {
+    id: string
+    name: string
+    level: number
+    hp: number
+    maxHp: number
+    ac: number
+    conditions: string[]
+    spellSlots: SpellSlot[]
+}
+
+interface Props {
+    character: Character | null
+    fetching?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    fetching: false,
+});
+
+const hasSpells = computed(() =>
+    props.character?.spellSlots?.some((s) => s.total > 0) ?? false,
+);
+
+const hpPercentage = computed(() => {
+    if (!props.character) return 0;
+    return Math.round((props.character.hp / props.character.maxHp) * 100);
+});
+
+const hpColor = computed(() => {
+    if (hpPercentage.value > 50) return 'bg-green-500';
+    if (hpPercentage.value > 25) return 'bg-yellow-500';
+    return 'bg-red-500';
+});
+</script>

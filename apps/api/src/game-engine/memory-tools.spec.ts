@@ -62,28 +62,29 @@ function makeEm(campaignDate = 'Day 3') {
     const mockCampaign = { id: 10, inGameDate: campaignDate };
     const mockNpc = { id: 42, campaignId: 10, name: 'Aldric' };
     return {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        findOne: vi.fn().mockImplementation((EntityClass: { name?: string }, where?: { id?: number; campaignId?: number }) => {
-            const name = EntityClass?.name ?? '';
-            if (name === 'GameSession') {
-                return Promise.resolve(mockSession);
-            }
-
-            if (name === 'Campaign') {
-                return Promise.resolve(mockCampaign);
-            }
-
-            if (name === 'Npc') {
-                if (where?.id === 42 && where.campaignId === 10) {
-                    return Promise.resolve(mockNpc);
+        findOne: vi.fn().mockImplementation(
+            (entityClass: { name?: string }, where?: { id?: number; campaignId?: number }) => {
+                const name = entityClass?.name ?? '';
+                if (name === 'GameSession') {
+                    return Promise.resolve(mockSession);
                 }
 
-                return Promise.resolve(null);
-            }
+                if (name === 'Campaign') {
+                    return Promise.resolve(mockCampaign);
+                }
 
-            // Character or anything else
-            return Promise.resolve(mockCharacter);
-        }),
+                if (name === 'Npc') {
+                    if (where?.id === 42 && where.campaignId === 10) {
+                        return Promise.resolve(mockNpc);
+                    }
+
+                    return Promise.resolve(null);
+                }
+
+                // Character or anything else
+                return Promise.resolve(mockCharacter);
+            },
+        ),
         find: vi.fn().mockResolvedValue([
             { eventType: 'DM_NARRATIVE', content: { narrative: 'The quest begins.' } },
         ]),

@@ -1,21 +1,3 @@
-<script setup lang="ts">
-interface GameEvent {
-    id: string;
-    eventType: 'PLAYER_INPUT' | 'DM_NARRATIVE' | 'TOOL_CALL' | 'SYSTEM';
-    content: Record<string, unknown>;
-    createdAt: string;
-}
-
-interface Props {
-    events: GameEvent[];
-    inProgressText?: string;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    inProgressText: undefined,
-});
-</script>
-
 <template>
     <div class="space-y-4">
         <template v-for="event in props.events"
@@ -47,3 +29,21 @@ const props = withDefaults(defineProps<Props>(), {
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+interface GameEvent {
+    id: string
+    eventType: 'PLAYER_INPUT' | 'DM_NARRATIVE' | 'TOOL_CALL' | 'SYSTEM'
+    content: Record<string, unknown>
+    createdAt: string
+}
+
+interface Props {
+    events: GameEvent[]
+    inProgressText?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    inProgressText: undefined,
+});
+</script>

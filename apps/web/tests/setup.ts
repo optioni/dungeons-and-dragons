@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import {
     computed,
     nextTick,
@@ -7,7 +8,6 @@ import {
     watch,
     watchEffect,
 } from 'vue';
-import { vi } from 'vitest';
 
 // Nuxt auto-imports Vue reactive APIs as globals — replicate that in tests
 vi.stubGlobal('ref', ref);

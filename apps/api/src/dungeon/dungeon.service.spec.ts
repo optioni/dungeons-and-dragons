@@ -57,7 +57,9 @@ describe('DungeonService', () => {
 
     beforeEach(() => {
         em = {
-            create: vi.fn().mockImplementation((_entity: unknown, data: Record<string, unknown>) => ({ id: 1, ...data })),
+            create: vi.fn().mockImplementation(
+                (_entity: unknown, data: Record<string, unknown>) => ({ id: 1, ...data }),
+            ),
             persist: vi.fn(),
             flush: vi.fn(),
             remove: vi.fn(),

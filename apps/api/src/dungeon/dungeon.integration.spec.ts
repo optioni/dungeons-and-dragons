@@ -207,7 +207,7 @@ describe('Dungeon system — integration', () => {
             // eslint-disable-next-line unicorn/no-array-method-this-argument
             const spawnedNpcs = await orm.em.fork().find(Npc, { campaignId: testCampaign.id });
             expect(spawnedNpcs.length).toBe(2);
-            expect(spawnedNpcs.map((n) => n.currentLocationId)).toEqual([room.id, room.id]);
+            expect(spawnedNpcs.map((npc) => npc.currentLocationId)).toEqual([room.id, room.id]);
 
             // UPDATE ROOM STATE: EXPLORED → CLEARED
             const em4 = orm.em.fork();
@@ -327,6 +327,7 @@ describe('Dungeon system — integration', () => {
 
             const questEntity = em.create(QuestEntity, {
                 quest,
+                questId: quest.id,
                 entityType: QuestEntityType.DUNGEON,
                 entityId: dungeon.id,
             });
@@ -342,10 +343,12 @@ describe('Dungeon system — integration', () => {
 
             // Verify reverse lookup: all DUNGEON entities for this dungeon
 
+            /* eslint-disable unicorn/no-array-method-this-argument */
             const byDungeon = await orm.em.fork().find(
                 QuestEntity,
                 { entityType: QuestEntityType.DUNGEON, entityId: dungeon.id },
             );
+            /* eslint-enable unicorn/no-array-method-this-argument */
             expect(byDungeon).toHaveLength(1);
             expect(byDungeon[0].quest.id).toBe(quest.id);
         });

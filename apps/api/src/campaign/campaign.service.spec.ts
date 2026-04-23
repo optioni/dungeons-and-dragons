@@ -29,6 +29,10 @@ function makeMockRepo(overrides: Record<string, unknown> = {}) {
     };
 }
 
+function makeSessionService(): { endActiveSession: ReturnType<typeof vi.fn> } {
+    return { endActiveSession: vi.fn().mockResolvedValue(undefined) };
+}
+
 describe('CampaignService', () => {
     let service: CampaignService;
     let mockRepo: ReturnType<typeof makeMockRepo>;
@@ -156,10 +160,6 @@ describe('CampaignService', () => {
     });
 
     describe('endCampaign', () => {
-        function makeSessionService() {
-            return { endActiveSession: vi.fn().mockResolvedValue(undefined) };
-        }
-
         it('sets status to ENDED, stamps endedAt, persists endReason', async () => {
             const campaign = Object.assign(new Campaign(), {
                 id: 1,

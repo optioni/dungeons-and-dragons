@@ -1,3 +1,9 @@
+import {
+    defineNuxtRouteMiddleware,
+    navigateTo,
+    useCookie,
+} from '#imports';
+
 // Redirects unauthenticated users away from all non-auth pages to /auth
 export default defineNuxtRouteMiddleware((to) => {
     const cookie = useCookie('access_token');

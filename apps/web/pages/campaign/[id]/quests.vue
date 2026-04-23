@@ -1,54 +1,3 @@
-<script setup lang="ts">
-import { useQuery } from '@urql/vue';
-import { QUESTS_QUERY } from '~/graphql/quests';
-
-definePageMeta({ middleware: 'require-auth' });
-
-const route = useRoute();
-const campaignId = computed(() => route.params.id as string);
-
-interface QuestObjective {
-    id: string;
-    description: string;
-    type: string;
-    status: 'INCOMPLETE' | 'COMPLETE';
-    order: number;
-}
-
-interface Quest {
-    id: string;
-    title: string;
-    description: string;
-    status: 'ACTIVE' | 'COMPLETED' | 'FAILED';
-    rewardNarrative: string | null;
-    rewardXp: number | null;
-    rewardGold: number | null;
-    objectives: QuestObjective[];
-}
-
-const { data: activeData, fetching: activeFetching } = useQuery({
-    query: QUESTS_QUERY,
-    variables: computed(() => ({ campaignId: campaignId.value, status: 'ACTIVE', first: 50 })),
-});
-
-const { data: completedData, fetching: completedFetching } = useQuery({
-    query: QUESTS_QUERY,
-    variables: computed(() => ({ campaignId: campaignId.value, first: 50 })),
-});
-
-const activeQuests = computed<Quest[]>(() =>
-    (activeData.value?.quests?.edges ?? []).map((e: { node: Quest }) => e.node),
-);
-
-const finishedQuests = computed<Quest[]>(() =>
-    (completedData.value?.quests?.edges ?? [])
-        .map((e: { node: Quest }) => e.node)
-        .filter((q: Quest) => q.status === 'COMPLETED' || q.status === 'FAILED'),
-);
-
-const showCompleted = ref(false);
-</script>
-
 <template>
     <div class="min-h-screen bg-gray-950 p-6">
         <!-- Header with navigation -->
@@ -217,6 +166,7 @@ const showCompleted = ref(false);
 
                                     <div class="flex gap-4 text-sm text-gray-400">
                                         <span v-if="quest.rewardXp">{{ quest.rewardXp }} XP</span>
+
                                         <span v-if="quest.rewardGold">{{ quest.rewardGold }} gp</span>
                                     </div>
                                 </div>
@@ -228,3 +178,55 @@ const showCompleted = ref(false);
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { useQuery } from '@urql/vue';
+
+import { QUESTS_QUERY } from '~/graphql/quests';
+
+definePageMeta({ middleware: 'require-auth' });
+
+const route = useRoute();
+const campaignId = computed(() => route.params.id as string);
+
+interface QuestObjective {
+    id: string
+    description: string
+    type: string
+    status: 'INCOMPLETE' | 'COMPLETE'
+    order: number
+}
+
+interface Quest {
+    id: string
+    title: string
+    description: string
+    status: 'ACTIVE' | 'COMPLETED' | 'FAILED'
+    rewardNarrative: string | null
+    rewardXp: number | null
+    rewardGold: number | null
+    objectives: QuestObjective[]
+}
+
+const { data: activeData, fetching: activeFetching } = useQuery({
+    query: QUESTS_QUERY,
+    variables: computed(() => ({ campaignId: campaignId.value, status: 'ACTIVE', first: 50 })),
+});
+
+const { data: completedData, fetching: completedFetching } = useQuery({
+    query: QUESTS_QUERY,
+    variables: computed(() => ({ campaignId: campaignId.value, first: 50 })),
+});
+
+const activeQuests = computed<Quest[]>(() =>
+    (activeData.value?.quests?.edges ?? []).map((e: { node: Quest }) => e.node),
+);
+
+const finishedQuests = computed<Quest[]>(() =>
+    (completedData.value?.quests?.edges ?? [])
+        .map((e: { node: Quest }) => e.node)
+        .filter((q: Quest) => q.status === 'COMPLETED' || q.status === 'FAILED'),
+);
+
+const showCompleted = ref(false);
+</script>

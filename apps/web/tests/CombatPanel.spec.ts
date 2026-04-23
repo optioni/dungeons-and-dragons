@@ -2,7 +2,33 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 
 import CombatPanel from '../components/session/CombatPanel.vue';
-import type { Combatant, CombatSession, SpellSlot } from '../components/session/CombatPanel.vue';
+
+interface Combatant {
+    id: string;
+    type: 'CHARACTER' | 'NPC';
+    name: string;
+    initiativeRoll: number;
+    currentHp: number;
+    maxHp: number;
+    conditions: string[];
+    usedAction: boolean;
+    usedBonusAction: boolean;
+    usedReaction: boolean;
+    movementUsed: number;
+}
+
+interface CombatSession {
+    id: string;
+    combatants: Combatant[];
+    currentTurnIndex: number;
+    roundNumber: number;
+}
+
+interface SpellSlot {
+    level: number;
+    total: number;
+    used: number;
+}
 
 // Stubs for Nuxt UI components so we can inspect props and slots
 const globalStubs = {
@@ -120,8 +146,8 @@ describe('CombatPanel', () => {
 
             const badges = wrapper.findAll('.stub-badge');
             expect(badges).toHaveLength(2);
-            expect(badges[0].text()).toBe('Poisoned');
-            expect(badges[1].text()).toBe('Blinded');
+            expect(badges[0]!.text()).toBe('Poisoned');
+            expect(badges[1]!.text()).toBe('Blinded');
         });
 
         it('renders no badges when combatant has no conditions', () => {
@@ -251,7 +277,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            await wrapper.findAll('.stub-button')[0].trigger('click');
+            await wrapper.findAll('.stub-button')[0]!.trigger('click');
             expect(wrapper.emitted('action')).toBeTruthy();
             expect(wrapper.emitted('action')![0]).toEqual(['I attack with my weapon.']);
         });

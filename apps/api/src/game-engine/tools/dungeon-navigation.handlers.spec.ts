@@ -73,7 +73,11 @@ describe('dungeon navigation handlers', () => {
     });
 
     it('MoveToRoomHandler marks unexplored rooms explored and rolls wandering checks', async () => {
-        const session = { id: 1, campaign: { id: 10 }, activeDungeon: { id: 7, encounterTable: [{ weight: 1, monsters: [] }] } };
+        const session = {
+            id: 1,
+            campaign: { id: 10 },
+            activeDungeon: { id: 7, encounterTable: [{ weight: 1, monsters: [] }] },
+        };
         const room = { id: 4, dungeon: { id: 7 }, roomState: RoomState.UNEXPLORED };
         const campaign = { id: 10, currentLocationId: null };
         const em = {

@@ -1,3 +1,8 @@
+import {
+    defineNuxtPlugin,
+    useRouter,
+    useRuntimeConfig,
+} from '#imports';
 import { createClient, fetchExchange, mapExchange, subscriptionExchange } from '@urql/vue';
 import { createClient as createSSEClient } from 'graphql-sse';
 
@@ -8,7 +13,10 @@ export default defineNuxtPlugin(() => {
 
     const sseClient = createSSEClient({
         url: `${apiUrl}/graphql`,
-        fetchOptions: { credentials: 'include' },
+        fetchFn: (
+            input: Parameters<typeof fetch>[0],
+            init?: Parameters<typeof fetch>[1],
+        ) => fetch(input, { ...init, credentials: 'include' }),
     });
 
     const urqlClient = createClient({

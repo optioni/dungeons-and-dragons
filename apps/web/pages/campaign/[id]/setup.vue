@@ -51,6 +51,7 @@
                             <u-icon v-if="wizardStepIndex > i"
                                 name="i-lucide-check"
                                 class="text-xs" />
+
                             <span v-else>{{ i + 1 }}</span>
                         </div>
 
@@ -77,7 +78,6 @@
                             <u-input
                                 v-model="charName"
                                 placeholder="Enter a name..."
-                                autofocus
                                 @input="charNameError = ''"
                             />
                         </u-form-field>
@@ -474,10 +474,10 @@
 import { useQuery, useMutation } from '@urql/vue';
 
 interface StoryConcept {
-    index: number;
-    premise: string;
-    centralConflict: string;
-    antagonistHint: string;
+    index: number
+    premise: string
+    centralConflict: string
+    antagonistHint: string
 }
 
 const route = useRoute();
@@ -509,8 +509,8 @@ const { data: campaignData, fetching: campaignFetching, error: campaignError, ex
 const campaign = computed(() => campaignData.value?.campaign);
 
 // ── Wizard step logic ──────────────────────────────────────────────────────────
-type WizardStep =
-    | 'charName' | 'charRace' | 'charClass' | 'charAbilities'
+type WizardStep
+    = | 'charName' | 'charRace' | 'charClass' | 'charAbilities'
     | 'tone' | 'concepts' | 'worldGen';
 
 const step = ref<WizardStep>('charName');

@@ -1,13 +1,7 @@
 {
+  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
-  },
-  "include": ["**/*.ts", "**/*.vue"],
-  "exclude": ["node_modules", "dist", ".output", ".nuxt"]
+    "types": ["node", "vitest/globals"]
+  }
 }

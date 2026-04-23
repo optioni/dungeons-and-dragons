@@ -2,7 +2,6 @@ import {
     describe, expect, it, vi,
 } from 'vitest';
 
-import { RoomState } from '../../dungeon/dungeon.enums.js';
 import { AddRoomItemHandler } from './add-room-item.handler.js';
 import { LootRoomHandler } from './loot-room.handler.js';
 import { UpdateRoomStateHandler } from './update-room-state.handler.js';

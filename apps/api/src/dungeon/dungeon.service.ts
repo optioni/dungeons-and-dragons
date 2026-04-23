@@ -105,6 +105,7 @@ export class DungeonService {
 
         const qb = this.roomEncounterRepo.createQueryBuilder('re')
             .leftJoin('re.room', 'room')
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             .andWhere({ 'room.dungeon': dungeonId });
         return graphqlService.findAndPaginate(qb, undefined, undefined, connArgs);
     }
@@ -128,7 +129,12 @@ export class DungeonService {
         return session?.activeDungeon ?? null;
     }
 
-    async addRoomItem(roomId: number, itemId: number, quantity = 1, containerName: string | null = null): Promise<RoomItem> {
+    async addRoomItem(
+        roomId: number,
+        itemId: number,
+        quantity = 1,
+        containerName: string | null = null,
+    ): Promise<RoomItem> {
         const room = await this.locationRepo.findOne({ id: roomId });
         if (!room) {
             throw new NotFoundException('Room not found');
@@ -201,8 +207,12 @@ export class DungeonService {
                 throw new Error('ENCOUNTER_NOT_FOUND');
             }
 
-            const npcIds = await this.materializeMonsterSpecs(input.campaignId, encounter.room.id, encounter.monsters);
-            return { npcIds, source: 'ROOM' };
+            const roomNpcIds = await this.materializeMonsterSpecs(
+                input.campaignId,
+                encounter.room.id,
+                encounter.monsters,
+            );
+            return { npcIds: roomNpcIds, source: 'ROOM' };
         }
 
         if (input.dungeonId === undefined || input.fromTable !== true) {
@@ -215,8 +225,8 @@ export class DungeonService {
             throw new Error(dungeon ? 'NO_ENCOUNTER_TABLE' : 'DUNGEON_NOT_FOUND');
         }
 
-        const npcIds = await this.materializeMonsterSpecs(input.campaignId, null, tableEntry.monsters);
-        return { npcIds, source: 'WANDERING' };
+        const wanderingNpcIds = await this.materializeMonsterSpecs(input.campaignId, null, tableEntry.monsters);
+        return { npcIds: wanderingNpcIds, source: 'WANDERING' };
     }
 
     private pickEncounterTableEntry(table: EncounterTableEntry[] | null): EncounterTableEntry | null {
