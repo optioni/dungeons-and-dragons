@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the gameplay frontend — the play route, transcript rendering combining persisted history with live streaming, the player input controls, the character sidebar, scene-aware UI, and stream interruption resilience.
-
 ## Requirements
-
 ### Requirement: The play route loads or resumes campaign play state
 The web application SHALL provide a main gameplay route at `/campaign/[id]/play`. On load, the route SHALL fetch the owned campaign, resolve or create the active `GameSession`, and load the persisted transcript before attaching to the live DM stream.
 
@@ -39,7 +37,7 @@ The main gameplay view SHALL include:
 - a text input and send action for player turns
 - surfaced suggested actions when the active stream emits them
 
-The route SHALL disable duplicate sends while a turn is already in progress for the active session.
+The route SHALL disable duplicate sends while a turn is already in progress for the active session. When the player taps a suggested action chip, the route SHALL pre-fill the current text input with that action rather than auto-submitting it.
 
 #### Scenario: Player can submit a turn from the play route
 - **WHEN** the player enters non-empty text and submits it while no turn is in progress
@@ -52,6 +50,10 @@ The route SHALL disable duplicate sends while a turn is already in progress for 
 #### Scenario: Suggested actions appear as ephemeral UI hints
 - **WHEN** the subscription emits a `SUGGESTED_ACTION` payload for the active DM message
 - **THEN** the UI renders those action chips without requiring that they already exist in persisted transcript data
+
+#### Scenario: Selecting a suggested action pre-fills the input
+- **WHEN** the player taps a rendered suggested action chip
+- **THEN** the route copies that action text into the player input field without immediately sending the turn
 
 ### Requirement: The character sidebar reflects durable gameplay state
 The play route SHALL render a sidebar containing at least the character's name, HP, max HP, AC, level, active conditions, and spell-slot summary when applicable. The sidebar SHALL update from durable server state rather than inferring long-lived character state from narrative text.
@@ -95,18 +97,18 @@ The play route SHALL tolerate SSE interruption by reconnecting to the active ses
 - **THEN** the client ignores duplicates using the stream sequencing data for that session
 
 ### Requirement: The level-up panel opens when levelUpPending is true
-The play route SHALL monitor `GameSession.levelUpPending`. When the value transitions to true (detected via subscription or post-turn query), the route SHALL open a level-up panel overlay. The panel SHALL display the new level, hit die roll instructions, and available ability score improvements or feat choices. The player SHALL be able to submit their choices, which triggers the `apply_level_up` mutation. While the panel is open the standard player input SHALL be disabled.
+The play route SHALL monitor the active DM stream for `STATUS` chunks with `status = "LEVEL_UP_PENDING"`. When that signal arrives, the route SHALL open a level-up panel overlay. The panel SHALL display the new level, hit die roll instructions, and available ability score improvements or feat choices. The player SHALL be able to submit their choices, which triggers the `apply_level_up` mutation. While the panel is open the standard player input SHALL be disabled.
 
-#### Scenario: Level-up panel opens when levelUpPending becomes true
-- **WHEN** the active session's `levelUpPending` transitions to true after a turn
+#### Scenario: Level-up panel opens from stream status
+- **WHEN** the active DM stream emits a `STATUS` chunk with `status = "LEVEL_UP_PENDING"`
 - **THEN** the level-up panel overlay is displayed and the standard text input is disabled
 
 #### Scenario: Submitting level-up choices closes the panel
 - **WHEN** the player confirms their level-up selections and the `apply_level_up` mutation succeeds
 - **THEN** the level-up panel is dismissed and the standard player input is re-enabled
 
-#### Scenario: Level-up panel is not shown when levelUpPending is false
-- **WHEN** the active session has `levelUpPending = false`
+#### Scenario: Level-up panel is not shown without the pending status
+- **WHEN** the active play route has not received a `LEVEL_UP_PENDING` status chunk for the current flow
 - **THEN** no level-up overlay is rendered
 
 ### Requirement: CampaignEndScreen component renders on CAMPAIGN_ENDED chunk
@@ -138,3 +140,15 @@ The play route SHALL query the campaign's `status` field on mount. If the campai
 #### Scenario: Player input is not available on ended campaign
 - **WHEN** the `CampaignEndScreen` is shown
 - **THEN** no player input field or session controls are rendered
+
+### Requirement: The spell-preparation modal opens when a SPELL_PREP_PENDING status chunk arrives
+The play route SHALL monitor the active DM stream for `STATUS` chunks with `status = "SPELL_PREP_PENDING"`. When that signal arrives, the route SHALL freeze the standard player input and open the spell-preparation selection UI for the active character. After the player successfully submits the `prepareSpells` mutation, the route SHALL close the spell-preparation UI and re-enable text input.
+
+#### Scenario: Spell-preparation UI opens from stream status
+- **WHEN** the active DM stream emits a `STATUS` chunk with `status = "SPELL_PREP_PENDING"`
+- **THEN** the spell-preparation modal or panel is displayed and the standard text input is disabled
+
+#### Scenario: Successful spell preparation resumes freeform play
+- **WHEN** the player submits spell choices and the `prepareSpells` mutation succeeds
+- **THEN** the spell-preparation UI closes and the standard text input is re-enabled
+
