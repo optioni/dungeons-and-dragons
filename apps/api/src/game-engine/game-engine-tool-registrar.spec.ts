@@ -86,6 +86,7 @@ describe('GameEngineToolRegistrar — trigger_catastrophe exclusion', () => {
         expect(handlers.has('trigger_world_event')).toBe(true);
         expect(handlers.has('resolve_world_event')).toBe(true);
         expect(handlers.has('update_npc')).toBe(true);
+        expect(handlers.has('trigger_spell_prep')).toBe(true);
     });
 
     it('registers quest tools', () => {
@@ -425,28 +426,50 @@ describe('GameEngineToolRegistrar — end_campaign tool', () => {
             { checkSkill: makeMock(), checkAbility: makeMock() } as never,
             { roll: makeMock() } as never,
             {
-                startCombat: makeMock(), advanceInitiative: makeMock(), heal: makeMock(),
-                applyCondition: makeMock(), removeCondition: makeMock(), rollDeathSave: makeMock(),
-                stabilise: makeMock(), instantDeath: makeMock(), endCombat: makeMock(), applyDamage: makeMock(),
+                startCombat: makeMock(),
+                advanceInitiative: makeMock(),
+                heal: makeMock(),
+                applyCondition: makeMock(),
+                removeCondition: makeMock(),
+                rollDeathSave: makeMock(),
+                stabilise: makeMock(),
+                instantDeath: makeMock(),
+                endCombat: makeMock(),
+                applyDamage: makeMock(),
             } as never,
             { takeShortRest: makeMock(), takeLongRest: makeMock() } as never,
             { travelTo: makeMock(), discoverLocation: makeMock(), createLocation: makeMock(), updateCampaignSettings: makeMock() } as never,
             {
-                createItem: makeMock(), giveItem: makeMock(), equipItem: makeMock(),
-                unequipItem: makeMock(), buyItem: makeMock(), sellItem: makeMock(), restockMerchant: makeMock(),
+                createItem: makeMock(),
+                giveItem: makeMock(),
+                equipItem: makeMock(),
+                unequipItem: makeMock(),
+                buyItem: makeMock(),
+                sellItem: makeMock(),
+                restockMerchant: makeMock(),
             } as never,
             { triggerLevelUp: makeMock(), applyLevelUp: makeMock(), useSpellSlot: makeMock(), prepareSpells: makeMock() } as never,
             {
-                updateNpc: makeMock(), addToParty: makeMock(), removeFromParty: makeMock(),
-                updateLocationState: makeMock(), shiftFactionDisposition: makeMock(),
-                triggerWorldEvent: makeMock(), resolveWorldEvent: makeMock(), triggerCatastrophe: makeMock(),
-                advanceAntagonistStage: makeMock(), recordLore: makeMock(), setSceneType: makeMock(),
+                updateNpc: makeMock(),
+                addToParty: makeMock(),
+                removeFromParty: makeMock(),
+                updateLocationState: makeMock(),
+                shiftFactionDisposition: makeMock(),
+                triggerWorldEvent: makeMock(),
+                resolveWorldEvent: makeMock(),
+                triggerCatastrophe: makeMock(),
+                advanceAntagonistStage: makeMock(),
+                recordLore: makeMock(),
+                setSceneType: makeMock(),
             } as never,
             { writeDiaryEntry: makeMock(), createMemory: makeMock(), searchMemories: makeMock() } as never,
             {} as never,
             {
-                createQuest: makeMock(), completeQuest: makeMock(), failQuest: makeMock(),
-                updateQuestObjective: makeMock(), runAutoChecker: vi.fn().mockResolvedValue({}),
+                createQuest: makeMock(),
+                completeQuest: makeMock(),
+                failQuest: makeMock(),
+                updateQuestObjective: makeMock(),
+                runAutoChecker: vi.fn().mockResolvedValue({}),
             } as never,
             campaignService as never,
             streamPublisher as never,
@@ -514,7 +537,7 @@ describe('GameEngineToolRegistrar — permadeath auto-end', () => {
     const sessionId = 1;
     const campaignId = 10;
 
-    function makeRegistrar(opts: {
+    function makeRegistrar(options: {
         deathMode?: string
         rollDeathSaveResult?: unknown
         instantDeathResult?: unknown
@@ -524,7 +547,9 @@ describe('GameEngineToolRegistrar — permadeath auto-end', () => {
     }) {
         const reg = new ToolRegistry();
 
-        const permadeathCampaign = { id: campaignId, deathMode: opts.deathMode ?? 'PERMADEATH', inGameDay: 3, inGameDate: 'Day 3', status: 'ACTIVE' };
+        const permadeathCampaign = {
+            id: campaignId, deathMode: options.deathMode ?? 'PERMADEATH', inGameDay: 3, inGameDate: 'Day 3', status: 'ACTIVE',
+        };
         const session = { id: sessionId, campaign: permadeathCampaign };
 
         const em = {
@@ -547,19 +572,24 @@ describe('GameEngineToolRegistrar — permadeath auto-end', () => {
 
         const combat = {
             rollDeathSave: vi.fn().mockResolvedValue(
-                opts.rollDeathSaveResult ?? { success: true, data: { outcome: 'DEAD' } },
+                options.rollDeathSaveResult ?? { success: true, data: { outcome: 'DEAD' } },
             ),
             instantDeath: vi.fn().mockResolvedValue(
-                opts.instantDeathResult ?? { success: true, data: { isDead: true } },
+                options.instantDeathResult ?? { success: true, data: { isDead: true } },
             ),
-            startCombat: makeMock(), advanceInitiative: makeMock(), heal: makeMock(),
-            applyCondition: makeMock(), removeCondition: makeMock(), stabilise: makeMock(),
-            endCombat: makeMock(), applyDamage: vi.fn().mockResolvedValue({ success: true, data: {} }),
+            startCombat: makeMock(),
+            advanceInitiative: makeMock(),
+            heal: makeMock(),
+            applyCondition: makeMock(),
+            removeCondition: makeMock(),
+            stabilise: makeMock(),
+            endCombat: makeMock(),
+            applyDamage: vi.fn().mockResolvedValue({ success: true, data: {} }),
         };
 
-        const campaignService = opts.campaignService ?? { endCampaign: vi.fn().mockResolvedValue({ ended: true }) };
-        const streamPublisher = opts.streamPublisher ?? { publish: vi.fn() };
-        const redis = { exists: vi.fn().mockResolvedValue(opts.redisExists ?? 0) };
+        const campaignService = options.campaignService ?? { endCampaign: vi.fn().mockResolvedValue({ ended: true }) };
+        const streamPublisher = options.streamPublisher ?? { publish: vi.fn() };
+        const redis = { exists: vi.fn().mockResolvedValue(options.redisExists ?? 0) };
 
         const registrar = new GameEngineToolRegistrar(
             reg,
@@ -569,12 +599,18 @@ describe('GameEngineToolRegistrar — permadeath auto-end', () => {
             combat as never,
             { takeShortRest: makeMock(), takeLongRest: makeMock() } as never,
             { travelTo: makeMock(), discoverLocation: makeMock(), createLocation: makeMock(), updateCampaignSettings: makeMock() } as never,
-            { createItem: makeMock(), giveItem: makeMock(), equipItem: makeMock(), unequipItem: makeMock(), buyItem: makeMock(), sellItem: makeMock(), restockMerchant: makeMock() } as never,
+            {
+                createItem: makeMock(), giveItem: makeMock(), equipItem: makeMock(), unequipItem: makeMock(), buyItem: makeMock(), sellItem: makeMock(), restockMerchant: makeMock(),
+            } as never,
             { triggerLevelUp: makeMock(), applyLevelUp: makeMock(), useSpellSlot: makeMock(), prepareSpells: makeMock() } as never,
-            { updateNpc: makeMock(), addToParty: makeMock(), removeFromParty: makeMock(), updateLocationState: makeMock(), shiftFactionDisposition: makeMock(), triggerWorldEvent: makeMock(), resolveWorldEvent: makeMock(), triggerCatastrophe: makeMock(), advanceAntagonistStage: makeMock(), recordLore: makeMock(), setSceneType: makeMock() } as never,
+            {
+                updateNpc: makeMock(), addToParty: makeMock(), removeFromParty: makeMock(), updateLocationState: makeMock(), shiftFactionDisposition: makeMock(), triggerWorldEvent: makeMock(), resolveWorldEvent: makeMock(), triggerCatastrophe: makeMock(), advanceAntagonistStage: makeMock(), recordLore: makeMock(), setSceneType: makeMock(),
+            } as never,
             { writeDiaryEntry: vi.fn().mockResolvedValue(undefined), createMemory: makeMock(), searchMemories: makeMock() } as never,
             {} as never,
-            { createQuest: makeMock(), completeQuest: makeMock(), failQuest: makeMock(), updateQuestObjective: makeMock(), runAutoChecker: vi.fn().mockResolvedValue({}) } as never,
+            {
+                createQuest: makeMock(), completeQuest: makeMock(), failQuest: makeMock(), updateQuestObjective: makeMock(), runAutoChecker: vi.fn().mockResolvedValue({}),
+            } as never,
             campaignService as never,
             streamPublisher as never,
             redis as never,

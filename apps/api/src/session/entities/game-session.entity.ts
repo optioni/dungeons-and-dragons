@@ -6,6 +6,7 @@ import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 import { Campaign } from '../../campaign/entities/campaign.entity.js';
+import { Dungeon } from '../../dungeon/entities/dungeon.entity.js';
 import { SceneType } from '../session.enums.js';
 import { CombatSession } from './combat-session.entity.js';
 import { GameEvent } from './game-event.entity.js';
@@ -34,6 +35,14 @@ export class GameSession extends BaseEntity {
     @Field(() => SceneType)
     @Property({ type: 'text', default: SceneType.EXPLORATION })
     sceneType: Opt<SceneType> = SceneType.EXPLORATION;
+
+    @ManyToOne(() => Dungeon, { nullable: true })
+    activeDungeon: Dungeon | null = null;
+
+    @Field(() => ID, { nullable: true })
+    get activeDungeonId(): number | null {
+        return this.activeDungeon?.id ?? null;
+    }
 
     @Field()
     @Property({ type: 'timestamptz', onCreate: () => new Date() })

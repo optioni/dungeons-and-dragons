@@ -1,7 +1,7 @@
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
-    BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException, Optional, forwardRef,
+    BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, NotFoundException, Optional,
 } from '@nestjs/common';
 import { type Connection } from 'graphql-relay';
 

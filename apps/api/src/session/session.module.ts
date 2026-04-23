@@ -1,5 +1,5 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module, forwardRef } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { CampaignModule } from '../campaign/campaign.module.js';
 import { GraphqlModule } from '../graphql/graphql.module.js';

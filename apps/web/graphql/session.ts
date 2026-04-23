@@ -3,6 +3,7 @@ export const ACTIVE_SESSION_QUERY = `
     activeSession(campaignId: $campaignId) {
       id
       campaignId
+      characterId
       sceneType
       levelUpPending
       startedAt
@@ -34,6 +35,7 @@ export const START_SESSION_MUTATION = `
     startSession(campaignId: $campaignId) {
       id
       campaignId
+      characterId
       sceneType
       levelUpPending
       startedAt
@@ -51,6 +53,12 @@ export const START_SESSION_MUTATION = `
 export const APPLY_LEVEL_UP_MUTATION = `
   mutation ApplyLevelUp($sessionId: ID!, $hitPointsRolled: Int!, $abilityScoreImprovements: Object, $feat: String) {
     applyLevelUp(sessionId: $sessionId, hitPointsRolled: $hitPointsRolled, abilityScoreImprovements: $abilityScoreImprovements, feat: $feat)
+  }
+`;
+
+export const PREPARE_SPELLS_MUTATION = `
+  mutation PrepareSpells($sessionId: ID!, $spells: [String!]!) {
+    prepareSpells(sessionId: $sessionId, spells: $spells)
   }
 `;
 
@@ -91,11 +99,33 @@ export const CHARACTER_QUERY_FOR_PLAY = `
       id
       name
       level
+      abilityScores
       hp
       maxHp
       ac
       conditions
       spellSlots
+      preparedSpells
+      class {
+        name
+        index
+        spellcastingAbility
+      }
+    }
+  }
+`;
+
+export const SPELL_OPTIONS_QUERY = `
+  query SpellOptionsForPlay($first: Int!) {
+    srdSpells(first: $first) {
+      edges {
+        node {
+          index
+          name
+          level
+          classes
+        }
+      }
     }
   }
 `;

@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { CharacterModule } from './character/character.module';
 import { validate } from './config/environment.validation';
+import { DungeonModule } from './dungeon/dungeon.module';
 import { GameEngineModule } from './game-engine/game-engine.module';
 import { GraphqlModule } from './graphql/graphql.module';
 import { LlmModule } from './llm/llm.module';
@@ -60,6 +61,7 @@ import { WorldModule } from './world/world.module';
         CharacterModule,
         CampaignModule,
         WorldModule,
+        DungeonModule,
         SessionModule,
         LlmModule,
         MemoryModule,

@@ -6,6 +6,7 @@ import { SceneType } from '../session/session.enums.js';
 
 const SCENE_FILES: Record<SceneType, string> = {
     [SceneType.EXPLORATION]: 'exploration.txt',
+    [SceneType.DUNGEON]: 'dungeon.txt',
     [SceneType.COMBAT]: 'combat.txt',
     [SceneType.SOCIAL]: 'social.txt',
     [SceneType.SETTLEMENT]: 'settlement.txt',

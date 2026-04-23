@@ -13,12 +13,14 @@ vi.mock('@urql/vue', () => ({
 vi.mock('~/graphql/session', () => ({
     ACTIVE_SESSION_QUERY: 'ACTIVE_SESSION_QUERY',
     APPLY_LEVEL_UP_MUTATION: 'APPLY_LEVEL_UP_MUTATION',
+    PREPARE_SPELLS_MUTATION: 'PREPARE_SPELLS_MUTATION',
     GAME_EVENTS_QUERY: 'GAME_EVENTS_QUERY',
     START_SESSION_MUTATION: 'START_SESSION_MUTATION',
     SEND_PLAYER_INPUT_MUTATION: 'SEND_PLAYER_INPUT_MUTATION',
     DM_STREAM_SUBSCRIPTION: 'DM_STREAM_SUBSCRIPTION',
     CHARACTER_QUERY_FOR_PLAY: 'CHARACTER_QUERY_FOR_PLAY',
     CAMPAIGN_QUERY_FOR_PLAY: 'CAMPAIGN_QUERY_FOR_PLAY',
+    SPELL_OPTIONS_QUERY: 'SPELL_OPTIONS_QUERY',
 }));
 
 import { useQuery, useMutation, useSubscription } from '@urql/vue';
@@ -33,6 +35,7 @@ interface SessionOverrides {
 function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutation?: ReturnType<typeof vi.fn>) {
     const session = {
         id: 'sess-1',
+        characterId: 'char-1',
         sceneType: 'EXPLORATION',
         levelUpPending: false,
         combatSession: null,
@@ -60,7 +63,33 @@ function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutatio
         } as any)
         .mockReturnValueOnce({
             // 4. CHARACTER_QUERY_FOR_PLAY
-            data: ref(null),
+            data: ref({
+                character: {
+                    id: 'char-1',
+                    name: 'Test Hero',
+                    level: 3,
+                    abilityScores: {
+                        STR: 10, DEX: 10, CON: 14, INT: 16, WIS: 12, CHA: 8,
+                    },
+                    hp: 20,
+                    maxHp: 20,
+                    ac: 14,
+                    conditions: [],
+                    spellSlots: [],
+                    preparedSpells: [],
+                    class: {
+                        name: 'Wizard',
+                        index: 'wizard',
+                        spellcastingAbility: 'INT',
+                    },
+                },
+            }),
+            fetching: ref(false),
+            executeQuery: vi.fn().mockResolvedValue({}),
+        } as any)
+        .mockReturnValueOnce({
+            // 5. SPELL_OPTIONS_QUERY
+            data: ref({ srdSpells: { edges: [] } }),
             fetching: ref(false),
             executeQuery: vi.fn().mockResolvedValue({}),
         } as any);
@@ -70,7 +99,8 @@ function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutatio
     vi.mocked(useMutation)
         .mockReturnValueOnce({ executeMutation: mockMutationFn } as any) // START_SESSION_MUTATION
         .mockReturnValueOnce({ executeMutation: mockMutationFn } as any) // SEND_PLAYER_INPUT_MUTATION
-        .mockReturnValueOnce({ executeMutation: levelUpMutation ?? mockMutationFn } as any); // APPLY_LEVEL_UP_MUTATION
+        .mockReturnValueOnce({ executeMutation: levelUpMutation ?? mockMutationFn } as any) // APPLY_LEVEL_UP_MUTATION
+        .mockReturnValueOnce({ executeMutation: mockMutationFn } as any); // PREPARE_SPELLS_MUTATION
 
     vi.mocked(useSubscription).mockReturnValue({ data: ref(null) } as any);
 }
@@ -82,8 +112,11 @@ const globalStubs = {
         emits: ['action'],
     },
     SessionCharacterSidebar: { template: '<div />', props: ['character', 'fetching'] },
+    SessionCampaignEndScreen: { template: '<div />' },
     SessionTranscriptView: { template: '<div />', props: ['events', 'inProgressText'] },
+    NuxtLink: { template: '<a><slot /></a>', props: ['to'] },
     UIcon: { template: '<span />', props: ['name', 'class'] },
+    UAlert: { template: '<div>{{ description }}</div>', props: ['description', 'color', 'variant'] },
     UBadge: { template: '<span><slot /></span>', props: ['color', 'variant', 'size'] },
     UButton: {
         template: '<button :disabled="disabled || loading" @click="$emit(\'click\')"><slot /></button>',

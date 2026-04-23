@@ -24,6 +24,7 @@ export enum QuestEntityType {
     NPC = 'NPC',
     LOCATION = 'LOCATION',
     ITEM = 'ITEM',
+    DUNGEON = 'DUNGEON',
     WORLD_EVENT = 'WORLD_EVENT',
 }
 

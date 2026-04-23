@@ -11,7 +11,7 @@ function makeEmbeddingService(embedding: number[] | null = [0.1, 0.2]) {
 }
 
 function makeEntityManager(rows: unknown[] = []) {
-    const created: Record<string, unknown>[] = [];
+    const created: Array<Record<string, unknown>> = [];
     const connection = {
         execute: vi.fn().mockResolvedValue(rows),
     };

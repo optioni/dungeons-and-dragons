@@ -50,6 +50,35 @@ const DM_TOOLS: Anthropic.Tool[] = [
             required: ['scene_type'],
         },
     },
+    {
+        name: 'suggest_actions',
+        description: 'Suggests a short list of possible next actions for the player at the end of the current turn.',
+        input_schema: {
+            type: 'object' as const,
+            properties: {
+                actions: {
+                    type: 'array',
+                    items: { type: 'string' as const },
+                    description: 'A non-empty list of concise suggested player actions',
+                },
+            },
+            required: ['actions'],
+        },
+    },
+    {
+        name: 'trigger_spell_prep',
+        description: 'Signals that the player must choose prepared spells before freeform play continues.',
+        input_schema: {
+            type: 'object' as const,
+            properties: {
+                character_id: {
+                    type: 'number',
+                    description: 'The character who needs to prepare spells',
+                },
+            },
+            required: ['character_id'],
+        },
+    },
 ];
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -63,6 +92,11 @@ const DM_TOOLS: Anthropic.Tool[] = [
 @Injectable()
 export class DmOrchestrator {
     private readonly logger = new Logger(DmOrchestrator.name);
+
+    private static readonly TOOL_SUCCESS_STATUSES: Record<string, string> = {
+        trigger_level_up: 'LEVEL_UP_PENDING',
+        trigger_spell_prep: 'SPELL_PREP_PENDING',
+    };
 
     private readonly anthropic: Anthropic;
 
@@ -191,6 +225,19 @@ export class DmOrchestrator {
                 continue;
             }
 
+            if (block.name === 'suggest_actions') {
+                const result = this.handleSuggestActions(sessionId, block.input as Record<string, unknown>);
+
+                await this.sessionService.appendEvent(sessionId, EventType.TOOL_CALL, {
+                    toolUseId: block.id,
+                    toolName: block.name,
+                    toolInput: block.input,
+                    toolResult: result,
+                });
+
+                continue;
+            }
+
             const result = await this.toolRegistry.dispatch(
                 sessionId,
                 block.name,
@@ -210,6 +257,14 @@ export class DmOrchestrator {
                 toolResult: result,
             });
 
+            const status = this.getToolSuccessStatus(block.name, result);
+            if (status) {
+                this.streamPublisher.publish(sessionId, {
+                    type: DmStreamChunkType.STATUS,
+                    status,
+                });
+            }
+
             /* eslint-disable @typescript-eslint/naming-convention */
             toolResults.push({
                 type: 'tool_result',
@@ -217,6 +272,10 @@ export class DmOrchestrator {
                 content: JSON.stringify(result),
             });
             /* eslint-enable @typescript-eslint/naming-convention */
+        }
+
+        if (toolResults.length === 0) {
+            return;
         }
 
         await this.runToolLoop(sessionId, system, [
@@ -265,5 +324,53 @@ export class DmOrchestrator {
         }
 
         return lines.length > 0 ? lines.join('\n') : undefined;
+    }
+
+    /**
+     * Converts `suggest_actions` into one chunk per action without replaying a tool
+     * result into the model. Invalid payloads return a structured error envelope.
+     */
+    private handleSuggestActions(sessionId: number, input: Record<string, unknown>): { success: boolean; data?: { count: number }; errorCode?: string; message?: string } {
+        const rawActions = input.actions;
+        if (!Array.isArray(rawActions)) {
+            return {
+                success: false,
+                errorCode: 'INVALID_ACTIONS',
+                message: 'suggest_actions requires an actions array',
+            };
+        }
+
+        const actions = rawActions.filter((action): action is string => typeof action === 'string')
+            .map((action) => action.trim())
+            .filter((action) => action.length > 0);
+
+        if (actions.length === 0) {
+            return {
+                success: false,
+                errorCode: 'EMPTY_ACTIONS',
+                message: 'suggest_actions requires at least one non-empty action',
+            };
+        }
+
+        for (const action of actions) {
+            this.streamPublisher.publish(sessionId, {
+                type: DmStreamChunkType.SUGGESTED_ACTION,
+                action,
+            });
+        }
+
+        return { success: true, data: { count: actions.length } };
+    }
+
+    /** Emits stream-only follow-up statuses for successful tool dispatches that pause freeform play. */
+    private getToolSuccessStatus(
+        toolName: string,
+        result: { success?: boolean },
+    ): string | undefined {
+        if (result.success !== true) {
+            return undefined;
+        }
+
+        return DmOrchestrator.TOOL_SUCCESS_STATUSES[toolName];
     }
 }

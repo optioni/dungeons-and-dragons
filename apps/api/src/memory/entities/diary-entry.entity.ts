@@ -35,7 +35,7 @@ export class DiaryEntry extends BaseEntity {
     @Property({ type: 'text' })
     inGameDate!: string;
 
-    @Property({ columnType: 'varchar(1000)' })
+    @Property({ type: 'text', columnType: 'varchar(1000)' })
     content!: string;
 
     @Property({ type: VectorType, nullable: true })

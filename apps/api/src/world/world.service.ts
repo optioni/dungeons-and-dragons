@@ -67,7 +67,7 @@ export class WorldService {
         await this.verifyCampaignOwnership(campaignId, userId);
         const qb = this.locationRepo.createQueryBuilder();
         return graphqlService.findAndPaginate(
-            qb.andWhere({ campaignId }),
+            qb.andWhere({ campaignId, dungeon: null }),
             undefined,
             undefined,
             connArgs,

@@ -33,7 +33,7 @@ vi.mock('@nestjs/common', () => ({
     OnModuleInit: () => () => {},
     Optional: () => () => {},
     Inject: () => () => {},
-    forwardRef: (fn: () => unknown) => fn,
+    forwardRef: (function_: () => unknown) => function_,
     Logger: class {
         error = vi.fn();
     },

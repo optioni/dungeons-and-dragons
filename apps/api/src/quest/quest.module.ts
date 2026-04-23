@@ -5,6 +5,7 @@ import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { CharacterItem } from '../character/entities/character-item.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { Item } from '../character/entities/item.entity.js';
+import { Dungeon } from '../dungeon/entities/dungeon.entity.js';
 import { GraphqlModule } from '../graphql/graphql.module.js';
 import { Location } from '../world/entities/location.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
@@ -30,6 +31,7 @@ import { QuestService } from './quest.service.js';
             Character,
             CharacterItem,
             Item,
+            Dungeon,
             Location,
             Npc,
             WorldEvent,

@@ -1,16 +1,17 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module, forwardRef } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { CampaignModule } from '../campaign/campaign.module.js';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { CharacterItem } from '../character/entities/character-item.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { Item } from '../character/entities/item.entity.js';
+import { DungeonModule } from '../dungeon/dungeon.module.js';
 import { LlmModule } from '../llm/llm.module.js';
 import { MemoryModule } from '../memory/memory.module.js';
-import { QueueModule } from '../queue/queue.module.js';
-import { QuestModule } from '../quest/quest.module.js';
 import { Quest } from '../quest/entities/quest.entity.js';
+import { QuestModule } from '../quest/quest.module.js';
+import { QueueModule } from '../queue/queue.module.js';
 import { CombatSession } from '../session/entities/combat-session.entity.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
@@ -32,6 +33,14 @@ import { GameEngineResolver } from './game-engine.resolver.js';
 import { ItemService } from './item.service.js';
 import { LevelingService } from './leveling.service.js';
 import { RestService } from './rest.service.js';
+import { AddRoomItemHandler } from './tools/add-room-item.handler.js';
+import { EnterDungeonHandler } from './tools/enter-dungeon.handler.js';
+import { ExitDungeonHandler } from './tools/exit-dungeon.handler.js';
+import { LootRoomHandler } from './tools/loot-room.handler.js';
+import { MoveToRoomHandler } from './tools/move-to-room.handler.js';
+import { SpawnEncounterHandler } from './tools/spawn-encounter.handler.js';
+import { TriggerSpellPrepHandler } from './tools/trigger-spell-prep.handler.js';
+import { UpdateRoomStateHandler } from './tools/update-room-state.handler.js';
 import { TravelService } from './travel.service.js';
 import { WorldMutationService } from './world-mutation.service.js';
 
@@ -63,6 +72,7 @@ import { WorldMutationService } from './world-mutation.service.js';
         MemoryModule,
         QueueModule,
         QuestModule,
+        DungeonModule,
         WorldModule,
         forwardRef(() => CampaignModule),
         forwardRef(() => SessionModule),
@@ -76,6 +86,14 @@ import { WorldMutationService } from './world-mutation.service.js';
         ItemService,
         LevelingService,
         WorldMutationService,
+        EnterDungeonHandler,
+        MoveToRoomHandler,
+        ExitDungeonHandler,
+        SpawnEncounterHandler,
+        UpdateRoomStateHandler,
+        AddRoomItemHandler,
+        LootRoomHandler,
+        TriggerSpellPrepHandler,
         GameEngineToolRegistrar,
         GameEngineResolver,
     ],

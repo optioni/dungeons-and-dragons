@@ -1,9 +1,11 @@
+import { EntityManager } from '@mikro-orm/postgresql';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import {
-    Args, ID, Mutation, Query, Resolver, Subscription,
+    Args, ID, Mutation, Query, ResolveField, Resolver, Root, Subscription,
 } from '@nestjs/graphql';
 
 import { type User } from '../auth/entities/user.entity.js';
+import { Character } from '../character/entities/character.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { type DmOrchestrator } from './dm-orchestrator.service.js';
 import { DmStreamChunk } from './dto/dm-stream-chunk.dto.js';
@@ -22,6 +24,7 @@ export class SessionResolver {
         private readonly sessionService: SessionService,
         private readonly streamPublisher: StreamPublisher,
         private readonly dmOrchestrator: DmOrchestrator,
+        private readonly em: EntityManager,
     ) {}
 
     /** Starts or resumes the active session for a campaign. */
@@ -58,6 +61,13 @@ export class SessionResolver {
         @CurrentUser() user: User,
     ): Promise<GameEvent[]> {
         return this.sessionService.getGameEvents(Number(sessionId), user.id);
+    }
+
+    /** Resolves the active campaign character attached to the session, if one exists. */
+    @ResolveField(() => ID, { nullable: true })
+    async characterId(@Root() session: GameSession): Promise<number | null> {
+        const character = await this.em.findOne(Character, { campaign: { id: session.campaignId } } as never);
+        return character?.id ?? null;
     }
 
     /**

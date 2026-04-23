@@ -16,7 +16,7 @@ export class NpcMemory extends BaseEntity {
     @Property({ type: 'integer' })
     npcId!: number;
 
-    @Property({ columnType: 'varchar(1000)' })
+    @Property({ type: 'text', columnType: 'varchar(1000)' })
     content!: string;
 
     @Property({ type: VectorType, nullable: true })

@@ -3,9 +3,8 @@ import type Redis from 'ioredis';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { CampaignService } from '../campaign/campaign.service.js';
 import { CampaignStatus } from '../campaign/campaign.enums.js';
-import { REDIS_CLIENT } from '../queue/queue.module.js';
+import { CampaignService } from '../campaign/campaign.service.js';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { type ToolResult } from '../llm/tool-registry.js';
@@ -13,13 +12,13 @@ import { ToolRegistry } from '../llm/tool-registry.service.js';
 import { DiaryEntryType } from '../memory/entities/diary-entry.entity.js';
 import { SubjectType } from '../memory/entities/memory.entity.js';
 import { MemoryService } from '../memory/memory.service.js';
-import { QuestObjectiveStatus, QuestObjectiveType } from '../quest/quest.enums.js';
 import { Quest } from '../quest/entities/quest.entity.js';
-import { QuestStatus } from '../quest/quest.enums.js';
+import { QuestObjectiveStatus, QuestObjectiveType, QuestStatus } from '../quest/quest.enums.js';
 import { type CreateQuestDto, type ObjectiveSpec, QuestService } from '../quest/quest.service.js';
+import { REDIS_CLIENT } from '../queue/queue.module.js';
+import { type CampaignEndedChunkPayload, DmStreamChunkType } from '../session/dto/dm-stream-chunk.dto.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
-import { type CampaignEndedChunkPayload, DmStreamChunkType } from '../session/dto/dm-stream-chunk.dto.js';
 import { StreamPublisher } from '../session/stream-publisher.service.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { NpcMemoryService } from '../world/npc-memory.service.js';
@@ -29,6 +28,14 @@ import { DiceService } from './dice.service.js';
 import { ItemService } from './item.service.js';
 import { LevelingService } from './leveling.service.js';
 import { RestService } from './rest.service.js';
+import { AddRoomItemHandler } from './tools/add-room-item.handler.js';
+import { EnterDungeonHandler } from './tools/enter-dungeon.handler.js';
+import { ExitDungeonHandler } from './tools/exit-dungeon.handler.js';
+import { LootRoomHandler } from './tools/loot-room.handler.js';
+import { MoveToRoomHandler } from './tools/move-to-room.handler.js';
+import { SpawnEncounterHandler } from './tools/spawn-encounter.handler.js';
+import { TriggerSpellPrepHandler } from './tools/trigger-spell-prep.handler.js';
+import { UpdateRoomStateHandler } from './tools/update-room-state.handler.js';
 import { TravelService } from './travel.service.js';
 import { WorldMutationService } from './world-mutation.service.js';
 
@@ -59,6 +66,14 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         private readonly campaignService: CampaignService,
         private readonly streamPublisher: StreamPublisher,
         @Inject(REDIS_CLIENT) private readonly redis: Pick<Redis, 'exists'>,
+        private readonly enterDungeonHandler: Pick<EnterDungeonHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly moveToRoomHandler: Pick<MoveToRoomHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly exitDungeonHandler: Pick<ExitDungeonHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly spawnEncounterHandler: Pick<SpawnEncounterHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly updateRoomStateHandler: Pick<UpdateRoomStateHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly addRoomItemHandler: Pick<AddRoomItemHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly lootRoomHandler: Pick<LootRoomHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly triggerSpellPrepHandler: Pick<TriggerSpellPrepHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
     ) {}
 
     onModuleInit(): void {
@@ -69,6 +84,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         this.registerItemTools();
         this.registerLevelingTools();
         this.registerWorldTools();
+        this.registerDungeonTools();
         this.registerMemoryTools();
         this.registerQuestTools();
         this.registerCampaignTools();
@@ -503,6 +519,20 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                 return leveling.prepareSpells(characterId, Array.isArray(input.spells) ? input.spells as string[] : []);
             },
         });
+
+        toolRegistry.register({
+            toolName: 'trigger_spell_prep',
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const characterId = input.character_id === undefined
+                    ? (await this.loadCtx(sessionId))?.characterId
+                    : this.num(input.character_id);
+                if (!characterId) {
+                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                }
+
+                return this.triggerSpellPrepHandler.execute(sessionId, { characterId });
+            },
+        });
     }
 
     private registerWorldTools(): void {
@@ -602,6 +632,76 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         });
     }
 
+    private registerDungeonTools(): void {
+        const {
+            toolRegistry,
+            enterDungeonHandler,
+            moveToRoomHandler,
+            exitDungeonHandler,
+            spawnEncounterHandler,
+            updateRoomStateHandler,
+            addRoomItemHandler,
+            lootRoomHandler,
+        } = this;
+
+        toolRegistry.register({
+            toolName: 'enter_dungeon',
+            execute: async (_sessionId, input): Promise<ToolResult> => enterDungeonHandler.execute(
+                this.num(_sessionId), this.num(input.dungeon_id),
+            ),
+        });
+
+        toolRegistry.register({
+            toolName: 'move_to_room',
+            execute: async (_sessionId, input): Promise<ToolResult> => moveToRoomHandler.execute(
+                this.num(_sessionId), this.num(input.room_id),
+            ),
+        });
+
+        toolRegistry.register({
+            toolName: 'exit_dungeon',
+            execute: async (sessionId): Promise<ToolResult> => exitDungeonHandler.execute(sessionId),
+        });
+
+        toolRegistry.register({
+            toolName: 'spawn_encounter',
+            execute: async (sessionId, input): Promise<ToolResult> => spawnEncounterHandler.execute(sessionId, {
+                roomId: input.room_id === undefined ? undefined : this.num(input.room_id),
+                dungeonId: input.dungeon_id === undefined ? undefined : this.num(input.dungeon_id),
+                fromTable: input.from_table === undefined ? undefined : Boolean(input.from_table),
+            }),
+        });
+
+        toolRegistry.register({
+            toolName: 'update_room_state',
+            execute: async (sessionId, input): Promise<ToolResult> => updateRoomStateHandler.execute(
+                sessionId,
+                this.num(input.room_id),
+                this.str(input.state),
+            ),
+        });
+
+        toolRegistry.register({
+            toolName: 'add_room_item',
+            execute: async (sessionId, input): Promise<ToolResult> => addRoomItemHandler.execute(sessionId, {
+                roomId: this.num(input.room_id),
+                itemId: this.num(input.item_id),
+                quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
+                containerName: input.container_name === undefined ? undefined : this.str(input.container_name),
+            }),
+        });
+
+        toolRegistry.register({
+            toolName: 'loot_room',
+            execute: async (sessionId, input): Promise<ToolResult> => lootRoomHandler.execute(
+                sessionId,
+                this.num(input.room_id),
+                this.num(input.item_id),
+                this.num(input.quantity ?? 1),
+            ),
+        });
+    }
+
     private registerQuestTools(): void {
         const { toolRegistry, questService } = this;
 
@@ -615,6 +715,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
                 const dto: CreateQuestDto = {
                     campaignId: context.campaignId,
+                    dungeonId: input.dungeon_id === undefined ? null : this.num(input.dungeon_id),
                     title: this.str(input.title),
                     description: this.str(input.description),
                     agendaImpact: input.agenda_impact === undefined ? null : this.str(input.agenda_impact),
@@ -834,14 +935,14 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         const start = Date.now();
 
         while (Date.now() - start < maxWaitMs) {
-            // eslint-disable-next-line no-await-in-loop
             const stillLocked = await this.redis.exists(lockKey);
             if (!stillLocked) {
                 break;
             }
 
-            // eslint-disable-next-line no-await-in-loop
-            await new Promise<void>((resolve) => { setTimeout(resolve, pollIntervalMs); });
+            await new Promise<void>((resolve) => {
+                setTimeout(resolve, pollIntervalMs);
+            });
         }
 
         await this.executePermadeathSequence(sessionId, campaign);

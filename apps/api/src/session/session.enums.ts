@@ -2,6 +2,7 @@ import { registerEnumType } from '@nestjs/graphql';
 
 export enum SceneType {
     EXPLORATION = 'EXPLORATION',
+    DUNGEON = 'DUNGEON',
     COMBAT = 'COMBAT',
     SOCIAL = 'SOCIAL',
     SETTLEMENT = 'SETTLEMENT',

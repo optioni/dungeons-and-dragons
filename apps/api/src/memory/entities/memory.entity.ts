@@ -36,7 +36,7 @@ export class Memory extends BaseEntity {
     @Property({ type: 'uuid', nullable: true })
     subjectId: string | null = null;
 
-    @Property({ columnType: 'varchar(1000)' })
+    @Property({ type: 'text', columnType: 'varchar(1000)' })
     content!: string;
 
     @Property({ type: VectorType, nullable: true })

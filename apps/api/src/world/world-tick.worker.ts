@@ -14,8 +14,8 @@ import { REDIS_CLIENT } from '../queue/queue.module.js';
 import { NpcItem } from './entities/npc-item.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { Npc } from './entities/npc.entity.js';
-import { NpcMemoryService } from './npc-memory.service.js';
 import { WorldEvent } from './entities/world-event.entity.js';
+import { NpcMemoryService } from './npc-memory.service.js';
 import { NpcRelationshipType, WorldEventSource, WorldEventStatus } from './world.enums.js';
 import { WorldService } from './world.service.js';
 

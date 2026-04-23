@@ -208,6 +208,152 @@ describe('DmOrchestrator', () => {
         });
     });
 
+    it('emits SUGGESTED_ACTION chunks and excludes suggest_actions from the next tool-result loop', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const suggestActionsBlock = {
+            type: 'tool_use',
+            id: 'toolu_suggest',
+            name: 'suggest_actions',
+            input: { actions: ['Open the chest', 'Listen at the door'] },
+        };
+        const triggerLevelUpBlock = {
+            type: 'tool_use',
+            id: 'toolu_level',
+            name: 'trigger_level_up',
+            input: { character_id: 7 },
+        };
+        const mockStream = {
+            async* [Symbol.asyncIterator]() {},
+            finalMessage: vi.fn().mockResolvedValueOnce({
+                content: [suggestActionsBlock, triggerLevelUpBlock],
+                stop_reason: 'tool_use',
+            }).mockResolvedValueOnce({
+                content: [],
+                stop_reason: 'end_turn',
+            }),
+        };
+        /* eslint-enable @typescript-eslint/naming-convention */
+        mockAnthropicMessages.stream.mockReturnValue(mockStream);
+        toolRegistry.dispatch.mockResolvedValue({ success: true, data: { newLevel: 4 } });
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        const publishedChunks = streamPublisher.publish.mock.calls.map((callArgs) => callArgs[1]);
+        expect(publishedChunks).toContainEqual({
+            type: DmStreamChunkType.SUGGESTED_ACTION,
+            action: 'Open the chest',
+        });
+        expect(publishedChunks).toContainEqual({
+            type: DmStreamChunkType.SUGGESTED_ACTION,
+            action: 'Listen at the door',
+        });
+
+        const secondStreamArgs = mockAnthropicMessages.stream.mock.calls[1]?.[0] as { messages: Array<{ role: string; content: unknown }> };
+        expect(secondStreamArgs.messages.at(-1)).toEqual({
+            role: 'user',
+            content: [{
+                type: 'tool_result',
+                tool_use_id: 'toolu_level',
+                content: JSON.stringify({ success: true, data: { newLevel: 4 } }),
+            }],
+        });
+    });
+
+    it('emits LEVEL_UP_PENDING after a successful trigger_level_up dispatch and skips it on error', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const toolUseBlock = {
+            type: 'tool_use',
+            id: 'toolu_level',
+            name: 'trigger_level_up',
+            input: { character_id: 7 },
+        };
+        const successStream = {
+            async* [Symbol.asyncIterator]() {},
+            finalMessage: vi.fn().mockResolvedValueOnce({
+                content: [toolUseBlock],
+                stop_reason: 'tool_use',
+            }).mockResolvedValueOnce({
+                content: [],
+                stop_reason: 'end_turn',
+            }),
+        };
+        /* eslint-enable @typescript-eslint/naming-convention */
+
+        mockAnthropicMessages.stream.mockReturnValue(successStream);
+        toolRegistry.dispatch.mockResolvedValueOnce({ success: true, data: { newLevel: 4 } });
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        expect(streamPublisher.publish).toHaveBeenCalledWith(
+            sessionId,
+            expect.objectContaining({
+                type: DmStreamChunkType.STATUS,
+                status: 'LEVEL_UP_PENDING',
+            }),
+        );
+
+        streamPublisher.publish.mockClear();
+        sessionService.appendEvent.mockClear();
+        mockAnthropicMessages.stream.mockClear();
+        toolRegistry.dispatch.mockClear();
+        npcMemoryService.searchNpcMemories = vi.fn().mockResolvedValue([]);
+        const errorStream = {
+            async* [Symbol.asyncIterator]() {},
+            finalMessage: vi.fn().mockResolvedValueOnce({
+                content: [toolUseBlock],
+                stop_reason: 'tool_use',
+            }).mockResolvedValueOnce({
+                content: [],
+                stop_reason: 'end_turn',
+            }),
+        };
+        mockAnthropicMessages.stream.mockReturnValue(errorStream);
+        toolRegistry.dispatch.mockResolvedValueOnce({ success: false, errorCode: 'LEVEL_UP_ALREADY_PENDING' });
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        expect(streamPublisher.publish).not.toHaveBeenCalledWith(
+            sessionId,
+            expect.objectContaining({
+                type: DmStreamChunkType.STATUS,
+                status: 'LEVEL_UP_PENDING',
+            }),
+        );
+    });
+
+    it('emits SPELL_PREP_PENDING after a successful trigger_spell_prep dispatch', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const toolUseBlock = {
+            type: 'tool_use',
+            id: 'toolu_spellprep',
+            name: 'trigger_spell_prep',
+            input: { character_id: 7 },
+        };
+        const mockStream = {
+            async* [Symbol.asyncIterator]() {},
+            finalMessage: vi.fn().mockResolvedValueOnce({
+                content: [toolUseBlock],
+                stop_reason: 'tool_use',
+            }).mockResolvedValueOnce({
+                content: [],
+                stop_reason: 'end_turn',
+            }),
+        };
+        /* eslint-enable @typescript-eslint/naming-convention */
+        mockAnthropicMessages.stream.mockReturnValue(mockStream);
+        toolRegistry.dispatch.mockResolvedValue({ success: true, data: { characterId: 7 } });
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        expect(streamPublisher.publish).toHaveBeenCalledWith(
+            sessionId,
+            expect.objectContaining({
+                type: DmStreamChunkType.STATUS,
+                status: 'SPELL_PREP_PENDING',
+            }),
+        );
+    });
+
     it('persists DM_NARRATIVE event on completion', async () => {
         /* eslint-disable @typescript-eslint/naming-convention */
         const mockStream = {

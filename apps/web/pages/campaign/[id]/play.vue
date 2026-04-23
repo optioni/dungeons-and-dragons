@@ -3,12 +3,14 @@ import { useQuery, useMutation, useSubscription } from '@urql/vue';
 import {
     ACTIVE_SESSION_QUERY,
     APPLY_LEVEL_UP_MUTATION,
+    PREPARE_SPELLS_MUTATION,
     GAME_EVENTS_QUERY,
     START_SESSION_MUTATION,
     SEND_PLAYER_INPUT_MUTATION,
     DM_STREAM_SUBSCRIPTION,
     CHARACTER_QUERY_FOR_PLAY,
     CAMPAIGN_QUERY_FOR_PLAY,
+    SPELL_OPTIONS_QUERY,
 } from '~/graphql/session';
 import type { CombatSession } from '~/components/session/CombatPanel.vue';
 
@@ -65,7 +67,9 @@ watch(
 const sessionId = ref<string | null>(null);
 const sceneType = ref<string>('EXPLORATION');
 const levelUpPending = ref(false);
+const spellPrepPending = ref(false);
 const combatSession = ref<CombatSession | null>(null);
+const characterId = ref<string | null>(null);
 
 const { data: activeSessionData, executeQuery: refetchActiveSession } = useQuery({
     query: ACTIVE_SESSION_QUERY,
@@ -75,8 +79,15 @@ const { data: activeSessionData, executeQuery: refetchActiveSession } = useQuery
 
 const { executeMutation: startSessionMutation } = useMutation(START_SESSION_MUTATION);
 
-function applySessionData(session: { id: string; sceneType: string; levelUpPending: boolean; combatSession: CombatSession | null }): void {
+function applySessionData(session: {
+    id: string
+    characterId: string | null
+    sceneType: string
+    levelUpPending: boolean
+    combatSession: CombatSession | null
+}): void {
     sessionId.value = session.id;
+    characterId.value = session.characterId;
     sceneType.value = session.sceneType;
     levelUpPending.value = session.levelUpPending;
     combatSession.value = session.combatSession;
@@ -160,6 +171,8 @@ watch(streamData, async (data) => {
 
         case 'STATUS':
             if (chunk.sceneType) sceneType.value = chunk.sceneType;
+            if (chunk.status === 'LEVEL_UP_PENDING') levelUpPending.value = true;
+            if (chunk.status === 'SPELL_PREP_PENDING') spellPrepPending.value = true;
             break;
 
         case 'DONE':
@@ -181,7 +194,7 @@ watch(streamData, async (data) => {
 const playerInput = ref('');
 const { executeMutation: sendInput } = useMutation(SEND_PLAYER_INPUT_MUTATION);
 
-const inputDisabled = computed(() => isStreaming.value || levelUpPending.value);
+const inputDisabled = computed(() => isStreaming.value || levelUpPending.value || spellPrepPending.value);
 
 async function handleSend() {
     const text = playerInput.value.trim();
@@ -202,7 +215,6 @@ async function handleSend() {
 
 function handleSuggestedAction(action: string) {
     playerInput.value = action;
-    handleSend();
 }
 
 function handleQuickAction(text: string) {
@@ -211,11 +223,14 @@ function handleQuickAction(text: string) {
 
 // ── Level Up Panel ───────────────────────────────────────────────────────────
 const { executeMutation: applyLevelUpMutation } = useMutation(APPLY_LEVEL_UP_MUTATION);
+const { executeMutation: prepareSpellsMutation } = useMutation(PREPARE_SPELLS_MUTATION);
 const levelUpHpRolled = ref(1);
 const levelUpAsi = ref<Record<string, number>>({});
 const levelUpFeat = ref('');
 const levelUpUseFeat = ref(false);
 const levelUpError = ref('');
+const spellPrepError = ref('');
+const selectedPreparedSpells = ref<string[]>([]);
 
 async function handleLevelUpSubmit() {
     if (!sessionId.value) return;
@@ -254,8 +269,6 @@ function setAsi(ability: string, val: number) {
 }
 
 // ── Character Sidebar ─────────────────────────────────────────────────────────
-const characterId = computed(() => null); // TODO: wire from campaign
-
 const { data: characterData, fetching: characterFetching, executeQuery: refetchCharacter } = useQuery({
     query: CHARACTER_QUERY_FOR_PLAY,
     variables: computed(() => ({ id: characterId.value })),
@@ -263,6 +276,91 @@ const { data: characterData, fetching: characterFetching, executeQuery: refetchC
 });
 
 const character = computed(() => characterData.value?.character ?? null);
+type SpellOption = { index: string; name: string; level: number; classes: string[] };
+
+const { data: spellOptionsData, fetching: spellOptionsFetching } = useQuery({
+    query: SPELL_OPTIONS_QUERY,
+    variables: { first: 400 },
+    pause: computed(() => !spellPrepPending.value || !character.value?.class?.name),
+});
+
+const availablePreparedSpells = computed<SpellOption[]>(() => {
+    const className = character.value?.class?.name;
+    if (!className) {
+        return [];
+    }
+
+    const edges = spellOptionsData.value?.srdSpells?.edges ?? [];
+    return edges
+        .map((edge: { node?: SpellOption | null }) => edge.node)
+        .filter((spell: SpellOption | null | undefined): spell is SpellOption => Boolean(spell))
+        .filter((spell) => spell.classes.includes(className))
+        .sort((left, right) => left.level - right.level || left.name.localeCompare(right.name));
+});
+
+const spellcastingAbilityModifier = computed(() => {
+    const abilityKey = character.value?.class?.spellcastingAbility as typeof ABILITIES[number] | undefined;
+    if (!abilityKey) {
+        return 0;
+    }
+
+    const score = character.value?.abilityScores?.[abilityKey];
+    return typeof score === 'number' ? Math.floor((score - 10) / 2) : 0;
+});
+
+const maxPreparedSpells = computed(() => {
+    if (!character.value?.class?.index || !['wizard', 'cleric', 'druid'].includes(character.value.class.index)) {
+        return 0;
+    }
+
+    return Math.max(1, character.value.level + spellcastingAbilityModifier.value);
+});
+
+watch(
+    () => spellPrepPending.value,
+    (pending) => {
+        if (!pending) {
+            selectedPreparedSpells.value = [];
+            spellPrepError.value = '';
+            return;
+        }
+
+        selectedPreparedSpells.value = [...(character.value?.preparedSpells ?? [])];
+    },
+    { immediate: true },
+);
+
+function togglePreparedSpell(spellIndex: string): void {
+    if (selectedPreparedSpells.value.includes(spellIndex)) {
+        selectedPreparedSpells.value = selectedPreparedSpells.value.filter((spell) => spell !== spellIndex);
+        return;
+    }
+
+    if (maxPreparedSpells.value > 0 && selectedPreparedSpells.value.length >= maxPreparedSpells.value) {
+        return;
+    }
+
+    selectedPreparedSpells.value = [...selectedPreparedSpells.value, spellIndex];
+}
+
+async function handlePrepareSpellsSubmit(): Promise<void> {
+    if (!sessionId.value) return;
+    spellPrepError.value = '';
+
+    const result = await prepareSpellsMutation({
+        sessionId: sessionId.value,
+        spells: selectedPreparedSpells.value,
+    });
+
+    if (result.error) {
+        spellPrepError.value = result.error.message;
+        return;
+    }
+
+    spellPrepPending.value = false;
+    selectedPreparedSpells.value = [];
+    await refetchCharacter({ requestPolicy: 'network-only' });
+}
 
 // ── Scroll to bottom on new content ──────────────────────────────────────────
 const transcriptRef = ref<HTMLElement | null>(null);
@@ -383,7 +481,7 @@ watch(
                 </div>
 
                 <!-- Suggested action chips -->
-                <div v-if="suggestedActions.length && !isStreaming"
+                <div v-if="suggestedActions.length"
                     class="px-6 pb-2 flex flex-wrap gap-2">
                     <u-button v-for="action in suggestedActions"
                         :key="action"
@@ -541,6 +639,83 @@ watch(
                             >
                                 Confirm Level Up
                             </u-button>
+                        </div>
+                    </div>
+                </transition>
+
+                <!-- Spell-preparation overlay -->
+                <transition
+                    enter-active-class="transition-opacity duration-200"
+                    enter-from-class="opacity-0"
+                    enter-to-class="opacity-100"
+                    leave-active-class="transition-opacity duration-200"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
+                >
+                    <div
+                        v-if="spellPrepPending"
+                        class="absolute inset-0 bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-6"
+                    >
+                        <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-2xl space-y-5">
+                            <div class="text-center">
+                                <u-icon name="i-lucide-book-open-check" class="text-sky-400 text-3xl mb-2" />
+
+                                <h2 class="text-lg font-bold text-white">Prepare Spells</h2>
+
+                                <p class="text-sm text-gray-400">
+                                    Choose up to {{ maxPreparedSpells }} spells for {{ character?.name }}.
+                                </p>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs text-gray-400">
+                                <span>{{ selectedPreparedSpells.length }}/{{ maxPreparedSpells }} selected</span>
+                                <span v-if="spellOptionsFetching">Loading spell list…</span>
+                            </div>
+
+                            <div class="max-h-96 overflow-y-auto border border-gray-800 rounded-xl divide-y divide-gray-800">
+                                <button
+                                    v-for="spell in availablePreparedSpells"
+                                    :key="spell.index"
+                                    type="button"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-800/70 transition-colors disabled:opacity-50"
+                                    :disabled="!selectedPreparedSpells.includes(spell.index)
+                                        && maxPreparedSpells > 0
+                                        && selectedPreparedSpells.length >= maxPreparedSpells"
+                                    @click="togglePreparedSpell(spell.index)"
+                                >
+                                    <div class="flex items-center justify-between gap-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-white">{{ spell.name }}</p>
+                                            <p class="text-xs text-gray-500">Level {{ spell.level }}</p>
+                                        </div>
+
+                                        <u-badge
+                                            :color="selectedPreparedSpells.includes(spell.index) ? 'primary' : 'neutral'"
+                                            variant="soft"
+                                            size="sm"
+                                        >
+                                            {{ selectedPreparedSpells.includes(spell.index) ? 'Prepared' : 'Available' }}
+                                        </u-badge>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <u-alert
+                                v-if="spellPrepError"
+                                color="error"
+                                variant="soft"
+                                :description="spellPrepError"
+                            />
+
+                            <div class="flex justify-end">
+                                <u-button
+                                    color="primary"
+                                    :disabled="spellOptionsFetching"
+                                    @click="handlePrepareSpellsSubmit"
+                                >
+                                    Confirm Prepared Spells
+                                </u-button>
+                            </div>
                         </div>
                     </div>
                 </transition>

@@ -7,6 +7,7 @@ import { ItemType } from '../character/character.enums.js';
 import { CharacterItem } from '../character/entities/character-item.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { Item } from '../character/entities/item.entity.js';
+import { Dungeon } from '../dungeon/entities/dungeon.entity.js';
 import { Location } from '../world/entities/location.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { WorldEvent } from '../world/entities/world-event.entity.js';
@@ -65,6 +66,7 @@ export interface ObjectiveSpec {
 
 export interface CreateQuestDto {
     campaignId: number
+    dungeonId?: number | null
     title: string
     description: string
     agendaImpact?: string | null
@@ -100,6 +102,8 @@ export class QuestService {
         private readonly characterItemRepo: EntityRepository<CharacterItem>,
         @InjectRepository(Npc)
         private readonly npcRepo: EntityRepository<Npc>,
+        @InjectRepository(Dungeon)
+        private readonly dungeonRepo?: EntityRepository<Dungeon>,
     ) {}
 
     /**
@@ -111,6 +115,15 @@ export class QuestService {
             const quest = await this.em.transactional(async (em) => {
                 const refMap = new Map<string, number>();
                 const pendingLinks: Array<{ entityType: QuestEntityType; entityId: number }> = [];
+
+                if (dto.dungeonId !== undefined && dto.dungeonId !== null) {
+                    const dungeon = await em.findOne(Dungeon, { id: dto.dungeonId, campaign: dto.campaignId });
+                    if (!dungeon) {
+                        throw new Error('DUNGEON_NOT_FOUND');
+                    }
+
+                    pendingLinks.push({ entityType: QuestEntityType.DUNGEON, entityId: dto.dungeonId });
+                }
 
                 await this.scaffoldQuestEntities(em, dto, refMap, pendingLinks);
 
