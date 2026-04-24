@@ -97,7 +97,8 @@
                     class="flex-1 overflow-y-auto px-6 py-4">
                     <session-transcript-view
                         :events="persistedEvents"
-                        :in-progress-text="inProgressNarrative || undefined" />
+                        :in-progress-text="inProgressNarrative || undefined"
+                        :inner-voice-text="innerVoiceText || undefined" />
                 </div>
 
                 <!-- Suggested action chips -->
@@ -479,6 +480,7 @@ interface GameEvent {
 
 const persistedEvents = ref<GameEvent[]>([]);
 const inProgressNarrative = ref('');
+const innerVoiceText = ref('');
 const lastSeenSequence = ref(0);
 
 const { executeQuery: refetchEvents } = useQuery({
@@ -517,6 +519,10 @@ watch(streamData, async (data) => {
             inProgressNarrative.value += chunk.text ?? '';
             break;
 
+        case 'INNER_VOICE':
+            innerVoiceText.value += chunk.text ?? '';
+            break;
+
         case 'TOOL_RESULT':
             break;
 
@@ -535,6 +541,10 @@ watch(streamData, async (data) => {
             break;
 
         case 'DONE':
+            if (!isStreaming.value && !inProgressNarrative.value) {
+                break;
+            }
+
             isStreaming.value = false;
             const { data: eventsData } = await refetchEvents({ requestPolicy: 'network-only' });
             persistedEvents.value = (eventsData?.gameEvents ?? []) as GameEvent[];
@@ -566,6 +576,7 @@ async function handleSend() {
         createdAt: new Date().toISOString(),
     });
     playerInput.value = '';
+    innerVoiceText.value = '';
     suggestedActions.value = [];
     lastSeenSequence.value = 0;
 

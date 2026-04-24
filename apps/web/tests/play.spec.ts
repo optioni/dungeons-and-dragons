@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 
 import PlayPage from '../pages/campaign/[id]/play.vue';
 
@@ -34,6 +34,7 @@ interface SessionOverrides {
 
 /** Configure useQuery/useMutation/useSubscription mocks for one component mount. */
 function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutation?: ReturnType<typeof vi.fn>) {
+    const streamRef = ref<any>(null);
     const session = {
         id: 'sess-1',
         characterId: 'char-1',
@@ -103,7 +104,9 @@ function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutatio
         .mockReturnValueOnce({ executeMutation: levelUpMutation ?? mockMutationFunction } as any) // APPLY_LEVEL_UP_MUTATION
         .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any); // PREPARE_SPELLS_MUTATION
 
-    vi.mocked(useSubscription).mockReturnValue({ data: ref(null) } as any);
+    vi.mocked(useSubscription).mockReturnValue({ data: streamRef } as any);
+
+    return { streamRef };
 }
 
 const globalStubs = {
@@ -114,7 +117,15 @@ const globalStubs = {
     },
     SessionCharacterSidebar: { template: '<div />', props: ['character', 'fetching'] },
     SessionCampaignEndScreen: { template: '<div />' },
-    SessionTranscriptView: { template: '<div />', props: ['events', 'inProgressText'] },
+    SessionTranscriptView: {
+        template: `
+          <div>
+            <div v-if="inProgressText" data-testid="in-progress">{{ inProgressText }}</div>
+            <div v-if="innerVoiceText" data-testid="inner-voice">{{ innerVoiceText }}</div>
+          </div>
+        `,
+        props: ['events', 'inProgressText', 'innerVoiceText'],
+    },
     NuxtLink: { template: '<a><slot /></a>', props: ['to'] },
     UIcon: { template: '<span />', props: ['name', 'class'] },
     UAlert: { template: '<div>{{ description }}</div>', props: ['description', 'color', 'variant'] },
@@ -172,6 +183,37 @@ describe('play page — layout transitions', () => {
         await flushPromises();
 
         expect(wrapper.text()).toContain('SOCIAL');
+    });
+});
+
+describe('play page — inner voice stream handling', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('accumulates INNER_VOICE chunks separately from the main narrative', async () => {
+        const { streamRef } = setupQueryMocks();
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        streamRef.value = { dmStream: { sequence: 1, type: 'INNER_VOICE', text: 'A warning prickles at the edge of thought.', sessionId: 'sess-1' } };
+        await nextTick();
+
+        expect(wrapper.find('[data-testid="inner-voice"]').text()).toContain('A warning prickles at the edge of thought.');
+        expect(wrapper.find('[data-testid="in-progress"]').exists()).toBe(false);
+    });
+
+    it('ignores a second DONE chunk when the session is already idle', async () => {
+        const { streamRef } = setupQueryMocks();
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        streamRef.value = { dmStream: { sequence: 1, type: 'DONE', sessionId: 'sess-1' } };
+        await flushPromises();
+        streamRef.value = { dmStream: { sequence: 2, type: 'DONE', sessionId: 'sess-1' } };
+        await flushPromises();
+
+        expect(wrapper.find('textarea').attributes('disabled')).toBeUndefined();
     });
 });
 

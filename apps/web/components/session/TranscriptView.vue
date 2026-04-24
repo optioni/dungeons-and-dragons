@@ -27,6 +27,13 @@
                 <span class="inline-block w-1.5 h-4 bg-primary-400 animate-pulse ml-0.5 align-middle" />
             </div>
         </div>
+
+        <div v-if="props.innerVoiceText"
+            class="flex justify-start">
+            <div class="max-w-[85%] px-4 py-2 text-sm italic leading-relaxed whitespace-pre-wrap text-gray-400">
+                {{ props.innerVoiceText }}
+            </div>
+        </div>
     </div>
 </template>
 
@@ -41,9 +48,11 @@ interface GameEvent {
 interface Props {
     events: GameEvent[]
     inProgressText?: string
+    innerVoiceText?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
     inProgressText: undefined,
+    innerVoiceText: undefined,
 });
 </script>
