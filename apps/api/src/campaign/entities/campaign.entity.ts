@@ -2,6 +2,7 @@ import { Collection, type Opt } from '@mikro-orm/core';
 import { Entity, OneToMany, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 import { DiaryEntry } from '../../memory/entities/diary-entry.entity.js';
 import { Memory } from '../../memory/entities/memory.entity.js';
@@ -66,12 +67,12 @@ export class Campaign extends BaseEntity {
     deathMode: DeathMode | null = null;
 
     /** 3-4 story concepts persisted after the LLM generation step. */
-    @Field(() => [Object], { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     @Property({ type: 'jsonb', nullable: true })
     generatedConcepts: StoryConcept[] | null = null;
 
     /** The player's chosen concept; becomes the seed for world generation. */
-    @Field(() => Object, { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     @Property({ type: 'jsonb', nullable: true })
     selectedConcept: StoryConcept | null = null;
 
@@ -79,7 +80,7 @@ export class Campaign extends BaseEntity {
      * Bootstrap narrative seed stored during world generation.
      * Materialized into the first GameEvent when SessionModule creates the initial session.
      */
-    @Field(() => Object, { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     @Property({ type: 'jsonb', nullable: true })
     openingSceneSeed: OpeningSceneSeed | null = null;
 
@@ -89,7 +90,7 @@ export class Campaign extends BaseEntity {
     antagonistNpcId: number | null = null;
 
     /** Structured antagonist plan state read by tool calls during play. */
-    @Field(() => Object, { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     @Property({ type: 'jsonb', nullable: true })
     antagonistPlanState: AntagonistPlanState | null = null;
 

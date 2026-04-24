@@ -44,16 +44,16 @@ export class GameSession extends BaseEntity {
         return this.activeDungeon?.id ?? null;
     }
 
-    @Field()
+    @Field(() => Date)
     @Property({ type: 'timestamptz', onCreate: () => new Date() })
     startedAt: Opt<Date> = new Date();
 
-    @Field({ nullable: true })
+    @Field(() => Date, { nullable: true })
     @Property({ type: 'timestamptz', nullable: true })
     endedAt: Date | null = null;
 
     /** True while a level-up is pending player confirmation. Disables standard input in the frontend. */
-    @Field()
+    @Field(() => Boolean)
     @Property({ type: 'boolean', default: false })
     levelUpPending: Opt<boolean> = false;
 

@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { SceneType } from '../session/session.enums.js';
@@ -22,9 +22,15 @@ export class PromptModuleRegistry implements OnModuleInit {
     private readonly modules = new Map<SceneType, string>();
 
     onModuleInit(): void {
-        // __dirname resolves to the compiled output directory at runtime;
-        // the prompt-modules/ folder is copied there during build.
-        const directory = join(__dirname, 'prompt-modules');
+        const directory = [
+            join(__dirname, 'prompt-modules'),
+            join(process.cwd(), 'src/llm/prompt-modules'),
+            join(process.cwd(), 'apps/api/src/llm/prompt-modules'),
+        ].find((candidate) => existsSync(candidate));
+
+        if (!directory) {
+            throw new Error('Prompt module directory not found');
+        }
 
         for (const [scene, file] of Object.entries(SCENE_FILES) as Array<[SceneType, string]>) {
             const text = readFileSync(join(directory, file), 'utf8');

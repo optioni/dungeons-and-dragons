@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 
 export interface RollResult {
     success: true
@@ -48,7 +48,7 @@ function hashString(input: string): number {
 export class DiceService {
     private readonly rand: () => number;
 
-    constructor(rand?: () => number) {
+    constructor(@Optional() rand?: () => number) {
         this.rand = rand ?? (() => Math.random());
     }
 

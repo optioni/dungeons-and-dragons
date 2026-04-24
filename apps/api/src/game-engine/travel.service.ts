@@ -8,8 +8,8 @@ import { LocationDiscovery } from '../world/entities/location-discovery.entity.j
 import { Location } from '../world/entities/location.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { LocationDiscoverySource } from '../world/world.enums.js';
-import { type CombatService } from './combat.service.js';
-import { type DiceService } from './dice.service.js';
+import { CombatService } from './combat.service.js';
+import { DiceService } from './dice.service.js';
 import { STATE_CHANGED_EVENT, StateChangedEvent } from './events/state-changed.event.js';
 
 export interface EncounterResult {

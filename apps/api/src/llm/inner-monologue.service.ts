@@ -1,13 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
-
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
-import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
-import { Character } from '../character/entities/character.entity.js';
 import { type SkillName } from '../character/character.enums.js';
+import { Character } from '../character/entities/character.entity.js';
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { DiceService } from '../game-engine/dice.service.js';
 import { DmStreamChunkType } from '../session/dto/dm-stream-chunk.dto.js';
@@ -18,11 +17,11 @@ import { Location } from '../world/entities/location.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 
 const ELIGIBLE_SKILLS = new Set<Lowercase<SkillName>>([
-    'perception',
+    'arcana',
+    'history',
     'insight',
     'investigation',
-    'history',
-    'arcana',
+    'perception',
     'survival',
 ]);
 

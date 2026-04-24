@@ -4,11 +4,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
+import { Character } from '../character/entities/character.entity.js';
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { ContextLoader } from '../llm/context-loader.service.js';
 import { InnerMonologueService } from '../llm/inner-monologue.service.js';
 import { ToolRegistry } from '../llm/tool-registry.service.js';
-import { Character } from '../character/entities/character.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { NpcMemoryService } from '../world/npc-memory.service.js';
 import { DmStreamChunkType } from './dto/dm-stream-chunk.dto.js';

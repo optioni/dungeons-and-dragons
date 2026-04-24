@@ -4,8 +4,8 @@ import { BaseEntity } from '@mikro-orm/postgresql';
 import {
     Field, ID, ObjectType,
 } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
-import { JsonScalar } from '../../graphql/scalars/json.scalar.js';
 import { Location } from '../../world/entities/location.entity.js';
 import { type MonsterSpec } from './dungeon.entity.js';
 
@@ -33,11 +33,11 @@ export class RoomEncounter extends BaseEntity {
     @Property({ type: 'text' })
     description!: string;
 
-    @Field()
+    @Field(() => Boolean)
     @Property({ type: 'boolean', default: false })
     cleared: Opt<boolean> = false;
 
-    @Field(() => JsonScalar)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     monsters!: MonsterSpec[];
 }

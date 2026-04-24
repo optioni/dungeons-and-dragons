@@ -7,7 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { type DiaryEntry } from '../memory/entities/diary-entry.entity.js';
-import { type MemoryService } from '../memory/memory.service.js';
+import { MemoryService } from '../memory/memory.service.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { EventType, SceneType } from '../session/session.enums.js';
@@ -57,7 +57,7 @@ export class ContextLoader {
         @InjectRepository(NpcItem)
         private readonly npcItemRepository: EntityRepository<NpcItem>,
         private readonly promptModuleRegistry: PromptModuleRegistry,
-        private readonly memoryService: Pick<MemoryService, 'getRecentDiaryEntries'>,
+        private readonly memoryService: MemoryService,
     ) {}
 
     /**

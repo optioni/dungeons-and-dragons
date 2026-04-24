@@ -43,6 +43,7 @@
     "eventemitter2": "^6.4.9",
     "graphql": "^16.13.2",
     "graphql-relay": "^0.10.2",
+    "graphql-scalars": "^1.25.0",
     "graphql-yoga": "^5.21.0",
     "ioredis": "^5.10.1",
     "passport": "^0.7.0",

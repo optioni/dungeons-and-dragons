@@ -180,6 +180,7 @@ export class MemoryService {
                 memoryParameters.push(subjectId);
                 memoryFilter += ' AND subject_id = ?';
             }
+
             memoryParameters.push(effectiveLimit);
 
             const memoryResults = await conn.execute<RawSearchRow[]>(
@@ -242,6 +243,7 @@ export class MemoryService {
             memoryParameters.push(subjectId);
             memoryFilter += ' AND subject_id = ?';
         }
+
         memoryParameters.push(effectiveLimit);
 
         const memoryResults = await conn.execute<RawSearchRow[]>(

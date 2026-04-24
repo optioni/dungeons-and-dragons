@@ -7,7 +7,7 @@ import {
 import { type User } from '../auth/entities/user.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
-import { type DmOrchestrator } from './dm-orchestrator.service.js';
+import { DmOrchestrator } from './dm-orchestrator.service.js';
 import { DmStreamChunk } from './dto/dm-stream-chunk.dto.js';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';

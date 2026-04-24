@@ -1,11 +1,12 @@
 import { YogaDriver, type YogaDriverConfig } from '@graphql-yoga/nestjs';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { defineConfig } from '@mikro-orm/postgresql';
+import { defineConfig, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { join } from 'node:path';
 
 import { AppResolver } from './app.resolver';
 import { AuthModule } from './auth/auth.module';
@@ -31,10 +32,11 @@ import { WorldModule } from './world/world.module';
         }),
         GraphQLModule.forRoot<YogaDriverConfig>({
             driver: YogaDriver,
-            autoSchemaFile: true,
+            autoSchemaFile: join(process.cwd(), '../../schema.graphql'),
             context: ({ req, res }: { req: Request; res: Response }) => ({ req, res }),
         }),
         MikroOrmModule.forRootAsync({
+            driver: PostgreSqlDriver,
             useFactory: (configService: ConfigService) => defineConfig({
                 clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
                 entities: ['./dist/src/**/*.entity.js'],

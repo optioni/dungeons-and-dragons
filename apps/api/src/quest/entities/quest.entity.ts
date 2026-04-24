@@ -35,11 +35,11 @@ export class Quest extends BaseEntity {
     status: Opt<QuestStatus> = QuestStatus.ACTIVE;
 
     /** Instructions for how NPC agendas shift when this quest resolves. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     agendaImpact: string | null = null;
 
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     rewardNarrative: string | null = null;
 
@@ -51,7 +51,7 @@ export class Quest extends BaseEntity {
     @Property({ type: 'integer', nullable: true })
     rewardGold: number | null = null;
 
-    @Field()
+    @Field(() => Date)
     @Property({ type: 'datetime', defaultRaw: 'now()' })
     createdAt: Opt<Date> = new Date();
 

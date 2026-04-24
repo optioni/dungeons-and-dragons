@@ -1,6 +1,7 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 @ObjectType()
 @Entity()
@@ -21,7 +22,7 @@ export class SrdRace extends BaseEntity {
     @Property({ type: 'integer' })
     speed!: number;
 
-    @Field(() => [Object])
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     // eslint-disable-next-line @typescript-eslint/naming-convention
     abilityBonuses!: Array<{ ability_score: { name: string }; bonus: number }>;

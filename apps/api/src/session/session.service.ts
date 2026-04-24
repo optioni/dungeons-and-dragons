@@ -1,7 +1,7 @@
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
-    BadRequestException, Injectable, NotFoundException,
+    BadRequestException, forwardRef, Inject, Injectable, NotFoundException,
 } from '@nestjs/common';
 
 import { CampaignService } from '../campaign/campaign.service.js';
@@ -20,6 +20,7 @@ export class SessionService {
         private readonly sessionRepository: EntityRepository<GameSession>,
         @InjectRepository(GameEvent)
         private readonly eventRepository: EntityRepository<GameEvent>,
+        @Inject(forwardRef(() => CampaignService))
         private readonly campaignService: CampaignService,
     ) {}
 

@@ -1,33 +1,32 @@
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
 import {
     afterAll, afterEach, describe, expect, it,
 } from 'vitest';
 
 import {
+    getIntegrationTestEnvironmentPath,
     getRequiredIntegrationDatabaseUrl,
     getRequiredIntegrationRedisUrl,
-    getIntegrationTestEnvironmentPath,
     loadIntegrationTestEnvironment,
     removeIntegrationTestEnvironment,
     writeIntegrationTestEnvironment,
 } from './test-integration-environment.js';
 
 describe('integration test environment handoff', () => {
-    const originalEnv = { ...process.env };
+    const originalEnvironment = { ...process.env };
     const tempDir = mkdtempSync(join(tmpdir(), 'dnd-api-integration-env-'));
-    const envPath = join(tempDir, 'env.json');
+    const environmentPath = join(tempDir, 'env.json');
 
     afterEach(() => {
-        process.env = { ...originalEnv };
-        rmSync(envPath, { force: true });
+        process.env = { ...originalEnvironment };
+        rmSync(environmentPath, { force: true });
         mkdirSync(tempDir, { recursive: true });
     });
 
     it('writes and loads dynamic database and Redis URLs', () => {
-        process.env['INTEGRATION_TEST_ENV_FILE'] = envPath;
+        process.env['INTEGRATION_TEST_ENV_FILE'] = environmentPath;
         delete process.env['DATABASE_URL'];
         delete process.env['REDIS_URL'];
 
@@ -49,7 +48,7 @@ describe('integration test environment handoff', () => {
     });
 
     it('removes generated handoff state', () => {
-        process.env['INTEGRATION_TEST_ENV_FILE'] = envPath;
+        process.env['INTEGRATION_TEST_ENV_FILE'] = environmentPath;
 
         writeIntegrationTestEnvironment({
             DATABASE_URL: 'postgresql://test:test@localhost:15432/test',

@@ -1,8 +1,7 @@
 import {
     Field, ID, Int, ObjectType, registerEnumType,
 } from '@nestjs/graphql';
-
-import { JsonScalar } from '../../graphql/scalars/json.scalar.js';
+import { GraphQLJSON } from 'graphql-scalars';
 
 export enum DmStreamChunkType {
     NARRATIVE_CHUNK = 'NARRATIVE_CHUNK',
@@ -36,27 +35,27 @@ export class DmStreamChunk {
     sequence!: number;
 
     /** Narrative text fragment — present for NARRATIVE_CHUNK. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     text?: string;
 
     /** Tool name — present for TOOL_RESULT. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     toolName?: string;
 
     /** Structured tool result — present for TOOL_RESULT. */
-    @Field(() => JsonScalar, { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     toolResult?: unknown;
 
     /** Suggested player action — present for SUGGESTED_ACTION. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     action?: string;
 
     /** Status message (e.g. scene change) — present for STATUS. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     status?: string;
 
     /** New scene type after a STATUS change. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     sceneType?: string;
 
     /** Owning session ID — used for stream routing. */

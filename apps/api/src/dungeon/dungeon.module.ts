@@ -1,5 +1,4 @@
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 
 import { Campaign } from '../campaign/entities/campaign.entity.js';
@@ -19,7 +18,6 @@ import { RoomItem } from './entities/room-item.entity.js';
 @Module({
     imports: [
         GraphqlModule,
-        CacheModule,
         QueueModule,
         MikroOrmModule.forFeature([
             Campaign,

@@ -2,8 +2,8 @@ import { type Opt, OptionalProps } from '@mikro-orm/core';
 import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
-import { JsonScalar } from '../../graphql/scalars/json.scalar.js';
 import { EventType } from '../session.enums.js';
 import { GameSession } from './game-session.entity.js';
 
@@ -33,11 +33,11 @@ export class GameEvent extends BaseEntity {
     @Property({ type: 'text' })
     eventType!: EventType;
 
-    @Field(() => JsonScalar)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     content!: unknown;
 
-    @Field()
+    @Field(() => Date)
     @Property({ type: 'timestamptz', onCreate: () => new Date() })
     createdAt: Opt<Date> = new Date();
 }

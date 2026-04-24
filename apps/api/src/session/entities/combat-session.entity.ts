@@ -4,6 +4,7 @@ import {
 } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 import { GameSession } from './game-session.entity.js';
 
@@ -39,7 +40,7 @@ export class CombatSession extends BaseEntity {
     session!: GameSession;
 
     /** Ordered by initiative descending. HP for NPCs is authoritative here; character HP is in Character entity. */
-    @Field(() => [Object])
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     combatants!: Combatant[];
 

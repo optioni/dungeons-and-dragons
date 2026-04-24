@@ -1,6 +1,7 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, Float, ID, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 @ObjectType()
 @Entity()
@@ -21,7 +22,7 @@ export class SrdEquipment extends BaseEntity {
     @Property({ type: 'text' })
     category!: string;
 
-    @Field(() => Object)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     cost!: { quantity: number; unit: string };
 
@@ -33,7 +34,7 @@ export class SrdEquipment extends BaseEntity {
     @Property({ type: 'jsonb' })
     properties!: string[];
 
-    @Field(() => Object, { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     @Property({ type: 'jsonb', nullable: true })
     damage: Record<string, unknown> | null = null;
 }

@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export interface IntegrationTestEnvironment {
-    readonly DATABASE_URL: string;
-    readonly REDIS_URL: string;
+    readonly DATABASE_URL: string
+    readonly REDIS_URL: string
 }
 
 const ENV_FILE_NAME = `dnd-api-integration-${createHash('sha256').update(process.cwd()).digest('hex').slice(0, 12)}.json`;
@@ -14,21 +14,21 @@ export function getIntegrationTestEnvironmentPath(): string {
     return process.env['INTEGRATION_TEST_ENV_FILE'] ?? join(tmpdir(), ENV_FILE_NAME);
 }
 
-export function writeIntegrationTestEnvironment(env: IntegrationTestEnvironment): void {
-    const envPath = getIntegrationTestEnvironmentPath();
-    writeFileSync(envPath, `${JSON.stringify(env)}\n`, { encoding: 'utf8' });
+export function writeIntegrationTestEnvironment(environment: IntegrationTestEnvironment): void {
+    const environmentPath = getIntegrationTestEnvironmentPath();
+    writeFileSync(environmentPath, `${JSON.stringify(environment)}\n`, { encoding: 'utf8' });
 }
 
 export function loadIntegrationTestEnvironment(): void {
-    const envPath = getIntegrationTestEnvironmentPath();
+    const environmentPath = getIntegrationTestEnvironmentPath();
 
-    if (!existsSync(envPath)) {
+    if (!existsSync(environmentPath)) {
         return;
     }
 
-    const env = JSON.parse(readFileSync(envPath, 'utf8')) as IntegrationTestEnvironment;
-    process.env['DATABASE_URL'] = env.DATABASE_URL;
-    process.env['REDIS_URL'] = env.REDIS_URL;
+    const environment = JSON.parse(readFileSync(environmentPath, 'utf8')) as IntegrationTestEnvironment;
+    process.env['DATABASE_URL'] = environment.DATABASE_URL;
+    process.env['REDIS_URL'] = environment.REDIS_URL;
 }
 
 export function getRequiredIntegrationDatabaseUrl(): string {

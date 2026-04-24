@@ -1,7 +1,7 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
-    Args, ID, Int, Mutation, Resolver,
+    Args, Field, ID, InputType, Int, Mutation, Resolver,
 } from '@nestjs/graphql';
 
 import { type User } from '../auth/entities/user.entity.js';
@@ -9,6 +9,29 @@ import { Character } from '../character/entities/character.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { LevelingService } from './leveling.service.js';
+
+/* eslint-disable @typescript-eslint/naming-convention */
+@InputType()
+class AbilityScoreImprovementsInput {
+    @Field(() => Int, { nullable: true })
+    STR?: number;
+
+    @Field(() => Int, { nullable: true })
+    DEX?: number;
+
+    @Field(() => Int, { nullable: true })
+    CON?: number;
+
+    @Field(() => Int, { nullable: true })
+    INT?: number;
+
+    @Field(() => Int, { nullable: true })
+    WIS?: number;
+
+    @Field(() => Int, { nullable: true })
+    CHA?: number;
+}
+/* eslint-enable @typescript-eslint/naming-convention */
 
 /** Exposes player-facing game-engine mutations (e.g. level-up confirmation). */
 @Resolver()
@@ -26,8 +49,8 @@ export class GameEngineResolver {
     async applyLevelUp(
         @Args('sessionId', { type: () => ID }) sessionId: string,
         @Args('hitPointsRolled', { type: () => Int }) hitPointsRolled: number,
-        @Args('abilityScoreImprovements', { type: () => Object, nullable: true }) abilityScoreImprovements: Record<string, number> | null,
-        @Args('feat', { nullable: true }) feat: string | null,
+        @Args('abilityScoreImprovements', { type: () => AbilityScoreImprovementsInput, nullable: true }) abilityScoreImprovements: AbilityScoreImprovementsInput | null,
+        @Args('feat', { type: () => String, nullable: true }) feat: string | null,
         @CurrentUser() currentUser: User,
     ): Promise<boolean> {
         void currentUser;
@@ -41,11 +64,17 @@ export class GameEngineResolver {
             throw new NotFoundException('Character not found');
         }
 
+        const cleanAbilityScoreImprovements = abilityScoreImprovements === null
+            ? undefined
+            : Object.fromEntries(
+                Object.entries(abilityScoreImprovements).filter(([, increment]) => typeof increment === 'number'),
+            ) as Record<string, number>;
+
         const result = await this.levelingService.applyLevelUp(
             Number(sessionId),
             character.id,
             {
-                abilityScoreImprovements: abilityScoreImprovements ?? undefined,
+                abilityScoreImprovements: cleanAbilityScoreImprovements,
                 feat: feat ?? undefined,
             },
             hitPointsRolled,

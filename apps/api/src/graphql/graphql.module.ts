@@ -7,7 +7,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { User } from '../auth/entities/user.entity';
 import { GraphqlService } from './graphql.service';
 import { AuthGuard } from './guards/auth.guard';
-import { JsonScalar } from './scalars/json.scalar';
 import { WhereService } from './where.service';
 
 @Module({
@@ -29,8 +28,7 @@ import { WhereService } from './where.service';
         },
         GraphqlService,
         WhereService,
-        JsonScalar,
     ],
-    exports: [AuthGuard, GraphqlService, JsonScalar],
+    exports: [AuthGuard, GraphqlService],
 })
 export class GraphqlModule {}

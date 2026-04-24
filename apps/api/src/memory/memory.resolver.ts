@@ -3,8 +3,8 @@ import { ForbiddenException } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
 import { type Connection } from 'graphql-relay';
 
-import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { type User } from '../auth/entities/user.entity.js';
+import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
 import { createRelayConnection } from '../graphql/relay';

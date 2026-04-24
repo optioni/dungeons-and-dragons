@@ -6,9 +6,9 @@ import {
 } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 import { Campaign } from '../../campaign/entities/campaign.entity.js';
-import { JsonScalar } from '../../graphql/scalars/json.scalar.js';
 import { Location } from '../../world/entities/location.entity.js';
 
 export interface EncounterTableEntry {
@@ -56,7 +56,7 @@ export class Dungeon extends BaseEntity {
     @Property({ type: 'integer', default: 1 })
     totalFloors: Opt<number> = 1;
 
-    @Field(() => JsonScalar, { nullable: true })
+    @Field(() => GraphQLJSON, { nullable: true })
     @Property({ type: 'jsonb', nullable: true })
     encounterTable: EncounterTableEntry[] | null = null;
 

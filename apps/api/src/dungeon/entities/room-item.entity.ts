@@ -40,7 +40,7 @@ export class RoomItem extends BaseEntity {
     @Property({ type: 'integer', default: 1 })
     quantity: Opt<number> = 1;
 
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     containerName: string | null = null;
 }

@@ -9,8 +9,8 @@ import { MemoryModule } from '../memory/memory.module.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { SessionModule } from '../session/session.module.js';
-import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { Location } from '../world/entities/location.entity.js';
+import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { ContextLoader } from './context-loader.service.js';
 import { InnerMonologueService } from './inner-monologue.service.js';
@@ -25,7 +25,7 @@ import { SetSceneTypeHandler } from './tools/set-scene-type.handler.js';
 @Module({
     imports: [
         MikroOrmModule.forFeature([Campaign, Character, GameEvent, GameSession, NpcItem, Location, Npc]),
-        CampaignModule,
+        forwardRef(() => CampaignModule),
         MemoryModule,
         forwardRef(() => SessionModule),
         forwardRef(() => GameEngineModule),

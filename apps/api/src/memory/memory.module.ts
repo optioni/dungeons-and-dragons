@@ -41,6 +41,6 @@ import { ANTHROPIC_CLIENT, BACKGROUND_MODEL, MemoryService } from './memory.serv
         MemoryService,
         MemoryResolver,
     ],
-    exports: [MemoryService],
+    exports: [EmbeddingService, MemoryService],
 })
 export class MemoryModule {}

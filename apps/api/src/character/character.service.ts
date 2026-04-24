@@ -246,12 +246,12 @@ export class CharacterService {
     }
 
     private normalizePersonality(input: Partial<CharacterPersonality>): CharacterPersonality {
-        const normalize = (items: unknown): string[] => Array.isArray(items)
+        const normalize = (items: unknown): string[] => (Array.isArray(items)
             ? items
                 .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
                 .map((item) => item.trim())
                 .slice(0, 2)
-            : [];
+            : []);
 
         return {
             personalityTraits: normalize(input.personalityTraits),

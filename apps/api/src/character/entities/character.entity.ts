@@ -2,6 +2,7 @@ import { type Opt } from '@mikro-orm/core';
 import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 import { SrdClass } from '../../srd/entities/srd-class.entity.js';
 import { SrdRace } from '../../srd/entities/srd-race.entity.js';
@@ -28,7 +29,7 @@ export class Character extends BaseEntity {
     level: Opt<number> = 1;
 
     /** Ability score values as {STR, DEX, CON, INT, WIS, CHA}. Modifiers are computed at runtime. */
-    @Field(() => Object)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     abilityScores!: AbilityScores;
 
@@ -49,7 +50,7 @@ export class Character extends BaseEntity {
     conditions: Opt<string[]> = [];
 
     /** Spell slots per level: [{level, total, used}]. Empty for non-spellcasting classes. */
-    @Field(() => [Object])
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb', default: [] })
     spellSlots: Opt<SpellSlot[]> = [];
 
@@ -74,7 +75,7 @@ export class Character extends BaseEntity {
     flaws: Opt<string[]> = [];
 
     /** Map of all 18 skill names to proficiency level: 'none' | 'proficient' | 'expert'. */
-    @Field(() => Object)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     skillProficiencies!: SkillProficiencies;
 
@@ -102,7 +103,7 @@ export class Character extends BaseEntity {
     @Property({ type: 'integer', default: 0 })
     deathSaveFailures: Opt<number> = 0;
 
-    @Field()
+    @Field(() => Boolean)
     @Property({ type: 'boolean', default: false })
     isDead: Opt<boolean> = false;
 

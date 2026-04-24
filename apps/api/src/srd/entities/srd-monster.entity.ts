@@ -3,6 +3,7 @@ import { BaseEntity } from '@mikro-orm/postgresql';
 import {
     Field, Float, ID, Int, ObjectType,
 } from '@nestjs/graphql';
+import { GraphQLJSON } from 'graphql-scalars';
 
 @ObjectType()
 @Entity()
@@ -43,15 +44,15 @@ export class SrdMonster extends BaseEntity {
     @Property({ type: 'float' })
     challengeRating!: number;
 
-    @Field(() => Object)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     speed!: Record<string, string>;
 
-    @Field(() => Object)
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     abilityScores!: Record<string, number>;
 
-    @Field(() => [Object])
+    @Field(() => GraphQLJSON)
     @Property({ type: 'jsonb' })
     actions!: Array<Record<string, unknown>>;
 }

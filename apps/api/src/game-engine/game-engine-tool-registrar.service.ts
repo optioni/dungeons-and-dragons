@@ -66,14 +66,14 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         private readonly campaignService: CampaignService,
         private readonly streamPublisher: StreamPublisher,
         @Inject(REDIS_CLIENT) private readonly redis: Pick<Redis, 'exists'>,
-        private readonly enterDungeonHandler: Pick<EnterDungeonHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly moveToRoomHandler: Pick<MoveToRoomHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly exitDungeonHandler: Pick<ExitDungeonHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly spawnEncounterHandler: Pick<SpawnEncounterHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly updateRoomStateHandler: Pick<UpdateRoomStateHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly addRoomItemHandler: Pick<AddRoomItemHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly lootRoomHandler: Pick<LootRoomHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
-        private readonly triggerSpellPrepHandler: Pick<TriggerSpellPrepHandler, 'execute'> = { execute: async () => ({ success: false, errorCode: 'UNAVAILABLE' }) },
+        private readonly enterDungeonHandler: EnterDungeonHandler,
+        private readonly moveToRoomHandler: MoveToRoomHandler,
+        private readonly exitDungeonHandler: ExitDungeonHandler,
+        private readonly spawnEncounterHandler: SpawnEncounterHandler,
+        private readonly updateRoomStateHandler: UpdateRoomStateHandler,
+        private readonly addRoomItemHandler: AddRoomItemHandler,
+        private readonly lootRoomHandler: LootRoomHandler,
+        private readonly triggerSpellPrepHandler: TriggerSpellPrepHandler,
     ) {}
 
     onModuleInit(): void {
