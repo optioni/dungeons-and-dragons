@@ -18,7 +18,7 @@
 | 6 ✓ | `permadeath-campaign-end` | game-engine, session-and-llm, memory-system |
 | 6 ✓ | `npc-episodic-memory` | world-system, memory-system |
 | 7 ✓ | `dungeon-system` | quest-system, world-system, game-engine |
-| 7 | `character-inner-monologue` | character-system, campaign-setup, session-and-llm |
+| 7 ✓ | `character-inner-monologue` | character-system, campaign-setup, session-and-llm |
 | 7 ✓ | `interactive-stream-signals` | session-and-llm, game-engine, permadeath-campaign-end ✓, web-game-view |
 | 8 | `web-game-view` | session-and-llm, game-engine |
 | 9 | `campaign-info-pages` | character-system, memory-system, game-engine, world-system |
