@@ -6,6 +6,7 @@ import { JsonScalar } from '../../graphql/scalars/json.scalar.js';
 
 export enum DmStreamChunkType {
     NARRATIVE_CHUNK = 'NARRATIVE_CHUNK',
+    INNER_VOICE = 'INNER_VOICE',
     TOOL_RESULT = 'TOOL_RESULT',
     SUGGESTED_ACTION = 'SUGGESTED_ACTION',
     STATUS = 'STATUS',
