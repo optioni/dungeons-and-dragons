@@ -15,7 +15,7 @@ import { NpcItem } from './entities/npc-item.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { Npc } from './entities/npc.entity.js';
 import { WorldEvent } from './entities/world-event.entity.js';
-import { NpcRelationshipType } from './world.enums.js';
+import { NpcRelationshipType, WorldEventStatus } from './world.enums.js';
 
 /**
  * Service for reading world and NPC data. All list queries are owner-scoped:
@@ -108,17 +108,24 @@ export class WorldService {
         );
     }
 
-    /** Returns owner-scoped world events as a relay connection. */
+    /** Returns owner-scoped world events as a relay connection; optionally filtered by status. */
     async getWorldEvents(
         campaignId: number,
         userId: number,
         connArgs: ConnectionArgs,
         graphqlService: GraphqlService,
+        status?: WorldEventStatus,
     ): Promise<Connection<WorldEvent>> {
         await this.verifyCampaignOwnership(campaignId, userId);
         const qb = this.worldEventRepo.createQueryBuilder();
+        const where: Record<string, unknown> = { campaignId };
+
+        if (status !== undefined) {
+            where['status'] = status;
+        }
+
         return graphqlService.findAndPaginate(
-            qb.andWhere({ campaignId }),
+            qb.andWhere(where),
             undefined,
             undefined,
             connArgs,

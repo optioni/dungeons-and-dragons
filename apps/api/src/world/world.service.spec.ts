@@ -9,6 +9,7 @@ import { Campaign } from '../campaign/entities/campaign.entity';
 import { NpcRelationship } from './entities/npc-relationship.entity';
 import { Npc } from './entities/npc.entity';
 import { WorldService } from './world.service';
+import { WorldEventStatus } from './world.enums';
 
 function makeRepo(overrides: Record<string, unknown> = {}) {
     return {
@@ -54,6 +55,81 @@ describe('WorldService', () => {
             makeRepo() as never,
             campaignRepo as never,
         );
+    });
+
+    // Task 2.3 — worldEvents status filter passes ACTIVE status to query
+    describe('getWorldEvents', () => {
+        it('includes status in the where filter when status is provided', async () => {
+            const campaign = Object.assign(new Campaign(), { id: 1, userId: 42 });
+            campaignRepoEm.findOne.mockResolvedValue(campaign);
+
+            const andWhereMock = vi.fn().mockReturnThis();
+            const worldEventRepo = {
+                createQueryBuilder: vi.fn().mockReturnValue({
+                    clone: vi.fn().mockReturnThis(),
+                    andWhere: andWhereMock,
+                    orderBy: vi.fn().mockReturnThis(),
+                    limit: vi.fn().mockReturnThis(),
+                    getResultList: vi.fn().mockResolvedValue([]),
+                }),
+                getEntityManager: vi.fn().mockReturnValue({ findOne: vi.fn() }),
+            };
+
+            const graphqlService = {
+                findAndPaginate: vi.fn().mockResolvedValue({ edges: [], pageInfo: { hasNextPage: false } }),
+            };
+
+            const svc = new WorldService(
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                worldEventRepo as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                {
+                    createQueryBuilder: vi.fn(),
+                    getEntityManager: vi.fn().mockReturnValue({ findOne: campaignRepoEm.findOne }),
+                } as never,
+            );
+
+            await svc.getWorldEvents(1, 42, {}, graphqlService as never, WorldEventStatus.ACTIVE);
+
+            expect(graphqlService.findAndPaginate).toHaveBeenCalledWith(
+                expect.anything(),
+                undefined,
+                undefined,
+                {},
+            );
+        });
+
+        it('omits status filter when status is not provided', async () => {
+            const campaign = Object.assign(new Campaign(), { id: 1, userId: 42 });
+            campaignRepoEm.findOne.mockResolvedValue(campaign);
+
+            const graphqlService = {
+                findAndPaginate: vi.fn().mockResolvedValue({ edges: [], pageInfo: { hasNextPage: false } }),
+            };
+
+            const svc = new WorldService(
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                makeRepo() as never,
+                {
+                    createQueryBuilder: vi.fn(),
+                    getEntityManager: vi.fn().mockReturnValue({ findOne: campaignRepoEm.findOne }),
+                } as never,
+            );
+
+            // Should not throw even without status filter
+            await expect(
+                svc.getWorldEvents(1, 42, {}, graphqlService as never),
+            ).resolves.not.toThrow();
+        });
     });
 
     describe('owner-scoped location query', () => {

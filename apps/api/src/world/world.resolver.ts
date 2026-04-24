@@ -8,6 +8,7 @@ import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
 import { createRelayConnection } from '../graphql/relay';
 import { WorldConnectionArgs } from './args/world-connection.args.js';
+import { WorldEventsConnectionArgs } from './args/world-events-connection.args.js';
 import { Faction } from './entities/faction.entity.js';
 import { Location } from './entities/location.entity.js';
 import { Map } from './entities/map.entity.js';
@@ -80,10 +81,10 @@ export class WorldResolver {
 
     @Query(() => WorldEventConnection)
     async worldEvents(
-        @Args() { campaignId, ...connArgs }: WorldConnectionArgs,
+        @Args() { campaignId, status, ...connArgs }: WorldEventsConnectionArgs,
         @CurrentUser() user: User,
     ): Promise<Connection<WorldEvent>> {
-        return this.worldService.getWorldEvents(Number(campaignId), user.id, connArgs, this.graphqlService);
+        return this.worldService.getWorldEvents(Number(campaignId), user.id, connArgs, this.graphqlService, status);
     }
 
     @Query(() => WorldEvent)
