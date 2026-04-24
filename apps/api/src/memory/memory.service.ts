@@ -3,6 +3,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
+import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { type GameEvent } from '../session/entities/game-event.entity.js';
 import { EventType } from '../session/session.enums.js';
 import { EmbeddingService } from './embedding.service.js';
@@ -83,7 +84,7 @@ export class MemoryService {
         const embedding = await this.embeddingService.generateEmbedding(truncated);
 
         const entry = this.em.create(DiaryEntry, {
-            campaign: { id: campaignId } as never,
+            campaign: this.em.getReference(Campaign, campaignId),
             inGameDate,
             entryType,
             content: truncated,
@@ -117,7 +118,7 @@ export class MemoryService {
         const embedding = await this.embeddingService.generateEmbedding(content);
 
         const memory = this.em.create(Memory, {
-            campaign: { id: campaignId } as never,
+            campaign: this.em.getReference(Campaign, campaignId),
             subjectType,
             subjectId: subjectId ?? null,
             content,
@@ -158,36 +159,37 @@ export class MemoryService {
                 const diaryResults = await conn.execute<RawSearchRow[]>(
                     `SELECT 'diary' as type, id, content, in_game_date as "inGameDate",
                             NULL as "subjectType", NULL as "subjectId",
-                            (embedding <=> $1::vector) as score
+                            (embedding <=> ?::vector) as score
                      FROM diary_entry
-                     WHERE campaign_id = $2 AND embedding IS NOT NULL
+                     WHERE campaign_id = ? AND embedding IS NOT NULL
                      ORDER BY score ASC
-                     LIMIT $3`,
+                     LIMIT ?`,
                     [embeddingString, campaignId, effectiveLimit],
                 );
                 diaryRows = diaryResults.map(mapRow);
             }
 
-            const memoryParameters: unknown[] = [embeddingString, campaignId, effectiveLimit];
+            const memoryParameters: unknown[] = [embeddingString, campaignId];
             let memoryFilter = 'embedding IS NOT NULL';
             if (subjectType) {
                 memoryParameters.push(subjectType);
-                memoryFilter += ` AND subject_type = $${memoryParameters.length}`;
+                memoryFilter += ' AND subject_type = ?';
             }
 
             if (subjectId) {
                 memoryParameters.push(subjectId);
-                memoryFilter += ` AND subject_id = $${memoryParameters.length}`;
+                memoryFilter += ' AND subject_id = ?';
             }
+            memoryParameters.push(effectiveLimit);
 
             const memoryResults = await conn.execute<RawSearchRow[]>(
                 `SELECT 'fact' as type, id, content, NULL as "inGameDate",
                         subject_type as "subjectType", subject_id::text as "subjectId",
-                        (embedding <=> $1::vector) as score
+                        (embedding <=> ?::vector) as score
                  FROM memory
-                 WHERE campaign_id = $2 AND ${memoryFilter}
+                 WHERE campaign_id = ? AND ${memoryFilter}
                  ORDER BY score ASC
-                 LIMIT $3`,
+                 LIMIT ?`,
                 memoryParameters,
             );
             memoryRows = memoryResults.map(mapRow);
@@ -218,39 +220,40 @@ export class MemoryService {
             const diaryResults = await conn.execute<RawSearchRow[]>(
                 `SELECT 'diary' as type, id, content, in_game_date as "inGameDate",
                         NULL as "subjectType", NULL as "subjectId",
-                        ts_rank(search_vector, to_tsquery('english', $1)) as score
+                        ts_rank(search_vector, to_tsquery('english', ?)) as score
                  FROM diary_entry
-                 WHERE campaign_id = $2
-                   AND search_vector @@ to_tsquery('english', $1)
+                 WHERE campaign_id = ?
+                   AND search_vector @@ to_tsquery('english', ?)
                  ORDER BY score DESC
-                 LIMIT $3`,
-                [tsQuery, campaignId, effectiveLimit],
+                 LIMIT ?`,
+                [tsQuery, campaignId, tsQuery, effectiveLimit],
             );
             diaryRows = diaryResults.map(mapRow);
         }
 
-        const memoryParameters: unknown[] = [tsQuery, campaignId, effectiveLimit];
+        const memoryParameters: unknown[] = [tsQuery, campaignId, tsQuery];
         let memoryFilter = '';
         if (subjectType) {
             memoryParameters.push(subjectType);
-            memoryFilter += ` AND subject_type = $${memoryParameters.length}`;
+            memoryFilter += ' AND subject_type = ?';
         }
 
         if (subjectId) {
             memoryParameters.push(subjectId);
-            memoryFilter += ` AND subject_id = $${memoryParameters.length}`;
+            memoryFilter += ' AND subject_id = ?';
         }
+        memoryParameters.push(effectiveLimit);
 
         const memoryResults = await conn.execute<RawSearchRow[]>(
             `SELECT 'fact' as type, id, content, NULL as "inGameDate",
                     subject_type as "subjectType", subject_id::text as "subjectId",
-                    ts_rank(search_vector, to_tsquery('english', $1)) as score
+                    ts_rank(search_vector, to_tsquery('english', ?)) as score
              FROM memory
-             WHERE campaign_id = $2
-               AND search_vector @@ to_tsquery('english', $1)
+             WHERE campaign_id = ?
+               AND search_vector @@ to_tsquery('english', ?)
                ${memoryFilter}
              ORDER BY score DESC
-             LIMIT $3`,
+             LIMIT ?`,
             memoryParameters,
         );
         const memoryRows = memoryResults.map(mapRow);

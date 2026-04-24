@@ -62,6 +62,7 @@ function makeEm() {
         persist: vi.fn(),
         flush: vi.fn().mockResolvedValue(undefined),
         find: vi.fn().mockResolvedValue([]),
+        getReference: vi.fn().mockImplementation((_entityClass: unknown, id: number) => ({ id })),
         getConnection: vi.fn().mockReturnValue({
             execute: vi.fn().mockResolvedValue([]),
         }),
