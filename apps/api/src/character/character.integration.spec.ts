@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
 import { defineConfig } from '@mikro-orm/postgresql';
 import {
-    afterEach, beforeEach, describe, expect, it,
+    afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
 
 import { User } from '../auth/entities/user.entity';
@@ -36,6 +36,7 @@ async function createOrm(): Promise<MikroORM> {
 describe('CharacterService integration', () => {
     let orm: MikroORM;
     let service: CharacterService;
+    let mockAnthropic: { messages: { create: ReturnType<typeof vi.fn> } };
     let testUser: User;
     let testCampaign: Campaign;
     let testRace: SrdRace;
@@ -49,7 +50,32 @@ describe('CharacterService integration', () => {
         const charRepo = em.getRepository(Character);
         const charItemRepo = em.getRepository(CharacterItem);
         const itemRepo = em.getRepository(Item);
-        service = new CharacterService(charRepo as never, charItemRepo as never, itemRepo as never);
+        service = new CharacterService(
+            charRepo as never,
+            charItemRepo as never,
+            itemRepo as never,
+            {
+                getOrThrow: (key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-haiku-test'),
+            } as never,
+        );
+        mockAnthropic = {
+            messages: {
+                create: vi.fn().mockResolvedValue({
+                    content: [{
+                        type: 'tool_use',
+                        id: 'toolu_personality',
+                        name: 'set_character_personality',
+                        input: {
+                            personalityTraits: ['I study every room before I trust it.'],
+                            ideals: ['Knowledge should protect the helpless.'],
+                            bonds: ['My family name deserves restoring.'],
+                            flaws: ['I mistake caution for wisdom.'],
+                        },
+                    }],
+                }),
+            },
+        };
+        (service as unknown as Record<string, unknown>)['anthropic'] = mockAnthropic;
 
         // Fetch a seeded race and class
         testRace = await em.findOneOrFail(SrdRace, { index: 'human' });
@@ -113,6 +139,10 @@ describe('CharacterService integration', () => {
             // Fighter is non-caster → empty spell slots
             expect(character.spellSlots).toEqual([]);
             expect(character.preparedSpells).toEqual([]);
+            expect(character.personalityTraits).toEqual(['I study every room before I trust it.']);
+            expect(character.ideals).toEqual(['Knowledge should protect the helpless.']);
+            expect(character.bonds).toEqual(['My family name deserves restoring.']);
+            expect(character.flaws).toEqual(['I mistake caution for wisdom.']);
 
             // All 18 skills start at 'none'
             expect(Object.values(character.skillProficiencies).every((value) => value === 'none')).toBe(true);
@@ -122,6 +152,27 @@ describe('CharacterService integration', () => {
             const em = orm.em.fork();
             const persisted = await em.findOneOrFail(Character, { id: character.id });
             expect(persisted.name).toBe('Aldric');
+        });
+
+        it('falls back to empty personality arrays when personality generation fails', async () => {
+            mockAnthropic.messages.create.mockRejectedValueOnce(new Error('anthropic unavailable'));
+
+            const character = await service.create(
+                {
+                    name: 'Fallback Hero',
+                    raceId: testRace.id,
+                    classId: testClass.id,
+                    campaignId: testCampaign.id,
+                    abilityScores: STANDARD_ARRAY,
+                },
+                testUser,
+            );
+            createdCharacterIds.push(character.id);
+
+            expect(character.personalityTraits).toEqual([]);
+            expect(character.ideals).toEqual([]);
+            expect(character.bonds).toEqual([]);
+            expect(character.flaws).toEqual([]);
         });
 
         // Task 7.2 — invalid ability scores → validation error, no row created

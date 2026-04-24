@@ -48,7 +48,12 @@ vi.mock('@nestjs/common', () => ({
 
 /** Creates a CharacterService instance with null repositories for pure method testing. */
 function makeService(): CharacterService {
-    return new CharacterService(null as never, null as never, null as never);
+    return new CharacterService(
+        null as never,
+        null as never,
+        null as never,
+        { getOrThrow: () => 'test-value' } as never,
+    );
 }
 
 describe('CharacterService — pure methods', () => {
@@ -56,6 +61,110 @@ describe('CharacterService — pure methods', () => {
 
     beforeEach(() => {
         service = makeService();
+    });
+
+    describe('create — personality population', () => {
+        it('persists generated personality fields on the new character', async () => {
+            const campaign = { id: 3, userId: 42 };
+            const race = { id: 5, name: 'Elf', traits: ['Darkvision'] };
+            const srdClass = {
+                id: 8, name: 'Wizard', index: 'wizard', hitDie: 6, proficiencies: ['Daggers'], spellcastingAbility: 'INT',
+            };
+            const createdCharacter = { id: 99 };
+            const em = {
+                findOne: vi.fn()
+                    .mockResolvedValueOnce(campaign)
+                    .mockResolvedValueOnce(race)
+                    .mockResolvedValueOnce(srdClass),
+                create: vi.fn().mockReturnValue(createdCharacter),
+                persist: vi.fn(),
+                flush: vi.fn(),
+            };
+            const anthropic = {
+                messages: {
+                    create: vi.fn().mockResolvedValue({
+                        content: [{
+                            type: 'tool_use',
+                            name: 'set_character_personality',
+                            input: {
+                                personalityTraits: ['I count exits before I relax.'],
+                                ideals: ['Knowledge should be shared carefully.'],
+                                bonds: ['My teacher vanished in the ruins.'],
+                                flaws: ['I confuse caution with control.'],
+                            },
+                        }],
+                    }),
+                },
+            };
+
+            const svc = new CharacterService(
+                { getEntityManager: () => em } as never,
+                null as never,
+                null as never,
+                { getOrThrow: (key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-haiku-test') } as never,
+            );
+            (svc as unknown as Record<string, unknown>)['anthropic'] = anthropic;
+
+            await svc.create({
+                name: 'Seraphina',
+                raceId: 5,
+                classId: 8,
+                campaignId: 3,
+                abilityScores: {
+                    STR: 8, DEX: 10, CON: 12, INT: 15, WIS: 14, CHA: 13,
+                },
+            }, { id: 42 } as never);
+
+            expect(em.create).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+                personalityTraits: ['I count exits before I relax.'],
+                ideals: ['Knowledge should be shared carefully.'],
+                bonds: ['My teacher vanished in the ruins.'],
+                flaws: ['I confuse caution with control.'],
+            }));
+        });
+
+        it('falls back to empty personality arrays when generation fails', async () => {
+            const campaign = { id: 3, userId: 42 };
+            const race = { id: 5, name: 'Elf', traits: ['Darkvision'] };
+            const srdClass = {
+                id: 8, name: 'Wizard', index: 'wizard', hitDie: 6, proficiencies: ['Daggers'], spellcastingAbility: 'INT',
+            };
+            const em = {
+                findOne: vi.fn()
+                    .mockResolvedValueOnce(campaign)
+                    .mockResolvedValueOnce(race)
+                    .mockResolvedValueOnce(srdClass),
+                create: vi.fn().mockReturnValue({ id: 99 }),
+                persist: vi.fn(),
+                flush: vi.fn(),
+            };
+            const svc = new CharacterService(
+                { getEntityManager: () => em } as never,
+                null as never,
+                null as never,
+                { getOrThrow: (key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-haiku-test') } as never,
+            );
+            (svc as unknown as Record<string, unknown>)['anthropic'] = {
+                messages: { create: vi.fn().mockRejectedValue(new Error('offline')) },
+            };
+
+            await svc.create({
+                name: 'Seraphina',
+                raceId: 5,
+                classId: 8,
+                campaignId: 3,
+                abilityScores: {
+                    STR: 8, DEX: 10, CON: 12, INT: 15, WIS: 14, CHA: 13,
+                },
+            }, { id: 42 } as never);
+
+            expect(em.create).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+                personalityTraits: [],
+                ideals: [],
+                bonds: [],
+                flaws: [],
+            }));
+        });
     });
 
     // Task 3.1: ability score validation
@@ -171,6 +280,7 @@ describe('CharacterService — pure methods', () => {
                 null as never,
                 { getEntityManager: () => mockEm } as never,
                 null as never,
+                { getOrThrow: () => 'test-value' } as never,
             );
 
             await expect(svc.equipItem(7, 'MAIN_HAND' as never, 42)).rejects.toThrow('MAIN_HAND');
@@ -187,6 +297,7 @@ describe('CharacterService — pure methods', () => {
                 null as never,
                 { getEntityManager: () => mockEm } as never,
                 null as never,
+                { getOrThrow: () => 'test-value' } as never,
             );
 
             await expect(svc.equipItem(7, 'MAIN_HAND' as never, 42)).rejects.toThrow('not found');
@@ -206,6 +317,7 @@ describe('CharacterService — pure methods', () => {
                 null as never,
                 { getEntityManager: () => mockEm } as never,
                 null as never,
+                { getOrThrow: () => 'test-value' } as never,
             );
 
             await expect(svc.unequipItem(7, 42)).rejects.toThrow('not found');
@@ -223,6 +335,7 @@ describe('CharacterService — pure methods', () => {
                 null as never,
                 { getEntityManager: () => mockEm } as never,
                 null as never,
+                { getOrThrow: () => 'test-value' } as never,
             );
 
             await expect(svc.unequipItem(7, 42)).rejects.toThrow('not found');
@@ -241,6 +354,7 @@ describe('CharacterService — pure methods', () => {
                 null as never,
                 { getEntityManager: () => mockEm } as never,
                 null as never,
+                { getOrThrow: () => 'test-value' } as never,
             );
 
             await expect(svc.getInventory(1, 42)).rejects.toThrow('not found');
@@ -257,6 +371,7 @@ describe('CharacterService — pure methods', () => {
                 null as never,
                 { getEntityManager: () => mockEm } as never,
                 null as never,
+                { getOrThrow: () => 'test-value' } as never,
             );
 
             await expect(svc.getInventory(1, 42)).rejects.toThrow('not found');

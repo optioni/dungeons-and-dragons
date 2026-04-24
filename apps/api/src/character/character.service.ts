@@ -1,11 +1,14 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { type Populate } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
     BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { type User } from '../auth/entities/user.entity.js';
+import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { SrdClass } from '../srd/entities/srd-class.entity.js';
 import { SrdRace } from '../srd/entities/srd-race.entity.js';
 import {
@@ -26,6 +29,19 @@ const LEVEL_1_SPELL_SLOTS: Partial<Record<string, SpellSlot[]>> = {
     warlock: [{ level: 1, total: 1, used: 0 }],
     wizard: [{ level: 1, total: 2, used: 0 }],
 };
+
+interface AnthropicClientLike {
+    messages: {
+        create: (parameters: Anthropic.Messages.MessageCreateParamsNonStreaming) => Promise<Anthropic.Message>
+    }
+}
+
+interface CharacterPersonality {
+    personalityTraits: string[]
+    ideals: string[]
+    bonds: string[]
+    flaws: string[]
+}
 
 export type UpdateCharacterStatePayload = Partial<{
     hp: number
@@ -53,6 +69,10 @@ export type UpdateCharacterStatePayload = Partial<{
  */
 @Injectable()
 export class CharacterService {
+    private readonly anthropic: AnthropicClientLike;
+
+    private readonly backgroundModel: string;
+
     constructor(
         @InjectRepository(Character)
         private readonly characterRepository: EntityRepository<Character>,
@@ -60,7 +80,13 @@ export class CharacterService {
         private readonly characterItemRepository: EntityRepository<CharacterItem>,
         @InjectRepository(Item)
         private readonly itemRepository: EntityRepository<Item>,
-    ) {}
+        private readonly configService: ConfigService<EnvironmentConfig>,
+    ) {
+        this.anthropic = new Anthropic({
+            apiKey: this.configService.getOrThrow('ANTHROPIC_API_KEY'),
+        });
+        this.backgroundModel = this.configService.getOrThrow('LLM_BACKGROUND_MODEL');
+    }
 
     /**
      * Validates that the provided ability scores are a permutation of the standard array [15,14,13,12,10,8].
@@ -134,6 +160,7 @@ export class CharacterService {
             : [];
 
         const skillProficiencies = Object.fromEntries(SKILL_NAMES.map((skill) => [skill, 'none'])) as SkillProficiencies;
+        const personality = await this.generateCharacterPersonality(input.name, race, srdClass, input.abilityScores);
 
         const character = em.create(Character, {
             name: input.name,
@@ -146,12 +173,101 @@ export class CharacterService {
             ac,
             spellSlots,
             skillProficiencies,
+            personalityTraits: personality.personalityTraits,
+            ideals: personality.ideals,
+            bonds: personality.bonds,
+            flaws: personality.flaws,
         } as never);
 
         em.persist(character);
         await em.flush();
 
         return character;
+    }
+
+    private async generateCharacterPersonality(
+        name: string,
+        race: SrdRace,
+        srdClass: SrdClass,
+        abilityScores: AbilityScores,
+    ): Promise<CharacterPersonality> {
+        try {
+            /* eslint-disable @typescript-eslint/naming-convention */
+            const response = await this.anthropic.messages.create({
+                model: this.backgroundModel,
+                max_tokens: 300,
+                tools: [{
+                    name: 'set_character_personality',
+                    description: 'Produce grounded D&D-style personality fields for a newly created player character.',
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            personalityTraits: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
+                            ideals: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
+                            bonds: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
+                            flaws: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
+                        },
+                        required: ['personalityTraits', 'ideals', 'bonds', 'flaws'],
+                    },
+                }],
+                tool_choice: { type: 'tool', name: 'set_character_personality' },
+                messages: [{
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: [
+                                'Generate concise D&D 5e style personality fields for a new player character.',
+                                `Name: ${name}`,
+                                `Race: ${race.name}`,
+                                `Class: ${srdClass.name}`,
+                                `Race traits: ${race.traits.join(', ') || 'none'}`,
+                                `Class proficiencies: ${srdClass.proficiencies.join(', ') || 'none'}`,
+                                `Ability scores: STR ${abilityScores.STR}, DEX ${abilityScores.DEX}, CON ${abilityScores.CON}, INT ${abilityScores.INT}, WIS ${abilityScores.WIS}, CHA ${abilityScores.CHA}`,
+                                'Return 1-2 short entries for each field. Make them playable and specific, not melodramatic.',
+                            ].join('\n'),
+                        },
+                    ],
+                }],
+            });
+            /* eslint-enable @typescript-eslint/naming-convention */
+
+            const toolUse = response.content.find(
+                (content) => content.type === 'tool_use' && content.name === 'set_character_personality',
+            );
+            if (!toolUse || toolUse.type !== 'tool_use') {
+                return this.emptyPersonality();
+            }
+
+            return this.normalizePersonality(toolUse.input as Partial<CharacterPersonality>);
+        } catch {
+            return this.emptyPersonality();
+        }
+    }
+
+    private normalizePersonality(input: Partial<CharacterPersonality>): CharacterPersonality {
+        const normalize = (items: unknown): string[] => Array.isArray(items)
+            ? items
+                .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+                .map((item) => item.trim())
+                .slice(0, 2)
+            : [];
+
+        return {
+            personalityTraits: normalize(input.personalityTraits),
+            ideals: normalize(input.ideals),
+            bonds: normalize(input.bonds),
+            flaws: normalize(input.flaws),
+        };
+    }
+
+    private emptyPersonality(): CharacterPersonality {
+        return {
+            personalityTraits: [],
+            ideals: [],
+            bonds: [],
+            flaws: [],
+        };
     }
 
     /**
