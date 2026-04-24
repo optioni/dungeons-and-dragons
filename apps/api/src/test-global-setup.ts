@@ -9,7 +9,7 @@
 import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
-import { defineConfig, type MikroORM as PostgreSqlMikroORM } from '@mikro-orm/postgresql';
+import { defineConfig } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { RedisContainer, type StartedRedisContainer } from '@testcontainers/redis';
@@ -55,7 +55,7 @@ export default async function setup(): Promise<Teardown> {
     const orm = await createMigratingOrm(databaseUrl);
 
     try {
-        await orm.getMigrator().up();
+        await orm.migrator.up();
         const em = orm.em.fork();
         const seeder = new SrdSeeder();
         // Seeder skips if data already exists — safe to call unconditionally
@@ -70,7 +70,7 @@ export default async function setup(): Promise<Teardown> {
     };
 }
 
-async function createMigratingOrm(databaseUrl: string): Promise<PostgreSqlMikroORM> {
+async function createMigratingOrm(databaseUrl: string): Promise<MikroORM> {
     return MikroORM.init(
         defineConfig({
             metadataProvider: TsMorphMetadataProvider,
