@@ -16,7 +16,7 @@ The web application SHALL provide a main gameplay route at `/campaign/[id]/play`
 - **THEN** the UI starts or prompts to start a session and renders the initial opening narrative returned from `startSession`
 
 ### Requirement: The transcript combines persisted history with live streamed output
-The play UI SHALL render the conversation transcript from persisted `GameEvent`s and append in-progress DM output from `dmStream(sessionId)` without waiting for page reload. Once a streamed DM turn is finalized, the UI SHALL reconcile the optimistic in-progress message with the persisted transcript state.
+The play UI SHALL render the conversation transcript from persisted `GameEvent`s and append in-progress DM output from `dmStream(sessionId)` without waiting for page reload. Once a streamed DM turn is finalized, the UI SHALL reconcile the optimistic in-progress message with the persisted transcript state. When the stream emits `INNER_VOICE` chunks, the play route SHALL render them as a visually distinct, character-owned transcript treatment separate from the DM narrative buffer. The route SHALL treat repeated terminal `DONE` chunks as idempotent once the session is already idle.
 
 #### Scenario: Historical transcript is visible on page load
 - **WHEN** the player opens a play route with existing session history
@@ -30,6 +30,14 @@ The play UI SHALL render the conversation transcript from persisted `GameEvent`s
 - **WHEN** the active turn emits its completion signal and the transcript query includes the persisted `DM_NARRATIVE` event
 - **THEN** the UI replaces the temporary in-progress rendering with the finalized persisted message without duplicating the content
 
+#### Scenario: Inner voice renders as a distinct transcript layer
+- **WHEN** the subscription emits `INNER_VOICE` chunks after the main DM turn completes
+- **THEN** the UI renders that text in a separate inner-voice treatment without merging it into the active DM narrative bubble
+
+#### Scenario: Second DONE does not reset the transcript a second time
+- **WHEN** the subscription emits a second terminal `DONE` chunk after the route is already idle
+- **THEN** the UI ignores it without duplicating transcript state or reopening loading indicators
+
 ### Requirement: The play screen provides core narrative controls and state
 The main gameplay view SHALL include:
 - a narrative column for the transcript
@@ -37,7 +45,7 @@ The main gameplay view SHALL include:
 - a text input and send action for player turns
 - surfaced suggested actions when the active stream emits them
 
-The route SHALL disable duplicate sends while a turn is already in progress for the active session. When the player taps a suggested action chip, the route SHALL pre-fill the current text input with that action rather than auto-submitting it.
+The route SHALL disable duplicate sends while a turn is already in progress for the active session. The route SHALL also disable the standard player input while a blocking play-state overlay such as level-up or spell preparation is open. When the player taps a suggested action chip, the route SHALL pre-fill the current text input with that action rather than auto-submitting it.
 
 #### Scenario: Player can submit a turn from the play route
 - **WHEN** the player enters non-empty text and submits it while no turn is in progress
@@ -54,6 +62,10 @@ The route SHALL disable duplicate sends while a turn is already in progress for 
 #### Scenario: Selecting a suggested action pre-fills the input
 - **WHEN** the player taps a rendered suggested action chip
 - **THEN** the route copies that action text into the player input field without immediately sending the turn
+
+#### Scenario: Blocking overlays disable freeform input
+- **WHEN** the play route shows a level-up or spell-preparation overlay
+- **THEN** the standard text input and send control are disabled until that blocking flow resolves
 
 ### Requirement: The character sidebar reflects durable gameplay state
 The play route SHALL render a sidebar containing at least the character's name, HP, max HP, AC, level, active conditions, and spell-slot summary when applicable. The sidebar SHALL update from durable server state rather than inferring long-lived character state from narrative text.
@@ -151,4 +163,15 @@ The play route SHALL monitor the active DM stream for `STATUS` chunks with `stat
 #### Scenario: Successful spell preparation resumes freeform play
 - **WHEN** the player submits spell choices and the `prepareSpells` mutation succeeds
 - **THEN** the spell-preparation UI closes and the standard text input is re-enabled
+
+### Requirement: The play route keeps transcript streaming separate from shell-state reconciliation
+The play route SHALL treat transcript chunk rendering and play-shell state reconciliation as separate concerns. Post-turn transcript-only updates such as `INNER_VOICE` chunks SHALL NOT retrigger combat-panel layout changes, sidebar refresh loops, or scene-shell transitions unless the server also publishes a durable session-state change.
+
+#### Scenario: Inner voice does not toggle combat layout
+- **WHEN** `INNER_VOICE` chunks arrive after a completed combat turn and `GameSession.sceneType` remains unchanged
+- **THEN** the transcript updates while the current shell layout remains stable
+
+#### Scenario: Transcript-only chunks do not reopen blocking overlays
+- **WHEN** a post-turn transcript chunk arrives without a new blocking `STATUS` signal
+- **THEN** the play route leaves level-up, spell-preparation, and other shell overlays in their current state
 
