@@ -1,0 +1,7375 @@
+{
+  "name": "public",
+  "namespaces": [
+    "public"
+  ],
+  "tables": [
+    {
+      "name": "campaign",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "setup_status": {
+          "name": "setup_status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'DRAFT'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "tone": {
+          "name": "tone",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "death_mode": {
+          "name": "death_mode",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "generated_concepts": {
+          "name": "generated_concepts",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "selected_concept": {
+          "name": "selected_concept",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "opening_scene_seed": {
+          "name": "opening_scene_seed",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "antagonist_npc_id": {
+          "name": "antagonist_npc_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "antagonist_plan_state": {
+          "name": "antagonist_plan_state",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "current_location_id": {
+          "name": "current_location_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "in_game_date": {
+          "name": "in_game_date",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "lore_document": {
+          "name": "lore_document",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 0,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "date"
+        },
+        "in_game_day": {
+          "name": "in_game_day",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "travel_encounter_enabled": {
+          "name": "travel_encounter_enabled",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'ACTIVE'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "end_reason": {
+          "name": "end_reason",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "campaign_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "campaign_antagonist_npc_id_fkey": {
+          "columnNames": [
+            "antagonist_npc_id"
+          ],
+          "constraintName": "campaign_antagonist_npc_id_fkey",
+          "localTableName": "public.campaign",
+          "referencedTableName": "public.npc",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "set null"
+        },
+        "campaign_current_location_id_fkey": {
+          "columnNames": [
+            "current_location_id"
+          ],
+          "constraintName": "campaign_current_location_id_fkey",
+          "localTableName": "public.campaign",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "set null"
+        },
+        "campaign_user_id_fkey": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "campaign_user_id_fkey",
+          "localTableName": "public.campaign",
+          "referencedTableName": "public.user",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "character",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "level": {
+          "name": "level",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "ability_scores": {
+          "name": "ability_scores",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "hp": {
+          "name": "hp",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "max_hp": {
+          "name": "max_hp",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "ac": {
+          "name": "ac",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "conditions": {
+          "name": "conditions",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "spell_slots": {
+          "name": "spell_slots",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "prepared_spells": {
+          "name": "prepared_spells",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "skill_proficiencies": {
+          "name": "skill_proficiencies",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "gold_pieces": {
+          "name": "gold_pieces",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "silver_pieces": {
+          "name": "silver_pieces",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "copper_pieces": {
+          "name": "copper_pieces",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "xp": {
+          "name": "xp",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "death_save_successes": {
+          "name": "death_save_successes",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "death_save_failures": {
+          "name": "death_save_failures",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "is_dead": {
+          "name": "is_dead",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "race_id": {
+          "name": "race_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "srd_class_id": {
+          "name": "srd_class_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "hit_dice_remaining": {
+          "name": "hit_dice_remaining",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "personality_traits": {
+          "name": "personality_traits",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "ideals": {
+          "name": "ideals",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "bonds": {
+          "name": "bonds",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "flaws": {
+          "name": "flaws",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "character_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "character_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "character_campaign_id_fkey",
+          "localTableName": "public.character",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "character_race_id_fkey": {
+          "columnNames": [
+            "race_id"
+          ],
+          "constraintName": "character_race_id_fkey",
+          "localTableName": "public.character",
+          "referencedTableName": "public.srd_race",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "no action"
+        },
+        "character_srd_class_id_fkey": {
+          "columnNames": [
+            "srd_class_id"
+          ],
+          "constraintName": "character_srd_class_id_fkey",
+          "localTableName": "public.character",
+          "referencedTableName": "public.srd_class",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "character_item",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "slot": {
+          "name": "slot",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "condition": {
+          "name": "condition",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "character_id",
+            "slot"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "character_item_character_id_slot_unique",
+          "unique": true,
+          "primary": false,
+          "expression": "CREATE UNIQUE INDEX character_item_character_id_slot_unique ON public.character_item USING btree (character_id, slot) WHERE (slot IS NOT NULL)"
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "character_item_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "character_item_character_id_fkey": {
+          "columnNames": [
+            "character_id"
+          ],
+          "constraintName": "character_item_character_id_fkey",
+          "localTableName": "public.character_item",
+          "referencedTableName": "public.character",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "character_item_item_id_fkey": {
+          "columnNames": [
+            "item_id"
+          ],
+          "constraintName": "character_item_item_id_fkey",
+          "localTableName": "public.character_item",
+          "referencedTableName": "public.item",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "combat_session",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "combatants": {
+          "name": "combatants",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "current_turn_index": {
+          "name": "current_turn_index",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "round_number": {
+          "name": "round_number",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "combat_session_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "session_id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "combat_session_session_id_unique",
+          "unique": true,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "combat_session_session_id_fkey": {
+          "columnNames": [
+            "session_id"
+          ],
+          "constraintName": "combat_session_session_id_fkey",
+          "localTableName": "public.combat_session",
+          "referencedTableName": "public.game_session",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "diary_entry",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "in_game_date": {
+          "name": "in_game_date",
+          "type": "varchar",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": -1,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "content": {
+          "name": "content",
+          "type": "varchar(1000)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 1000,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "vector(1024)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 1024,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "unknown"
+        },
+        "search_vector": {
+          "name": "search_vector",
+          "type": "tsvector",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "entry_type": {
+          "name": "entry_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'DAILY'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "embedding"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "diary_entry_embedding_idx",
+          "unique": false,
+          "primary": false,
+          "type": "ivfflat"
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "diary_entry_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "diary_entry_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "diary_entry_campaign_id_fkey",
+          "localTableName": "public.diary_entry",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "dungeon",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "total_floors": {
+          "name": "total_floors",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "encounter_table": {
+          "name": "encounter_table",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "dungeon_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "dungeon_campaign_id_foreign": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "dungeon_campaign_id_foreign",
+          "localTableName": "public.dungeon",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "faction",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "goals": {
+          "name": "goals",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "power_level": {
+          "name": "power_level",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "player_disposition": {
+          "name": "player_disposition",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "territory": {
+          "name": "territory",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "faction_campaign_id_idx",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "faction_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "faction_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "faction_campaign_id_fkey",
+          "localTableName": "public.faction",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "game_event",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "content": {
+          "name": "content",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "game_event_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "game_event_session_id_foreign": {
+          "columnNames": [
+            "session_id"
+          ],
+          "constraintName": "game_event_session_id_foreign",
+          "localTableName": "public.game_event",
+          "referencedTableName": "public.game_session",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "game_session",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "scene_type": {
+          "name": "scene_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'EXPLORATION'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "level_up_pending": {
+          "name": "level_up_pending",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "active_dungeon_id": {
+          "name": "active_dungeon_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "game_session_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "game_session_active_dungeon_id_foreign": {
+          "columnNames": [
+            "active_dungeon_id"
+          ],
+          "constraintName": "game_session_active_dungeon_id_foreign",
+          "localTableName": "public.game_session",
+          "referencedTableName": "public.dungeon",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "game_session_campaign_id_foreign": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "game_session_campaign_id_foreign",
+          "localTableName": "public.game_session",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "item",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "weight": {
+          "name": "weight",
+          "type": "float8",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 53,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "double"
+        },
+        "value": {
+          "name": "value",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "item_type": {
+          "name": "item_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "srd_equipment_id": {
+          "name": "srd_equipment_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "item_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "item_srd_equipment_id_fkey": {
+          "columnNames": [
+            "srd_equipment_id"
+          ],
+          "constraintName": "item_srd_equipment_id_fkey",
+          "localTableName": "public.item",
+          "referencedTableName": "public.srd_equipment",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "location",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "current_state": {
+          "name": "current_state",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "coordinates": {
+          "name": "coordinates",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "connected_location_ids": {
+          "name": "connected_location_ids",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "recent_events": {
+          "name": "recent_events",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "dungeon_id": {
+          "name": "dungeon_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "floor": {
+          "name": "floor",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "room_state": {
+          "name": "room_state",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'UNEXPLORED'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "location_campaign_id_idx",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "location_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "location_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "location_campaign_id_fkey",
+          "localTableName": "public.location",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "location_dungeon_id_foreign": {
+          "columnNames": [
+            "dungeon_id"
+          ],
+          "constraintName": "location_dungeon_id_foreign",
+          "localTableName": "public.location",
+          "referencedTableName": "public.dungeon",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "location_discovery",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "discovered_at": {
+          "name": "discovered_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 0,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "date"
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'PLAYER_ACTION'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "campaign_id",
+            "location_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "location_discovery_campaign_location_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "location_discovery_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "location_discovery_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "location_discovery_campaign_id_fkey",
+          "localTableName": "public.location_discovery",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "location_discovery_location_id_fkey": {
+          "columnNames": [
+            "location_id"
+          ],
+          "constraintName": "location_discovery_location_id_fkey",
+          "localTableName": "public.location_discovery",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "map",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "scale": {
+          "name": "scale",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "map_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "map_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "map_campaign_id_fkey",
+          "localTableName": "public.map",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "map_location",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "map_id": {
+          "name": "map_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "map_location_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "map_location_location_id_fkey": {
+          "columnNames": [
+            "location_id"
+          ],
+          "constraintName": "map_location_location_id_fkey",
+          "localTableName": "public.map_location",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "map_location_map_id_fkey": {
+          "columnNames": [
+            "map_id"
+          ],
+          "constraintName": "map_location_map_id_fkey",
+          "localTableName": "public.map_location",
+          "referencedTableName": "public.map",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "memory",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "subject_type": {
+          "name": "subject_type",
+          "type": "memory_subject_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "memory_subject_type"
+        },
+        "subject_id": {
+          "name": "subject_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "content": {
+          "name": "content",
+          "type": "varchar(1000)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 1000,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "vector(1024)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 1024,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "unknown"
+        },
+        "search_vector": {
+          "name": "search_vector",
+          "type": "tsvector",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": []
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "embedding"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "memory_embedding_idx",
+          "unique": false,
+          "primary": false,
+          "type": "ivfflat"
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "memory_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "memory_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "memory_campaign_id_fkey",
+          "localTableName": "public.memory",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "npc",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "profession": {
+          "name": "profession",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "core_motivation": {
+          "name": "core_motivation",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "personality_traits": {
+          "name": "personality_traits",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'[]'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "speech_style": {
+          "name": "speech_style",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "disposition": {
+          "name": "disposition",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "current_location_id": {
+          "name": "current_location_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "alive": {
+          "name": "alive",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "hp": {
+          "name": "hp",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "max_hp": {
+          "name": "max_hp",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "party_status": {
+          "name": "party_status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'NONE'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "agenda": {
+          "name": "agenda",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "last_conversed_at": {
+          "name": "last_conversed_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "next_tick_in_game_day": {
+          "name": "next_tick_in_game_day",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "npc_campaign_id_idx",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "npc_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "npc_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "npc_campaign_id_fkey",
+          "localTableName": "public.npc",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "npc_current_location_id_fkey": {
+          "columnNames": [
+            "current_location_id"
+          ],
+          "constraintName": "npc_current_location_id_fkey",
+          "localTableName": "public.npc",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "set null"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "npc_item",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "npc_id": {
+          "name": "npc_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "merchant_price": {
+          "name": "merchant_price",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "npc_item_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "npc_item_item_id_fkey": {
+          "columnNames": [
+            "item_id"
+          ],
+          "constraintName": "npc_item_item_id_fkey",
+          "localTableName": "public.npc_item",
+          "referencedTableName": "public.item",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "set null"
+        },
+        "npc_item_npc_id_fkey": {
+          "columnNames": [
+            "npc_id"
+          ],
+          "constraintName": "npc_item_npc_id_fkey",
+          "localTableName": "public.npc_item",
+          "referencedTableName": "public.npc",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "npc_memory",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "npc_id": {
+          "name": "npc_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "content": {
+          "name": "content",
+          "type": "varchar(1000)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 1000,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "vector(1024)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 1024,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "unknown"
+        },
+        "in_game_date": {
+          "name": "in_game_date",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "source_npc_id": {
+          "name": "source_npc_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "npc_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "npc_memory_npc_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "npc_memory_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "npc_relationship",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "source_npc_id": {
+          "name": "source_npc_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "target_npc_id": {
+          "name": "target_npc_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "disposition": {
+          "name": "disposition",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "npc_relationship_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "npc_relationship_source_npc_id_fkey": {
+          "columnNames": [
+            "source_npc_id"
+          ],
+          "constraintName": "npc_relationship_source_npc_id_fkey",
+          "localTableName": "public.npc_relationship",
+          "referencedTableName": "public.npc",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "npc_relationship_target_npc_id_fkey": {
+          "columnNames": [
+            "target_npc_id"
+          ],
+          "constraintName": "npc_relationship_target_npc_id_fkey",
+          "localTableName": "public.npc_relationship",
+          "referencedTableName": "public.npc",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "quest",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "status": {
+          "name": "status",
+          "type": "quest_status",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'ACTIVE'",
+          "comment": null,
+          "enumItems": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "quest_status"
+        },
+        "agenda_impact": {
+          "name": "agenda_impact",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "reward_narrative": {
+          "name": "reward_narrative",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "reward_xp": {
+          "name": "reward_xp",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "reward_gold": {
+          "name": "reward_gold",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "campaign_id",
+            "status"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "quest_campaign_id_status_idx",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "quest_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "quest_entity",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "quest_id": {
+          "name": "quest_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "quest_entity_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "quest_entity_type"
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "entity_type",
+            "entity_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "quest_entity_entity_type_entity_id_idx",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "quest_entity_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "quest_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "quest_entity_quest_id_idx",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "quest_entity_quest_id_fkey": {
+          "columnNames": [
+            "quest_id"
+          ],
+          "constraintName": "quest_entity_quest_id_fkey",
+          "localTableName": "public.quest_entity",
+          "referencedTableName": "public.quest",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "quest_objective",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "quest_id": {
+          "name": "quest_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "type": {
+          "name": "type",
+          "type": "quest_objective_type",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "quest_objective_type"
+        },
+        "status": {
+          "name": "status",
+          "type": "quest_objective_status",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'INCOMPLETE'",
+          "comment": null,
+          "enumItems": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "quest_objective_status"
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "order": {
+          "name": "order",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "0",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "quest_objective_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "quest_id",
+            "status"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "quest_objective_quest_id_status_idx",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "quest_objective_quest_id_fkey": {
+          "columnNames": [
+            "quest_id"
+          ],
+          "constraintName": "quest_objective_quest_id_fkey",
+          "localTableName": "public.quest_objective",
+          "referencedTableName": "public.quest",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "room_encounter",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "cleared": {
+          "name": "cleared",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "monsters": {
+          "name": "monsters",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "room_encounter_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "room_encounter_room_id_foreign": {
+          "columnNames": [
+            "room_id"
+          ],
+          "constraintName": "room_encounter_room_id_foreign",
+          "localTableName": "public.room_encounter",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "room_item",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "container_name": {
+          "name": "container_name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "room_item_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "room_item_item_id_foreign": {
+          "columnNames": [
+            "item_id"
+          ],
+          "constraintName": "room_item_item_id_foreign",
+          "localTableName": "public.room_item",
+          "referencedTableName": "public.item",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        },
+        "room_item_room_id_foreign": {
+          "columnNames": [
+            "room_id"
+          ],
+          "constraintName": "room_item_room_id_foreign",
+          "localTableName": "public.room_item",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "srd_class",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "index": {
+          "name": "index",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "hit_die": {
+          "name": "hit_die",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "proficiencies": {
+          "name": "proficiencies",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "saving_throws": {
+          "name": "saving_throws",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "spellcasting_ability": {
+          "name": "spellcasting_ability",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "index"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "srd_class_index_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "srd_class_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "srd_condition",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "index": {
+          "name": "index",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "index"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "srd_condition_index_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "srd_condition_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "srd_equipment",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "index": {
+          "name": "index",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "cost": {
+          "name": "cost",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "weight": {
+          "name": "weight",
+          "type": "float8",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 53,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "double"
+        },
+        "properties": {
+          "name": "properties",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "damage": {
+          "name": "damage",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "index"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "srd_equipment_index_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "srd_equipment_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "srd_monster",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "index": {
+          "name": "index",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "size": {
+          "name": "size",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "alignment": {
+          "name": "alignment",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "armor_class": {
+          "name": "armor_class",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "hit_points": {
+          "name": "hit_points",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "challenge_rating": {
+          "name": "challenge_rating",
+          "type": "float8",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 53,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "double"
+        },
+        "speed": {
+          "name": "speed",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "ability_scores": {
+          "name": "ability_scores",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "actions": {
+          "name": "actions",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "index"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "srd_monster_index_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "srd_monster_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "srd_race",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "index": {
+          "name": "index",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "speed": {
+          "name": "speed",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "ability_bonuses": {
+          "name": "ability_bonuses",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "traits": {
+          "name": "traits",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "size": {
+          "name": "size",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "index"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "srd_race_index_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "srd_race_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "srd_spell",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "index": {
+          "name": "index",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "level": {
+          "name": "level",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "school": {
+          "name": "school",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "casting_time": {
+          "name": "casting_time",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "range": {
+          "name": "range",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "components": {
+          "name": "components",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "duration": {
+          "name": "duration",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "higher_level": {
+          "name": "higher_level",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "classes": {
+          "name": "classes",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "index"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "srd_spell_index_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "srd_spell_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "user",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 0,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "date"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "email"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "user_email_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "user_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "world_event",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int4",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "location_id": {
+          "name": "location_id",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "deadline_in_game_date": {
+          "name": "deadline_in_game_date",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'WORLD_TICK'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'ACTIVE'",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 0,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "date"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "world_event_campaign_id_idx",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "world_event_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "world_event_campaign_id_fkey": {
+          "columnNames": [
+            "campaign_id"
+          ],
+          "constraintName": "world_event_campaign_id_fkey",
+          "localTableName": "public.world_event",
+          "referencedTableName": "public.campaign",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        },
+        "world_event_location_id_fkey": {
+          "columnNames": [
+            "location_id"
+          ],
+          "constraintName": "world_event_location_id_fkey",
+          "localTableName": "public.world_event",
+          "referencedTableName": "public.location",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "set null"
+        }
+      },
+      "nativeEnums": {
+        "memory_subject_type": {
+          "name": "memory_subject_type",
+          "schema": "public",
+          "items": [
+            "npc",
+            "character",
+            "location",
+            "faction",
+            "item",
+            "general"
+          ]
+        },
+        "quest_entity_type": {
+          "name": "quest_entity_type",
+          "schema": "public",
+          "items": [
+            "NPC",
+            "LOCATION",
+            "ITEM",
+            "WORLD_EVENT",
+            "DUNGEON"
+          ]
+        },
+        "quest_objective_status": {
+          "name": "quest_objective_status",
+          "schema": "public",
+          "items": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "quest_objective_type": {
+          "name": "quest_objective_type",
+          "schema": "public",
+          "items": [
+            "REACH_LOCATION",
+            "NPC_DEAD",
+            "NPC_ALIVE",
+            "HAVE_ITEM",
+            "TALK_TO_NPC",
+            "MANUAL"
+          ]
+        },
+        "quest_status": {
+          "name": "quest_status",
+          "schema": "public",
+          "items": [
+            "ACTIVE",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
+      "comment": null
+    }
+  ],
+  "views": [],
+  "nativeEnums": {
+    "memory_subject_type": {
+      "name": "memory_subject_type",
+      "schema": "public",
+      "items": [
+        "npc",
+        "character",
+        "location",
+        "faction",
+        "item",
+        "general"
+      ]
+    },
+    "quest_entity_type": {
+      "name": "quest_entity_type",
+      "schema": "public",
+      "items": [
+        "NPC",
+        "LOCATION",
+        "ITEM",
+        "WORLD_EVENT",
+        "DUNGEON"
+      ]
+    },
+    "quest_objective_status": {
+      "name": "quest_objective_status",
+      "schema": "public",
+      "items": [
+        "INCOMPLETE",
+        "COMPLETE"
+      ]
+    },
+    "quest_objective_type": {
+      "name": "quest_objective_type",
+      "schema": "public",
+      "items": [
+        "REACH_LOCATION",
+        "NPC_DEAD",
+        "NPC_ALIVE",
+        "HAVE_ITEM",
+        "TALK_TO_NPC",
+        "MANUAL"
+      ]
+    },
+    "quest_status": {
+      "name": "quest_status",
+      "schema": "public",
+      "items": [
+        "ACTIVE",
+        "COMPLETED",
+        "FAILED"
+      ]
+    }
+  }
+}
