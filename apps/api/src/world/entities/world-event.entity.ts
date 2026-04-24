@@ -30,7 +30,7 @@ export class WorldEvent extends BaseEntity {
     locationId: number | null = null;
 
     /** In-game date after which the event escalates or expires if unresolved. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     deadlineInGameDate: string | null = null;
 
@@ -43,11 +43,11 @@ export class WorldEvent extends BaseEntity {
     status: Opt<WorldEventStatus> = WorldEventStatus.ACTIVE;
 
     /** Narrative summary of how the event concluded. Set when status → RESOLVED. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     outcome: string | null = null;
 
-    @Field()
+    @Field(() => Date)
     @Property({ type: 'date', onCreate: () => new Date() })
     createdAt: Opt<Date> = new Date();
 }

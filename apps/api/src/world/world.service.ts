@@ -8,14 +8,19 @@ import { type Connection } from 'graphql-relay';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
 import { type ConnectionArgs } from '../graphql/relay';
+import { QuestEntity } from '../quest/entities/quest-entity.entity.js';
+import { QuestEntityType, QuestStatus } from '../quest/quest.enums.js';
+import { WorldMapEdge, WorldMapFrontierNode, WorldMapNode, WorldMapResponse } from './dto/world-map.types.js';
 import { Faction } from './entities/faction.entity.js';
+import { LocationDiscovery } from './entities/location-discovery.entity.js';
 import { Location } from './entities/location.entity.js';
+import { MapLocation } from './entities/map-location.entity.js';
 import { Map } from './entities/map.entity.js';
 import { NpcItem } from './entities/npc-item.entity.js';
 import { NpcRelationship } from './entities/npc-relationship.entity.js';
 import { Npc } from './entities/npc.entity.js';
 import { WorldEvent } from './entities/world-event.entity.js';
-import { NpcRelationshipType, WorldEventStatus } from './world.enums.js';
+import { MapScale, NpcRelationshipType, WorldEventStatus } from './world.enums.js';
 
 /**
  * Service for reading world and NPC data. All list queries are owner-scoped:
@@ -28,6 +33,10 @@ export class WorldService {
         private readonly locationRepo: EntityRepository<Location>,
         @InjectRepository(Map)
         private readonly mapRepo: EntityRepository<Map>,
+        @InjectRepository(MapLocation)
+        private readonly mapLocationRepo: EntityRepository<MapLocation>,
+        @InjectRepository(LocationDiscovery)
+        private readonly locationDiscoveryRepo: EntityRepository<LocationDiscovery>,
         @InjectRepository(Faction)
         private readonly factionRepo: EntityRepository<Faction>,
         @InjectRepository(WorldEvent)
@@ -40,6 +49,8 @@ export class WorldService {
         private readonly npcItemRepo: EntityRepository<NpcItem>,
         @InjectRepository(Campaign)
         private readonly campaignRepo: EntityRepository<Campaign>,
+        @InjectRepository(QuestEntity)
+        private readonly questEntityRepo: EntityRepository<QuestEntity>,
     ) {}
 
     /**
@@ -311,6 +322,170 @@ export class WorldService {
             const timeB = sourceB?.lastConversedAt?.getTime() ?? 0;
             return timeA - timeB;
         });
+    }
+
+    /**
+     * Builds the fog-of-war world map read model for a campaign at the requested scale.
+     * Discovered nodes are returned with full display data; undiscovered adjacent nodes
+     * are returned as anonymous frontier nodes (no name, state, or narrative data).
+     */
+    async getWorldMap(
+        campaignId: number,
+        userId: number,
+        requestedScale: MapScale,
+    ): Promise<WorldMapResponse> {
+        const campaign = await this.verifyCampaignOwnership(campaignId, userId);
+
+        const em = this.mapRepo.getEntityManager();
+
+        // Find all maps for the campaign to build available scales list
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const allMaps = await em.find(Map, { campaignId });
+        const availableScales = allMaps
+            .filter((map) => map.mapScale !== null)
+            .map((map) => map.mapScale as MapScale);
+
+        // Also consider DUNGEON scale if any dungeon locations exist
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const dungeonLocations = await em.find(Location, {
+            campaignId,
+            dungeon: { $ne: null } as never,
+        });
+        if (dungeonLocations.length > 0 && !availableScales.includes(MapScale.DUNGEON)) {
+            availableScales.push(MapScale.DUNGEON);
+        }
+
+        // Find the map matching the requested scale
+        let mapLocationIds: number[] = [];
+
+        if (requestedScale === MapScale.DUNGEON) {
+            mapLocationIds = dungeonLocations.map((loc) => loc.id);
+        } else {
+            const matchingMap = allMaps.find((map) => map.mapScale === requestedScale);
+            if (matchingMap) {
+                // eslint-disable-next-line unicorn/no-array-method-this-argument
+                const mapLocs = await em.find(MapLocation, { mapId: matchingMap.id });
+                mapLocationIds = mapLocs.map((mapLoc) => mapLoc.locationId);
+            }
+        }
+
+        if (mapLocationIds.length === 0) {
+            return {
+                selectedScale: requestedScale,
+                availableScales,
+                currentLocationId: campaign.currentLocationId === null ? null : String(campaign.currentLocationId),
+                discoveredNodes: [],
+                frontierNodes: [],
+                edges: [],
+            };
+        }
+
+        // Load locations on this map
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const mapLocations = await em.find(Location, { id: { $in: mapLocationIds } });
+        const locationById = new globalThis.Map<number, Location>(
+            mapLocations.map((loc) => [loc.id, loc]),
+        );
+
+        // Load discovery records for this campaign
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const discoveries = await em.find(LocationDiscovery, { campaignId });
+        const discoveredIds = new Set(discoveries.map((disc) => disc.locationId));
+
+        // Identify discovered locations on this map
+        const discoveredOnMap = mapLocations.filter((loc) => discoveredIds.has(loc.id));
+
+        // Find frontier node ids: connected to a discovered location but not yet discovered
+        const frontierIdSet = new Set<number>();
+        for (const loc of discoveredOnMap) {
+            for (const connId of loc.connectedLocationIds) {
+                if (!discoveredIds.has(connId)) {
+                    frontierIdSet.add(connId);
+                }
+            }
+        }
+
+        // Load frontier locations (may be outside the current map's mapLocationIds for cross-map edges)
+        const frontierIdsArray = [...frontierIdSet];
+        const frontierLocations: Location[] = frontierIdsArray.length > 0
+            // eslint-disable-next-line unicorn/no-array-method-this-argument
+            ? await em.find(Location, { id: { $in: frontierIdsArray } })
+            : [];
+        const frontierById = new globalThis.Map<number, Location>(
+            frontierLocations.map((loc) => [loc.id, loc]),
+        );
+
+        // Load active quest entity references to LOCATION for activity markers
+        // eslint-disable-next-line unicorn/no-array-method-this-argument
+        const activeQuestEntities = await em.find(QuestEntity, {
+            entityType: QuestEntityType.LOCATION,
+            quest: {
+                campaignId,
+                status: QuestStatus.ACTIVE,
+            } as never,
+        });
+        const activeQuestLocationIds = new Set(activeQuestEntities.map((questEntity) => questEntity.entityId));
+
+        // Build discovered nodes
+        const discoveredNodes: WorldMapNode[] = discoveredOnMap.map((loc) => ({
+            id: String(loc.id),
+            name: loc.name,
+            coordinates: loc.coordinates
+                ? { x: loc.coordinates.x, y: loc.coordinates.y }
+                : null,
+            currentState: loc.currentState,
+            connectedLocationIds: loc.connectedLocationIds.map(String),
+            hasActivityMarker: activeQuestLocationIds.has(loc.id),
+        }));
+
+        // Build frontier nodes — no name, description, or state exposed
+        const frontierNodes: WorldMapFrontierNode[] = [...frontierIdSet].map((frontierLocId) => {
+            const frontierLoc = frontierById.get(frontierLocId);
+            const connectedDiscoveredIds = discoveredOnMap
+                .filter((disc) => disc.connectedLocationIds.includes(frontierLocId))
+                .map((disc) => String(disc.id));
+            return {
+                id: String(frontierLocId),
+                coordinates: frontierLoc?.coordinates
+                    ? { x: frontierLoc.coordinates.x, y: frontierLoc.coordinates.y }
+                    : null,
+                connectedDiscoveredIds,
+            };
+        });
+
+        // Build visible edges: discovered↔discovered and discovered↔frontier
+        const edgeSet = new Set<string>();
+        const edges: WorldMapEdge[] = [];
+
+        const addEdge = (a: number, b: number): void => {
+            const key = [Math.min(a, b), Math.max(a, b)].join('-');
+            if (!edgeSet.has(key)) {
+                edgeSet.add(key);
+                edges.push({ fromId: String(a), toId: String(b) });
+            }
+        };
+
+        for (const loc of discoveredOnMap) {
+            for (const connId of loc.connectedLocationIds) {
+                const connLoc = locationById.get(connId);
+                if (connLoc && discoveredIds.has(connId)) {
+                    // discovered ↔ discovered
+                    addEdge(loc.id, connId);
+                } else if (frontierIdSet.has(connId)) {
+                    // discovered ↔ frontier
+                    addEdge(loc.id, connId);
+                }
+            }
+        }
+
+        return {
+            selectedScale: requestedScale,
+            availableScales,
+            currentLocationId: campaign.currentLocationId === null ? null : String(campaign.currentLocationId),
+            discoveredNodes,
+            frontierNodes,
+            edges,
+        };
     }
 
     /**

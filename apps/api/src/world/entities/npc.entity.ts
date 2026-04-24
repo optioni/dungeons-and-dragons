@@ -25,16 +25,16 @@ export class Npc extends BaseEntity {
     @Property({ type: 'text' })
     name!: string;
 
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     description: string | null = null;
 
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     profession: string | null = null;
 
     /** Primary drive that motivates all of the NPC's decisions. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     coreMotivation: string | null = null;
 
@@ -44,12 +44,12 @@ export class Npc extends BaseEntity {
     personalityTraits: Opt<string[]> = [];
 
     /** Distinctive voice or verbal tics used to portray this NPC in dialogue. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     speechStyle: string | null = null;
 
     /** General stance toward the player (friendly, neutral, hostile, etc.). */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     disposition: string | null = null;
 
@@ -58,7 +58,7 @@ export class Npc extends BaseEntity {
     @Property({ type: 'integer', nullable: true })
     currentLocationId: number | null = null;
 
-    @Field()
+    @Field(() => Boolean)
     @Property({ type: 'boolean', default: true })
     alive: Opt<boolean> = true;
 
@@ -78,7 +78,7 @@ export class Npc extends BaseEntity {
      * What the NPC is currently trying to achieve. Processed by the world-tick
      * Haiku calls when `nextTickInGameDay` is reached.
      */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     agenda: string | null = null;
 
@@ -91,7 +91,7 @@ export class Npc extends BaseEntity {
     nextTickInGameDay: number | null = null;
 
     /** Timestamp of the last world-tick conversation this NPC participated in. */
-    @Field({ nullable: true })
+    @Field(() => Date, { nullable: true })
     @Property({ type: 'datetime', nullable: true })
     lastConversedAt: Date | null = null;
 

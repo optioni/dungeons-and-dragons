@@ -5,6 +5,7 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { SrdClass } from './entities/srd-class.entity.js';
 import { SrdCondition } from './entities/srd-condition.entity.js';
 import { SrdEquipment } from './entities/srd-equipment.entity.js';
@@ -12,7 +13,6 @@ import { SrdMonster } from './entities/srd-monster.entity.js';
 import { SrdRace } from './entities/srd-race.entity.js';
 import { SrdSpell } from './entities/srd-spell.entity.js';
 import { SrdSeeder } from './srd.seeder.js';
-import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 
 const DB_URL = getRequiredIntegrationDatabaseUrl();
 const SRD_ENTITIES = [SrdClass, SrdRace, SrdSpell, SrdMonster, SrdEquipment, SrdCondition];

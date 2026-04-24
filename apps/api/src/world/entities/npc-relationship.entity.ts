@@ -28,12 +28,12 @@ export class NpcRelationship extends BaseEntity {
     type!: NpcRelationshipType;
 
     /** Narrative description of the relationship's history. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     description: string | null = null;
 
     /** How the source NPC currently feels toward the target (warm, wary, bitter, etc.). */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     disposition: string | null = null;
 }

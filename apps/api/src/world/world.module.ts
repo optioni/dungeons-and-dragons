@@ -7,6 +7,8 @@ import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { GraphqlModule } from '../graphql/graphql.module.js';
 import { MemoryModule } from '../memory/memory.module.js';
 import { ANTHROPIC_CLIENT, BACKGROUND_MODEL } from '../memory/memory.service.js';
+import { QuestEntity } from '../quest/entities/quest-entity.entity.js';
+import { Quest } from '../quest/entities/quest.entity.js';
 import { QueueModule } from '../queue/queue.module.js';
 import { Faction } from './entities/faction.entity.js';
 import { LocationDiscovery } from './entities/location-discovery.entity.js';
@@ -42,6 +44,8 @@ import { WorldService } from './world.service.js';
             NpcRelationship,
             NpcItem,
             NpcMemory,
+            Quest,
+            QuestEntity,
         ]),
         MemoryModule,
         QueueModule,

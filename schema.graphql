@@ -1,0 +1,1033 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthPayload {
+  accessToken: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type DiaryEntry {
+  id: ID!
+  campaignId: ID!
+  entryType: DiaryEntryType!
+  inGameDate: String!
+  content: String!
+  createdAt: DateTime!
+}
+
+enum DiaryEntryType {
+  DAILY
+  MEMORIAL
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Campaign {
+  id: ID!
+  name: String!
+  status: CampaignStatus!
+  endedAt: DateTime
+  endReason: String
+  setupStatus: CampaignSetupStatus!
+  tone: CampaignTone
+  deathMode: DeathMode
+  generatedConcepts: JSON
+  selectedConcept: JSON
+  openingSceneSeed: JSON
+  antagonistNpcId: ID
+  antagonistPlanState: JSON
+  currentLocationId: ID
+  inGameDate: String
+  travelEncounterEnabled: Boolean!
+  loreDocument: String
+  createdAt: DateTime!
+  hasCharacter: Boolean!
+}
+
+enum CampaignStatus {
+  ACTIVE
+  ENDED
+}
+
+enum CampaignSetupStatus {
+  DRAFT
+  CONCEPTS_GENERATED
+  READY_TO_PLAY
+}
+
+enum CampaignTone {
+  DARK
+  HEROIC
+  COMEDIC
+  GRITTY
+  EPIC
+}
+
+enum DeathMode {
+  STANDARD
+  PERMADEATH
+  HARDCORE
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+type SrdClass {
+  id: ID!
+  index: String!
+  name: String!
+  hitDie: Int!
+  proficiencies: [String!]!
+  savingThrows: [String!]!
+  spellcastingAbility: String
+}
+
+type SrdRace {
+  id: ID!
+  index: String!
+  name: String!
+  speed: Int!
+  abilityBonuses: JSON!
+  traits: [String!]!
+  size: String!
+}
+
+type Character {
+  id: ID!
+  name: String!
+  level: Int!
+  abilityScores: JSON!
+  hp: Int!
+  maxHp: Int!
+  ac: Int!
+  conditions: [String!]!
+  spellSlots: JSON!
+  preparedSpells: [String!]!
+  personalityTraits: [String!]!
+  ideals: [String!]!
+  bonds: [String!]!
+  flaws: [String!]!
+  skillProficiencies: JSON!
+  goldPieces: Int!
+  silverPieces: Int!
+  copperPieces: Int!
+  xp: Int!
+  deathSaveSuccesses: Int!
+  deathSaveFailures: Int!
+  isDead: Boolean!
+  hitDiceRemaining: Int!
+  race: SrdRace!
+  class: SrdClass!
+  proficiencyBonus: Int!
+}
+
+type SrdEquipment {
+  id: ID!
+  index: String!
+  name: String!
+  category: String!
+  cost: JSON!
+  weight: Float
+  properties: [String!]!
+  damage: JSON
+}
+
+type Item {
+  id: ID!
+  name: String!
+  description: String!
+  weight: Float
+  value: Int
+  itemType: ItemType!
+  srdEquipment: SrdEquipment
+}
+
+enum ItemType {
+  WEAPON
+  ARMOR
+  SHIELD
+  POTION
+  SCROLL
+  WONDROUS
+  TOOL
+  GEAR
+  CURRENCY
+  OTHER
+}
+
+type CharacterItem {
+  id: ID!
+  item: Item!
+  quantity: Int!
+  slot: EquipSlot
+  condition: String
+}
+
+enum EquipSlot {
+  MAIN_HAND
+  OFF_HAND
+  HEAD
+  CHEST
+  HANDS
+  FEET
+  RING_1
+  RING_2
+  NECK
+  BACK
+}
+
+type Location {
+  id: ID!
+  campaignId: ID!
+  dungeonId: ID
+  name: String!
+  description: String!
+  currentState: String
+  coordinates: JSON
+  connectedLocationIds: [ID!]
+  recentEvents: [String!]
+  floor: Int
+  roomState: RoomState
+}
+
+enum RoomState {
+  UNEXPLORED
+  EXPLORED
+  CLEARED
+  LOCKED
+  TRAPPED
+}
+
+type Dungeon {
+  id: ID!
+  campaignId: ID!
+  name: String!
+  description: String!
+  totalFloors: Int!
+  encounterTable: JSON
+}
+
+type CombatSession {
+  id: ID!
+  combatants: JSON!
+  currentTurnIndex: Int!
+  roundNumber: Int!
+}
+
+type GameEvent {
+  id: ID!
+  sessionId: ID!
+  eventType: EventType!
+  content: JSON!
+  createdAt: DateTime!
+}
+
+enum EventType {
+  PLAYER_INPUT
+  DM_NARRATIVE
+  TOOL_CALL
+  SYSTEM
+}
+
+type GameSession {
+  id: ID!
+  campaignId: ID!
+  sceneType: SceneType!
+  activeDungeonId: ID
+  startedAt: DateTime!
+  endedAt: DateTime
+  levelUpPending: Boolean!
+  combatSession: CombatSession
+  characterId: ID
+}
+
+enum SceneType {
+  EXPLORATION
+  DUNGEON
+  COMBAT
+  SOCIAL
+  SETTLEMENT
+  REST
+}
+
+type SrdMonster {
+  id: ID!
+  index: String!
+  name: String!
+  size: String!
+  type: String!
+  alignment: String!
+  armorClass: Int!
+  hitPoints: Int!
+  challengeRating: Float!
+  speed: JSON!
+  abilityScores: JSON!
+  actions: JSON!
+}
+
+type NpcRelationship {
+  id: ID!
+  sourceNpcId: ID!
+  targetNpcId: ID!
+  type: NpcRelationshipType!
+  description: String
+  disposition: String
+}
+
+enum NpcRelationshipType {
+  ALLY
+  RIVAL
+  ENEMY
+  NEUTRAL
+  FAMILY
+  MENTOR
+  STUDENT
+}
+
+type Npc {
+  id: ID!
+  campaignId: ID!
+  name: String!
+  description: String
+  profession: String
+  coreMotivation: String
+  personalityTraits: [String!]
+  speechStyle: String
+  disposition: String
+  currentLocationId: ID
+  alive: Boolean!
+  hp: Int
+  maxHp: Int
+  partyStatus: NpcPartyStatus!
+  agenda: String
+  nextTickInGameDay: Int
+  lastConversedAt: DateTime
+  relationships: [NpcRelationship!]
+}
+
+enum NpcPartyStatus {
+  NONE
+  ALLY
+  COMPANION
+  ENEMY
+}
+
+type RoomEncounter {
+  id: ID!
+  roomId: ID!
+  description: String!
+  cleared: Boolean!
+  monsters: JSON!
+}
+
+type RoomItem {
+  id: ID!
+  roomId: ID!
+  itemId: ID!
+  quantity: Int!
+  containerName: String
+}
+
+type DungeonEdge {
+  cursor: String!
+  node: Dungeon!
+}
+
+type DungeonConnection {
+  edges: [DungeonEdge!]!
+  pageInfo: PageInfo!
+}
+
+type RoomEncounterEdge {
+  cursor: String!
+  node: RoomEncounter!
+}
+
+type RoomEncounterConnection {
+  edges: [RoomEncounterEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DiaryEntryEdge {
+  cursor: String!
+  node: DiaryEntry!
+}
+
+type DiaryEntryConnection {
+  edges: [DiaryEntryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QuestEntity {
+  id: ID!
+  entityType: QuestEntityType!
+  entityId: Int!
+}
+
+enum QuestEntityType {
+  NPC
+  LOCATION
+  ITEM
+  DUNGEON
+  WORLD_EVENT
+}
+
+type QuestObjective {
+  id: ID!
+  description: String!
+  type: QuestObjectiveType!
+  status: QuestObjectiveStatus!
+  entityId: ID
+  order: Int!
+}
+
+enum QuestObjectiveType {
+  REACH_LOCATION
+  NPC_DEAD
+  NPC_ALIVE
+  HAVE_ITEM
+  TALK_TO_NPC
+  MANUAL
+}
+
+enum QuestObjectiveStatus {
+  INCOMPLETE
+  COMPLETE
+}
+
+type Quest {
+  id: ID!
+  campaignId: ID!
+  title: String!
+  description: String!
+  status: QuestStatus!
+  agendaImpact: String
+  rewardNarrative: String
+  rewardXp: Int
+  rewardGold: Int
+  createdAt: DateTime!
+  objectives: [QuestObjective!]!
+  entities: [QuestEntity!]!
+}
+
+enum QuestStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+type WorldEvent {
+  id: ID!
+  campaignId: ID!
+  description: String!
+  locationId: ID
+  deadlineInGameDate: String
+  source: WorldEventSource!
+  status: WorldEventStatus!
+  outcome: String
+  createdAt: DateTime!
+}
+
+enum WorldEventSource {
+  SETUP
+  PLAYER_ACTION
+  WORLD_TICK
+  CATASTROPHE
+}
+
+enum WorldEventStatus {
+  ACTIVE
+  RESOLVED
+  EXPIRED
+}
+
+type QuestEdge {
+  cursor: String!
+  node: Quest!
+}
+
+type QuestConnection {
+  edges: [QuestEdge!]!
+  pageInfo: PageInfo!
+}
+
+type Faction {
+  id: ID!
+  campaignId: ID!
+  name: String!
+  goals: String
+  powerLevel: Int
+  playerDisposition: String
+  territory: String
+}
+
+type Map {
+  id: ID!
+  campaignId: ID!
+  name: String!
+  description: String
+  scale: String
+  mapScale: MapScale
+}
+
+enum MapScale {
+  WORLD
+  REGIONAL
+  LOCAL
+  DUNGEON
+}
+
+type WorldMapCoordinates {
+  x: Float!
+  y: Float!
+}
+
+type WorldMapNode {
+  id: ID!
+  name: String!
+  coordinates: WorldMapCoordinates
+  currentState: String
+  connectedLocationIds: [ID!]!
+  hasActivityMarker: Boolean!
+}
+
+type WorldMapFrontierNode {
+  id: ID!
+  coordinates: WorldMapCoordinates
+  connectedDiscoveredIds: [ID!]!
+}
+
+type WorldMapEdge {
+  fromId: ID!
+  toId: ID!
+}
+
+type WorldMapResponse {
+  selectedScale: MapScale!
+  availableScales: [MapScale!]!
+  currentLocationId: ID
+  discoveredNodes: [WorldMapNode!]!
+  frontierNodes: [WorldMapFrontierNode!]!
+  edges: [WorldMapEdge!]!
+}
+
+type LocationEdge {
+  cursor: String!
+  node: Location!
+}
+
+type LocationConnection {
+  edges: [LocationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type MapEdge {
+  cursor: String!
+  node: Map!
+}
+
+type MapConnection {
+  edges: [MapEdge!]!
+  pageInfo: PageInfo!
+}
+
+type FactionEdge {
+  cursor: String!
+  node: Faction!
+}
+
+type FactionConnection {
+  edges: [FactionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorldEventEdge {
+  cursor: String!
+  node: WorldEvent!
+}
+
+type WorldEventConnection {
+  edges: [WorldEventEdge!]!
+  pageInfo: PageInfo!
+}
+
+type NpcEdge {
+  cursor: String!
+  node: Npc!
+}
+
+type NpcConnection {
+  edges: [NpcEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DmStreamChunk {
+  type: DmStreamChunkType!
+  sequence: Int!
+  text: String
+  toolName: String
+  toolResult: JSON
+  action: String
+  status: String
+  sceneType: String
+  sessionId: ID!
+}
+
+enum DmStreamChunkType {
+  NARRATIVE_CHUNK
+  INNER_VOICE
+  TOOL_RESULT
+  SUGGESTED_ACTION
+  STATUS
+  CAMPAIGN_ENDED
+  DONE
+}
+
+type CampaignEdge {
+  cursor: String!
+  node: Campaign!
+}
+
+type CampaignConnection {
+  edges: [CampaignEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SrdCondition {
+  id: ID!
+  index: String!
+  name: String!
+  description: String!
+}
+
+type SrdSpell {
+  id: ID!
+  index: String!
+  name: String!
+  level: Int!
+  school: String!
+  castingTime: String!
+  range: String!
+  components: [String!]!
+  duration: String!
+  description: String!
+  higherLevel: String
+  classes: [String!]!
+}
+
+type SrdClassEdge {
+  cursor: String!
+  node: SrdClass!
+}
+
+type SrdClassConnection {
+  edges: [SrdClassEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SrdConditionEdge {
+  cursor: String!
+  node: SrdCondition!
+}
+
+type SrdConditionConnection {
+  edges: [SrdConditionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SrdEquipmentEdge {
+  cursor: String!
+  node: SrdEquipment!
+}
+
+type SrdEquipmentConnection {
+  edges: [SrdEquipmentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SrdMonsterEdge {
+  cursor: String!
+  node: SrdMonster!
+}
+
+type SrdMonsterConnection {
+  edges: [SrdMonsterEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SrdRaceEdge {
+  cursor: String!
+  node: SrdRace!
+}
+
+type SrdRaceConnection {
+  edges: [SrdRaceEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SrdSpellEdge {
+  cursor: String!
+  node: SrdSpell!
+}
+
+type SrdSpellConnection {
+  edges: [SrdSpellEdge!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  hello: String!
+  srdClasses(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+  ): SrdClassConnection!
+  srdClass(index: String!): SrdClass
+  srdRaces(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+  ): SrdRaceConnection!
+  srdRace(index: String!): SrdRace
+  srdSpells(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    where: SrdSpellWhereInput
+  ): SrdSpellConnection!
+  srdSpell(index: String!): SrdSpell
+  srdMonsters(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    where: SrdMonsterWhereInput
+  ): SrdMonsterConnection!
+  srdMonster(index: String!): SrdMonster
+  srdEquipment(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    where: SrdEquipmentWhereInput
+  ): SrdEquipmentConnection!
+  srdEquipmentItem(index: String!): SrdEquipment
+  srdConditions(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+  ): SrdConditionConnection!
+  srdCondition(index: String!): SrdCondition
+  character(id: ID!): Character!
+  characterByCampaign(campaignId: ID!): Character!
+  characterInventory(characterId: ID!): [CharacterItem!]!
+  campaigns(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+  ): CampaignConnection!
+  campaign(id: ID!): Campaign!
+  activeSession(campaignId: ID!): GameSession
+  gameEvents(sessionId: ID!): [GameEvent!]!
+  diaryEntries(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    campaignId: ID!
+  ): DiaryEntryConnection!
+  locations(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    campaignId: ID!
+  ): LocationConnection!
+  location(id: ID!): Location!
+  maps(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    campaignId: ID!
+  ): MapConnection!
+  factions(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    campaignId: ID!
+  ): FactionConnection!
+  worldEvents(
+    campaignId: ID!
+
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    status: WorldEventStatus
+  ): WorldEventConnection!
+  worldEvent(id: ID!): WorldEvent!
+  worldMap(campaignId: ID!, scale: MapScale! = WORLD): WorldMapResponse!
+  npcs(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    campaignId: ID!
+  ): NpcConnection!
+  npc(id: ID!): Npc!
+  quests(
+    campaignId: ID!
+    status: QuestStatus
+
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+  ): QuestConnection!
+  quest(id: ID!): Quest!
+  dungeons(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    campaignId: ID!
+  ): DungeonConnection!
+  roomEncounters(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    dungeonId: ID!
+  ): RoomEncounterConnection!
+  roomItems(roomId: ID!): [RoomItem!]!
+}
+
+input SrdSpellWhereInput {
+  name_ilike: String
+  level: Int
+  school_ilike: String
+  AND: [SrdSpellWhereInput!]
+  OR: [SrdSpellWhereInput!]
+}
+
+input SrdMonsterWhereInput {
+  name_ilike: String
+  challengeRating_gte: Float
+  challengeRating_lte: Float
+  AND: [SrdMonsterWhereInput!]
+  OR: [SrdMonsterWhereInput!]
+}
+
+input SrdEquipmentWhereInput {
+  name_ilike: String
+  category_ilike: String
+  AND: [SrdEquipmentWhereInput!]
+  OR: [SrdEquipmentWhereInput!]
+}
+
+type Mutation {
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  createCharacter(input: CreateCharacterInput!): Character!
+  equipItem(characterItemId: ID!, slot: EquipSlot!): CharacterItem!
+  unequipItem(characterItemId: ID!): CharacterItem!
+  createCampaign(input: CreateCampaignInput!): Campaign!
+  generateCampaignStoryConcepts(input: GenerateConceptsInput!): Campaign!
+  selectCampaignStoryConcept(input: SelectConceptInput!): Campaign!
+  generateCampaignWorldSeed(input: GenerateWorldSeedInput!): Campaign!
+  startSession(campaignId: ID!): GameSession!
+  endSession(sessionId: ID!): GameSession!
+  sendPlayerInput(sessionId: ID!, text: String!): Boolean!
+  applyLevelUp(sessionId: ID!, hitPointsRolled: Int!, abilityScoreImprovements: AbilityScoreImprovementsInput, feat: String): Boolean!
+  prepareSpells(sessionId: ID!, spells: [String!]!): Boolean!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateCharacterInput {
+  name: String!
+  raceId: ID!
+  classId: ID!
+  campaignId: ID!
+  abilityScores: AbilityScoresInput!
+}
+
+input AbilityScoresInput {
+  STR: Int!
+  DEX: Int!
+  CON: Int!
+  INT: Int!
+  WIS: Int!
+  CHA: Int!
+}
+
+input CreateCampaignInput {
+  name: String!
+}
+
+input GenerateConceptsInput {
+  campaignId: ID!
+  tone: CampaignTone!
+  deathMode: DeathMode!
+}
+
+input SelectConceptInput {
+  campaignId: ID!
+  conceptIndex: Int!
+}
+
+input GenerateWorldSeedInput {
+  campaignId: ID!
+}
+
+input AbilityScoreImprovementsInput {
+  STR: Int
+  DEX: Int
+  CON: Int
+  INT: Int
+  WIS: Int
+  CHA: Int
+}
+
+type Subscription {
+  dmStream(sessionId: ID!): DmStreamChunk!
+}

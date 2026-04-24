@@ -2,6 +2,8 @@ import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
+import { MapScale } from '../world.enums.js';
+
 /**
  * A named map belonging to a campaign, grouping locations by scale
  * (e.g. world map, region map, dungeon level).
@@ -21,12 +23,17 @@ export class Map extends BaseEntity {
     @Property({ type: 'text' })
     name!: string;
 
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     description: string | null = null;
 
     /** Narrative description of the map's extent — e.g. "1 square = 5 miles". */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     scale: string | null = null;
+
+    /** Structured scale category used for client-side map switching and fog-of-war queries. */
+    @Field(() => MapScale, { nullable: true })
+    @Property({ type: 'text', nullable: true })
+    mapScale: MapScale | null = null;
 }

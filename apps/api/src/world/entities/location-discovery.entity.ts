@@ -25,7 +25,7 @@ export class LocationDiscovery extends BaseEntity {
     @Property({ type: 'integer' })
     locationId!: number;
 
-    @Field()
+    @Field(() => Date)
     @Property({ type: 'date', onCreate: () => new Date() })
     discoveredAt: Opt<Date> = new Date();
 

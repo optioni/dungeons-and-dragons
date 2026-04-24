@@ -12,6 +12,7 @@ import { Character } from '../character/entities/character.entity';
 import { Item } from '../character/entities/item.entity';
 import { SrdClass } from '../srd/entities/srd-class.entity';
 import { SrdRace } from '../srd/entities/srd-race.entity';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { Faction } from '../world/entities/faction.entity';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity';
 import { Location } from '../world/entities/location.entity';
@@ -22,7 +23,6 @@ import { NpcRelationship } from '../world/entities/npc-relationship.entity';
 import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
 import { LocationDiscoverySource } from '../world/world.enums';
-import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { CampaignSetupStatus } from './campaign.enums';
 import { Campaign } from './entities/campaign.entity';
 

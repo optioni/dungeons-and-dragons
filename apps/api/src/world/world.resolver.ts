@@ -9,11 +9,13 @@ import { GraphqlService } from '../graphql/graphql.service.js';
 import { createRelayConnection } from '../graphql/relay';
 import { WorldConnectionArgs } from './args/world-connection.args.js';
 import { WorldEventsConnectionArgs } from './args/world-events-connection.args.js';
+import { WorldMapResponse } from './dto/world-map.types.js';
 import { Faction } from './entities/faction.entity.js';
 import { Location } from './entities/location.entity.js';
 import { Map } from './entities/map.entity.js';
 import { Npc } from './entities/npc.entity.js';
 import { WorldEvent } from './entities/world-event.entity.js';
+import { MapScale } from './world.enums.js';
 import { WorldService } from './world.service.js';
 
 export const LocationConnection = createRelayConnection(Location);
@@ -93,6 +95,15 @@ export class WorldResolver {
         @CurrentUser() user: User,
     ): Promise<WorldEvent> {
         return this.worldService.findWorldEventById(Number(id), user.id);
+    }
+
+    @Query(() => WorldMapResponse)
+    async worldMap(
+        @Args('campaignId', { type: () => ID }) campaignId: string,
+        @Args('scale', { type: () => MapScale, defaultValue: MapScale.WORLD }) scale: MapScale,
+        @CurrentUser() user: User,
+    ): Promise<WorldMapResponse> {
+        return this.worldService.getWorldMap(Number(campaignId), user.id, scale);
     }
 
     @Query(() => NpcConnection)

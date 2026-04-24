@@ -1,5 +1,12 @@
 import { registerEnumType } from '@nestjs/graphql';
 
+export enum MapScale {
+    WORLD = 'WORLD',
+    REGIONAL = 'REGIONAL',
+    LOCAL = 'LOCAL',
+    DUNGEON = 'DUNGEON',
+}
+
 export enum LocationDiscoverySource {
     SETUP = 'SETUP',
     PLAYER_ACTION = 'PLAYER_ACTION',
@@ -40,6 +47,7 @@ export enum NpcRelationshipType {
     STUDENT = 'STUDENT',
 }
 
+registerEnumType(MapScale, { name: 'MapScale' });
 registerEnumType(LocationDiscoverySource, { name: 'LocationDiscoverySource' });
 registerEnumType(WorldEventSource, { name: 'WorldEventSource' });
 registerEnumType(WorldEventStatus, { name: 'WorldEventStatus' });

@@ -22,7 +22,7 @@ export class Faction extends BaseEntity {
     name!: string;
 
     /** What the faction is trying to achieve. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     goals: string | null = null;
 
@@ -32,12 +32,12 @@ export class Faction extends BaseEntity {
     powerLevel: number | null = null;
 
     /** Current attitude toward the player: friendly, neutral, hostile, etc. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     playerDisposition: string | null = null;
 
     /** Geographic or social domain this faction controls. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     territory: string | null = null;
 }

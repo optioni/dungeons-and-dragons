@@ -17,6 +17,7 @@ import {
     getRequiredIntegrationDatabaseUrl,
     getRequiredIntegrationRedisUrl,
 } from '../test-integration-environment.js';
+import { QuestEntity } from '../quest/entities/quest-entity.entity';
 import { Faction } from './entities/faction.entity';
 import { LocationDiscovery } from './entities/location-discovery.entity';
 import { Location } from './entities/location.entity';
@@ -50,6 +51,7 @@ const ALL_ENTITIES = [
     NpcMemory,
     NpcRelationship,
     NpcItem,
+    QuestEntity,
 ];
 
 function buildMemoryService(em: EntityManager): MemoryService {
@@ -79,12 +81,15 @@ function buildWorldService(em: EntityManager): WorldService {
     return new WorldService(
         makeRepo(Location),
         makeRepo(WorldMap),
+        makeRepo(MapLocation),
+        makeRepo(LocationDiscovery),
         makeRepo(Faction),
         makeRepo(WorldEvent),
         makeRepo(Npc),
         makeRepo(NpcRelationship),
         makeRepo(NpcItem),
         makeRepo(Campaign),
+        makeRepo(QuestEntity),
     );
 }
 
