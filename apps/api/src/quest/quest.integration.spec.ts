@@ -15,12 +15,13 @@ import { Item } from '../character/entities/item.entity';
 import { Location } from '../world/entities/location.entity';
 import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { QuestEntity } from './entities/quest-entity.entity';
 import { QuestObjective } from './entities/quest-objective.entity';
 import { Quest } from './entities/quest.entity';
 import { QuestObjectiveType, QuestStatus } from './quest.enums';
 
-const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 
 async function createOrm(): Promise<MikroORM> {
     return MikroORM.init(

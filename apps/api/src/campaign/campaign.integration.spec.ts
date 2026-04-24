@@ -22,10 +22,11 @@ import { NpcRelationship } from '../world/entities/npc-relationship.entity';
 import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
 import { LocationDiscoverySource } from '../world/world.enums';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { CampaignSetupStatus } from './campaign.enums';
 import { Campaign } from './entities/campaign.entity';
 
-const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 
 async function createOrm(): Promise<MikroORM> {
     return MikroORM.init(

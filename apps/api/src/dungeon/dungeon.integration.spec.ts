@@ -21,12 +21,13 @@ import { GameSession } from '../session/entities/game-session.entity';
 import { SceneType } from '../session/session.enums';
 import { Location } from '../world/entities/location.entity';
 import { Npc } from '../world/entities/npc.entity';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { RoomState } from './dungeon.enums';
 import { Dungeon } from './entities/dungeon.entity';
 import { RoomEncounter } from './entities/room-encounter.entity';
 import { RoomItem } from './entities/room-item.entity';
 
-const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 
 async function createOrm(): Promise<MikroORM> {
     return MikroORM.init(

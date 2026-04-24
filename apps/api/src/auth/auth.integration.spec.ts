@@ -10,8 +10,9 @@ import {
 
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 
-const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 const TEST_JWT_SECRET = 'integration-test-secret-min-16-chars';
 
 async function createOrm(): Promise<MikroORM> {

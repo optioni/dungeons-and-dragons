@@ -12,8 +12,9 @@ import { SrdMonster } from './entities/srd-monster.entity.js';
 import { SrdRace } from './entities/srd-race.entity.js';
 import { SrdSpell } from './entities/srd-spell.entity.js';
 import { SrdSeeder } from './srd.seeder.js';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 
-const DB_URL = process.env['DATABASE_URL'] ?? 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 const SRD_ENTITIES = [SrdClass, SrdRace, SrdSpell, SrdMonster, SrdEquipment, SrdCondition];
 
 let sharedOrm: MikroORM;

@@ -8,12 +8,13 @@ import {
 
 import { User } from '../auth/entities/user.entity';
 import { Campaign } from '../campaign/entities/campaign.entity';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { EmbeddingService } from './embedding.service';
 import { DiaryEntry } from './entities/diary-entry.entity';
 import { Memory, SubjectType } from './entities/memory.entity';
 import { MemoryService } from './memory.service';
 
-const DB_URL = process.env['DATABASE_URL'] ?? 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 
 /** 1024-dim fixed embedding used so all records share the same cosine space. */
 const FIXED_EMBEDDING = Array.from({ length: 1024 }, (_, index) => (index % 10) * 0.01);

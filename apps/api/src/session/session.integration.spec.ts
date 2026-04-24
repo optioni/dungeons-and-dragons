@@ -27,11 +27,12 @@ import { NpcItem } from '../world/entities/npc-item.entity';
 import { NpcRelationship } from '../world/entities/npc-relationship.entity';
 import { Npc } from '../world/entities/npc.entity';
 import { WorldEvent } from '../world/entities/world-event.entity';
+import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { GameEvent } from './entities/game-event.entity';
 import { GameSession } from './entities/game-session.entity';
 import { EventType, SceneType } from './session.enums';
 
-const DB_URL = 'postgresql://dnd:dnd@localhost:5432/dnd';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
 
 async function createOrm(): Promise<MikroORM> {
     return MikroORM.init(

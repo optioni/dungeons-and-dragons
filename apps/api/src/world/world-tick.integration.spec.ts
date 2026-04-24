@@ -13,6 +13,10 @@ import { EmbeddingService } from '../memory/embedding.service';
 import { DiaryEntry } from '../memory/entities/diary-entry.entity';
 import { Memory } from '../memory/entities/memory.entity';
 import { MemoryService } from '../memory/memory.service';
+import {
+    getRequiredIntegrationDatabaseUrl,
+    getRequiredIntegrationRedisUrl,
+} from '../test-integration-environment.js';
 import { Faction } from './entities/faction.entity';
 import { LocationDiscovery } from './entities/location-discovery.entity';
 import { Location } from './entities/location.entity';
@@ -28,8 +32,8 @@ import { WorldTickWorker } from './world-tick.worker';
 import { WorldEventSource, WorldEventStatus } from './world.enums';
 import { WorldService } from './world.service';
 
-const DB_URL = process.env['DATABASE_URL'] ?? 'postgresql://dnd:dnd@localhost:5432/dnd';
-const REDIS_URL = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
+const DB_URL = getRequiredIntegrationDatabaseUrl();
+const REDIS_URL = getRequiredIntegrationRedisUrl();
 
 const ALL_ENTITIES = [
     User,
