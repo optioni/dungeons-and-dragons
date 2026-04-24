@@ -41,13 +41,24 @@ interface CharacterOverrides {
     level?: number
 }
 
+interface QueryMockOptions {
+    initialEvents?: Record<string, unknown>[]
+    completedEvents?: Record<string, unknown>[]
+    sendInputMutation?: ReturnType<typeof vi.fn>
+}
+
 /** Configure useQuery/useMutation/useSubscription mocks for one component mount. */
 function setupQueryMocks(
     sessionOverrides: SessionOverrides = {},
     levelUpMutation?: ReturnType<typeof vi.fn>,
     characterOverrides: CharacterOverrides = {},
+    options: QueryMockOptions = {},
 ) {
     const streamRef = ref<any>(null);
+    const refetchEvents = vi.fn().mockResolvedValue({
+        data: { gameEvents: options.completedEvents ?? [] },
+    });
+    const sendInputMutation = options.sendInputMutation ?? vi.fn().mockResolvedValue({ data: { sendPlayerInput: true }, error: null });
     const session = {
         id: 'sess-1',
         characterId: 'char-1',
@@ -72,9 +83,9 @@ function setupQueryMocks(
         } as any)
         .mockReturnValueOnce({
             // 3. GAME_EVENTS_QUERY
-            data: ref(null),
+            data: ref(options.initialEvents ? { gameEvents: options.initialEvents } : null),
             fetching: ref(false),
-            executeQuery: vi.fn().mockResolvedValue({ data: { gameEvents: [] } }),
+            executeQuery: refetchEvents,
         } as any)
         .mockReturnValueOnce({
             // 4. CHARACTER_QUERY_FOR_PLAY
@@ -117,13 +128,13 @@ function setupQueryMocks(
 
     vi.mocked(useMutation)
         .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any) // START_SESSION_MUTATION
-        .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any) // SEND_PLAYER_INPUT_MUTATION
+        .mockReturnValueOnce({ executeMutation: sendInputMutation } as any) // SEND_PLAYER_INPUT_MUTATION
         .mockReturnValueOnce({ executeMutation: levelUpMutation ?? mockMutationFunction } as any) // APPLY_LEVEL_UP_MUTATION
         .mockReturnValueOnce({ executeMutation: mockMutationFunction } as any); // PREPARE_SPELLS_MUTATION
 
     vi.mocked(useSubscription).mockReturnValue({ data: streamRef } as any);
 
-    return { streamRef };
+    return { streamRef, refetchEvents, sendInputMutation };
 }
 
 const globalStubs = {
@@ -148,12 +159,12 @@ const globalStubs = {
     UAlert: { template: '<div>{{ description }}</div>', props: ['description', 'color', 'variant'] },
     UBadge: { template: '<span><slot /></span>', props: ['color', 'variant', 'size'] },
     UButton: {
-        template: '<button :disabled="disabled || loading" @click="$emit(\'click\')"><slot /></button>',
+        template: '<button :data-icon="icon" :disabled="disabled || loading" @click="$emit(\'click\')"><slot /></button>',
         props: ['disabled', 'loading', 'size', 'variant', 'color', 'icon', 'block'],
         emits: ['click'],
     },
     UTextarea: {
-        template: '<textarea :disabled="disabled" />',
+        template: '<textarea :disabled="disabled" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" @keydown="$emit(\'keydown\', $event)" />',
         props: ['disabled', 'modelValue', 'rows', 'autoresize', 'placeholder'],
         emits: ['update:modelValue', 'keydown'],
     },
@@ -230,6 +241,63 @@ describe('play page — inner voice stream handling', () => {
         streamRef.value = { dmStream: { sequence: 2, type: 'DONE', sessionId: 'sess-1' } };
         await flushPromises();
 
+        expect(wrapper.find('textarea').attributes('disabled')).toBeUndefined();
+    });
+});
+
+describe('play page — deterministic core loop smoke', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('resumes a session, accepts player input, completes the stream, and exposes updated state links', async () => {
+        const completedEvents = [
+            {
+                id: 'event-1',
+                sessionId: 'sess-1',
+                eventType: 'PLAYER_INPUT',
+                content: { text: 'Check the sealed door' },
+                createdAt: '2026-04-24T00:00:00.000Z',
+            },
+            {
+                id: 'event-2',
+                sessionId: 'sess-1',
+                eventType: 'DM_NARRATIVE',
+                content: { narrative: 'The door hums and the runes fade.' },
+                createdAt: '2026-04-24T00:00:01.000Z',
+            },
+        ];
+        const { streamRef, sendInputMutation, refetchEvents } = setupQueryMocks(
+            { sceneType: 'EXPLORATION' },
+            undefined,
+            {},
+            { completedEvents },
+        );
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        const textarea = wrapper.find('textarea');
+        await textarea.setValue('Check the sealed door');
+        const sendButton = wrapper.find('[data-icon="i-lucide-send"]');
+        await sendButton?.trigger('click');
+        await flushPromises();
+
+        expect(sendInputMutation).toHaveBeenCalledWith({
+            sessionId: 'sess-1',
+            text: 'Check the sealed door',
+        });
+        expect(wrapper.text()).toContain('Character');
+        expect(wrapper.text()).toContain('Quests');
+
+        streamRef.value = { dmStream: { sequence: 1, type: 'NARRATIVE_CHUNK', text: 'The door hums', sessionId: 'sess-1' } };
+        await nextTick();
+        expect(wrapper.find('[data-testid="in-progress"]').text()).toContain('The door hums');
+
+        streamRef.value = { dmStream: { sequence: 2, type: 'DONE', sessionId: 'sess-1' } };
+        await flushPromises();
+
+        expect(refetchEvents).toHaveBeenCalledWith({ requestPolicy: 'network-only' });
+        expect(wrapper.find('[data-testid="in-progress"]').exists()).toBe(false);
         expect(wrapper.find('textarea').attributes('disabled')).toBeUndefined();
     });
 });
