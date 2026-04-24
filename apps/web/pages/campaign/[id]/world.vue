@@ -1,7 +1,7 @@
 <template>
-    <div class="min-h-screen bg-gray-950 p-6">
+    <div class="min-h-screen bg-gray-950 p-4 md:p-6">
         <!-- Navigation -->
-        <div class="max-w-5xl mx-auto mb-6">
+        <div class="max-w-6xl mx-auto mb-6">
             <div class="flex items-center gap-4">
                 <nuxt-link
                     :to="`/campaign/${campaignId}/play`"
@@ -37,143 +37,198 @@
             </div>
         </div>
 
-        <div class="max-w-5xl mx-auto space-y-6">
+        <div class="max-w-6xl mx-auto space-y-6">
             <h1 class="text-3xl font-bold text-white">World Overview</h1>
 
-            <!-- Factions -->
+            <!-- World Map Section (primary) -->
             <u-card>
                 <template #header>
-                    <h2 class="text-lg font-semibold">Factions</h2>
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <h2 class="text-lg font-semibold">Map</h2>
+
+                        <!-- Scale switcher -->
+                        <div class="flex gap-1">
+                            <u-button
+                                v-for="scale in availableScales"
+                                :key="scale"
+                                size="xs"
+                                :variant="selectedScale === scale ? 'solid' : 'soft'"
+                                color="neutral"
+                                @click="setScale(scale)"
+                            >
+                                {{ scale }}
+                            </u-button>
+                        </div>
+                    </div>
                 </template>
 
-                <div v-if="factionsFetching"
-                    class="flex justify-center py-6">
-                    <u-icon name="i-lucide-loader-circle"
-                        class="animate-spin" />
-                </div>
+                <!-- Fixed-height map container to prevent panel shift on scale changes -->
+                <div class="relative w-full"
+                    style="height: 400px;">
+                    <div v-if="mapFetching"
+                        class="absolute inset-0 flex items-center justify-center bg-gray-900 rounded">
+                        <u-icon name="i-lucide-loader-circle"
+                            class="animate-spin text-2xl text-gray-400" />
+                    </div>
 
-                <div v-else-if="!factions.length"
-                    class="text-center text-gray-500 py-6">
-                    No factions known yet.
-                </div>
-
-                <div v-else
-                    class="space-y-4">
                     <div
-                        v-for="faction in factions"
-                        :key="faction.id"
-                        class="rounded-lg bg-gray-800 p-4"
+                        v-else-if="!worldMap || (worldMap.discoveredNodes.length === 0 && worldMap.frontierNodes.length === 0)"
+                        class="absolute inset-0 flex items-center justify-center bg-gray-900 rounded"
                     >
-                        <div class="flex items-start gap-3">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-medium text-white">{{ faction.name }}</span>
+                        <p class="text-gray-500 text-sm">No map data for this scale yet.</p>
+                    </div>
 
-                                    <u-badge
-                                        v-if="faction.playerDisposition"
-                                        :color="dispositionColor(faction.playerDisposition)"
-                                        variant="soft"
-                                        size="xs"
-                                    >
-                                        {{ faction.playerDisposition }}
-                                    </u-badge>
+                    <world-map-graph
+                        v-else
+                        class="w-full h-full"
+                        :discovered-nodes="worldMap.discoveredNodes"
+                        :frontier-nodes="worldMap.frontierNodes"
+                        :edges="worldMap.edges"
+                        :current-location-id="worldMap.currentLocationId"
+                        :previous-node-ids="previousNodeIds"
+                        aria-label="Campaign world map"
+                        @node-select="onMapNodeSelect"
+                    />
+                </div>
+            </u-card>
 
-                                    <span v-if="faction.powerLevel != null"
-                                        class="text-xs text-gray-500">
-                                        Power {{ faction.powerLevel }}/10
-                                    </span>
+            <!-- Reference panels (desktop: 2-col grid, mobile: stacked) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Factions -->
+                <u-card>
+                    <template #header>
+                        <h2 class="text-lg font-semibold">Factions</h2>
+                    </template>
+
+                    <div v-if="factionsFetching"
+                        class="flex justify-center py-6">
+                        <u-icon name="i-lucide-loader-circle"
+                            class="animate-spin" />
+                    </div>
+
+                    <div v-else-if="!factions.length"
+                        class="text-center text-gray-500 py-6">
+                        No factions known yet.
+                    </div>
+
+                    <div v-else
+                        class="space-y-4">
+                        <div
+                            v-for="faction in factions"
+                            :key="faction.id"
+                            class="rounded-lg bg-gray-800 p-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-medium text-white">{{ faction.name }}</span>
+
+                                        <u-badge
+                                            v-if="faction.playerDisposition"
+                                            :color="dispositionColor(faction.playerDisposition)"
+                                            variant="soft"
+                                            size="xs"
+                                        >
+                                            {{ faction.playerDisposition }}
+                                        </u-badge>
+
+                                        <span v-if="faction.powerLevel != null"
+                                            class="text-xs text-gray-500">
+                                            Power {{ faction.powerLevel }}/10
+                                        </span>
+                                    </div>
+
+                                    <p v-if="faction.goals"
+                                        class="text-sm text-gray-400 mt-1">
+                                        {{ faction.goals }}
+                                    </p>
+
+                                    <p v-if="faction.territory"
+                                        class="text-xs text-gray-500 mt-1">
+                                        Territory: {{ faction.territory }}
+                                    </p>
                                 </div>
-
-                                <p v-if="faction.goals"
-                                    class="text-sm text-gray-400 mt-1">
-                                    {{ faction.goals }}
-                                </p>
-
-                                <p v-if="faction.territory"
-                                    class="text-xs text-gray-500 mt-1">
-                                    Territory: {{ faction.territory }}
-                                </p>
                             </div>
                         </div>
                     </div>
-                </div>
-            </u-card>
+                </u-card>
 
-            <!-- NPC Roster -->
-            <u-card>
-                <template #header>
-                    <h2 class="text-lg font-semibold">Known NPCs</h2>
-                </template>
+                <!-- NPC Roster -->
+                <u-card>
+                    <template #header>
+                        <h2 class="text-lg font-semibold">Known NPCs</h2>
+                    </template>
 
-                <div v-if="npcsFetching"
-                    class="flex justify-center py-6">
-                    <u-icon name="i-lucide-loader-circle"
-                        class="animate-spin" />
-                </div>
-
-                <div v-else-if="!npcs.length"
-                    class="text-center text-gray-500 py-6">
-                    No NPCs encountered yet.
-                </div>
-
-                <div v-else
-                    class="space-y-2">
-                    <button
-                        v-for="npc in npcs"
-                        :key="npc.id"
-                        type="button"
-                        class="w-full text-left rounded-lg bg-gray-800 px-4 py-3 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        @click="openNpcModal(npc.id)"
-                    >
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <span class="font-medium text-white">{{ npc.name }}</span>
-
-                            <span v-if="npc.profession"
-                                class="text-xs text-gray-400">{{ npc.profession }}</span>
-
-                            <u-badge
-                                v-if="npc.disposition"
-                                :color="dispositionColor(npc.disposition)"
-                                variant="soft"
-                                size="xs"
-                            >
-                                {{ npc.disposition }}
-                            </u-badge>
-
-                            <u-badge
-                                v-if="npc.partyStatus && npc.partyStatus !== 'NONE'"
-                                color="success"
-                                variant="soft"
-                                size="xs"
-                            >
-                                {{ npc.partyStatus }}
-                            </u-badge>
-
-                            <u-badge
-                                v-if="!npc.alive"
-                                color="error"
-                                variant="soft"
-                                size="xs"
-                            >
-                                Deceased
-                            </u-badge>
-                        </div>
-                    </button>
-
-                    <div v-if="npcsPageInfo?.hasNextPage"
-                        class="flex justify-center pt-2">
-                        <u-button
-                            variant="soft"
-                            color="neutral"
-                            size="sm"
-                            :loading="npcsLoadingMore"
-                            @click="loadMoreNpcs"
-                        >
-                            Load more NPCs
-                        </u-button>
+                    <div v-if="npcsFetching"
+                        class="flex justify-center py-6">
+                        <u-icon name="i-lucide-loader-circle"
+                            class="animate-spin" />
                     </div>
-                </div>
-            </u-card>
+
+                    <div v-else-if="!npcs.length"
+                        class="text-center text-gray-500 py-6">
+                        No NPCs encountered yet.
+                    </div>
+
+                    <div v-else
+                        class="space-y-2">
+                        <button
+                            v-for="npc in npcs"
+                            :key="npc.id"
+                            type="button"
+                            class="w-full text-left rounded-lg bg-gray-800 px-4 py-3 hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            @click="openNpcModal(npc.id)"
+                        >
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <span class="font-medium text-white">{{ npc.name }}</span>
+
+                                <span v-if="npc.profession"
+                                    class="text-xs text-gray-400">{{ npc.profession }}</span>
+
+                                <u-badge
+                                    v-if="npc.disposition"
+                                    :color="dispositionColor(npc.disposition)"
+                                    variant="soft"
+                                    size="xs"
+                                >
+                                    {{ npc.disposition }}
+                                </u-badge>
+
+                                <u-badge
+                                    v-if="npc.partyStatus && npc.partyStatus !== 'NONE'"
+                                    color="success"
+                                    variant="soft"
+                                    size="xs"
+                                >
+                                    {{ npc.partyStatus }}
+                                </u-badge>
+
+                                <u-badge
+                                    v-if="!npc.alive"
+                                    color="error"
+                                    variant="soft"
+                                    size="xs"
+                                >
+                                    Deceased
+                                </u-badge>
+                            </div>
+                        </button>
+
+                        <div v-if="npcsPageInfo?.hasNextPage"
+                            class="flex justify-center pt-2">
+                            <u-button
+                                variant="soft"
+                                color="neutral"
+                                size="sm"
+                                :loading="npcsLoadingMore"
+                                @click="loadMoreNpcs"
+                            >
+                                Load more NPCs
+                            </u-button>
+                        </div>
+                    </div>
+                </u-card>
+            </div>
 
             <!-- Diary Entries -->
             <u-card>
@@ -194,8 +249,18 @@
 
                 <div v-else
                     class="space-y-3">
+                    <!-- Diary search -->
+                    <div class="pb-2">
+                        <u-input
+                            v-model="diarySearch"
+                            placeholder="Search diary…"
+                            size="sm"
+                            icon="i-lucide-search"
+                        />
+                    </div>
+
                     <div
-                        v-for="entry in recentDiary"
+                        v-for="entry in filteredRecentDiary"
                         :key="entry.id"
                         class="rounded-lg bg-gray-800 p-4"
                     >
@@ -216,7 +281,7 @@
                     </div>
 
                     <!-- Older entries collapsed section -->
-                    <template v-if="olderDiary.length || diaryPageInfo?.hasNextPage">
+                    <template v-if="filteredOlderDiary.length || diaryPageInfo?.hasNextPage">
                         <div class="pt-2">
                             <u-button
                                 variant="ghost"
@@ -231,7 +296,7 @@
 
                         <template v-if="showOlderDiary">
                             <div
-                                v-for="entry in olderDiary"
+                                v-for="entry in filteredOlderDiary"
                                 :key="entry.id"
                                 class="rounded-lg bg-gray-900 border border-gray-800 p-4"
                             >
@@ -404,34 +469,111 @@
                 </u-card>
             </template>
         </u-modal>
+
+        <!-- Travel Confirmation Dialog -->
+        <u-modal v-model:open="travelDialogOpen">
+            <template #content>
+                <u-card>
+                    <template #header>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">Travel to {{ travelDestination?.name }}</h3>
+
+                            <u-button
+                                icon="i-lucide-x"
+                                variant="ghost"
+                                color="neutral"
+                                size="sm"
+                                @click="travelDialogOpen = false"
+                            />
+                        </div>
+                    </template>
+
+                    <p class="text-sm text-gray-300 mb-4">
+                        Set out for <strong class="text-white">{{ travelDestination?.name }}</strong>?
+                        The DM will narrate the journey, handle any encounters, and update your location.
+                    </p>
+
+                    <div v-if="travelError"
+                        class="mb-4 p-3 rounded bg-red-900/50 border border-red-700 text-red-300 text-sm">
+                        {{ travelError }}
+                    </div>
+
+                    <div class="flex gap-3 justify-end">
+                        <u-button
+                            variant="soft"
+                            color="neutral"
+                            @click="travelDialogOpen = false"
+                        >
+                            Cancel
+                        </u-button>
+
+                        <u-button
+                            color="primary"
+                            :loading="travelLoading"
+                            @click="confirmTravel"
+                        >
+                            Travel
+                        </u-button>
+                    </div>
+                </u-card>
+            </template>
+        </u-modal>
     </div>
 </template>
 
 <script setup lang="ts">
-import { useQuery } from '@urql/vue';
+import { useMutation, useQuery } from '@urql/vue';
 import {
     FACTIONS_QUERY,
     NPCS_QUERY,
     NPC_PROFILE_QUERY,
     DIARY_ENTRIES_QUERY,
     WORLD_EVENTS_QUERY,
+    WORLD_MAP_QUERY,
 } from '~/graphql/world';
+import {
+    ACTIVE_SESSION_QUERY,
+    START_SESSION_MUTATION,
+    SEND_PLAYER_INPUT_MUTATION,
+} from '~/graphql/session';
 
-const route = useRoute();
-const campaignId = computed(() => route.params.id as string);
+// ── Types ──────────────────────────────────────────────────────────────────
 
-// ── Factions ──────────────────────────────────────────────────────────────
+type MapScale = 'WORLD' | 'REGIONAL' | 'LOCAL' | 'DUNGEON'
 
-const { data: factionsData, fetching: factionsFetching } = useQuery({
-    query: FACTIONS_QUERY,
-    variables: computed(() => ({ campaignId: campaignId.value, first: 50 })),
-});
+interface WorldMapCoords {
+    x: number
+    y: number
+}
 
-const factions = computed(() =>
-    (factionsData.value?.factions?.edges ?? []).map((e: { node: unknown }) => e.node),
-);
+interface WorldMapNode {
+    id: string
+    name: string
+    coordinates: WorldMapCoords | null
+    currentState: string | null
+    connectedLocationIds: string[]
+    hasActivityMarker: boolean
+}
 
-// ── NPCs ──────────────────────────────────────────────────────────────────
+interface WorldMapFrontierNode {
+    id: string
+    coordinates: WorldMapCoords | null
+    connectedDiscoveredIds: string[]
+}
+
+interface WorldMapEdge {
+    fromId: string
+    toId: string
+}
+
+interface WorldMapData {
+    selectedScale: MapScale
+    availableScales: MapScale[]
+    currentLocationId: string | null
+    discoveredNodes: WorldMapNode[]
+    frontierNodes: WorldMapFrontierNode[]
+    edges: WorldMapEdge[]
+}
 
 interface NpcRosterItem {
     id: string
@@ -457,6 +599,140 @@ interface NpcProfile extends NpcRosterItem {
     speechStyle: string | null
     relationships: NpcRelationship[] | null
 }
+
+interface DiaryEntry {
+    id: string
+    campaignId: string
+    entryType: string
+    inGameDate: string
+    content: string
+    createdAt: string
+}
+
+// ── Route ─────────────────────────────────────────────────────────────────
+
+const route = useRoute();
+const router = useRouter();
+const campaignId = computed(() => route.params.id as string);
+
+// ── World Map ─────────────────────────────────────────────────────────────
+
+const selectedScale = ref<MapScale>('WORLD');
+const worldMap = ref<WorldMapData | null>(null);
+const previousNodeIds = ref<Set<string>>(new Set<string>());
+
+const { data: mapData, fetching: mapFetching, executeQuery: refetchMap } = useQuery({
+    query: WORLD_MAP_QUERY,
+    variables: computed(() => ({ campaignId: campaignId.value, scale: selectedScale.value })),
+    requestPolicy: 'network-only',
+});
+
+watch(mapData, (data) => {
+    if (!data?.worldMap) return;
+    const newMap = data.worldMap as WorldMapData;
+
+    // Capture current visible ids BEFORE updating for animation diffing
+    if (worldMap.value) {
+        const currentIds = new Set<string>();
+        for (const n of worldMap.value.discoveredNodes) currentIds.add(n.id);
+        for (const n of worldMap.value.frontierNodes) currentIds.add(n.id);
+        previousNodeIds.value = currentIds;
+    }
+
+    worldMap.value = newMap;
+}, { immediate: true });
+
+const availableScales = computed<MapScale[]>(() => worldMap.value?.availableScales ?? []);
+
+function setScale(scale: MapScale): void {
+    if (scale === selectedScale.value) return;
+    // Capture current node ids before scale switch so no animation replays
+    if (worldMap.value) {
+        const ids = new Set<string>();
+        for (const n of worldMap.value.discoveredNodes) ids.add(n.id);
+        for (const n of worldMap.value.frontierNodes) ids.add(n.id);
+        previousNodeIds.value = ids;
+    }
+    selectedScale.value = scale;
+}
+
+// Refetch map when returning from play (route change detection)
+onActivated(() => {
+    void refetchMap({ requestPolicy: 'network-only' });
+});
+
+// ── Travel Flow ───────────────────────────────────────────────────────────
+
+const travelDialogOpen = ref(false);
+const travelDestination = ref<{ id: string; name: string } | null>(null);
+const travelLoading = ref(false);
+const travelError = ref<string | null>(null);
+
+const { data: activeSessionData } = useQuery({
+    query: ACTIVE_SESSION_QUERY,
+    variables: computed(() => ({ campaignId: campaignId.value })),
+});
+
+const { executeMutation: startSessionMutation } = useMutation(START_SESSION_MUTATION);
+const { executeMutation: sendPlayerInputMutation } = useMutation(SEND_PLAYER_INPUT_MUTATION);
+
+function onMapNodeSelect(nodeId: string, name: string): void {
+    // Prevent travel to current location
+    if (nodeId === worldMap.value?.currentLocationId) return;
+    travelDestination.value = { id: nodeId, name };
+    travelError.value = null;
+    travelDialogOpen.value = true;
+}
+
+async function confirmTravel(): Promise<void> {
+    if (!travelDestination.value || travelLoading.value) return;
+    travelError.value = null;
+    travelLoading.value = true;
+
+    try {
+        // Resolve or start an active session
+        let sessionId = (activeSessionData.value?.activeSession as { id: string } | null | undefined)?.id ?? null;
+
+        if (!sessionId) {
+            const sessionResult = await startSessionMutation({ campaignId: campaignId.value });
+            if (sessionResult.error || !sessionResult.data?.startSession) {
+                travelError.value = 'Could not start a session. Please try again.';
+                return;
+            }
+            sessionId = (sessionResult.data.startSession as { id: string }).id;
+        }
+
+        // Send the travel input through the DM session flow
+        const inputResult = await sendPlayerInputMutation({
+            sessionId,
+            text: `Travel to ${travelDestination.value.name}.`,
+        });
+
+        if (inputResult.error) {
+            travelError.value = 'Failed to submit travel request. Please try again.';
+            return;
+        }
+
+        travelDialogOpen.value = false;
+        // Navigate to play so the DM stream narrates the journey
+        await router.push(`/campaign/${campaignId.value}/play`);
+    } finally {
+        travelLoading.value = false;
+    }
+}
+
+// ── Factions ──────────────────────────────────────────────────────────────
+
+const { data: factionsData, fetching: factionsFetching } = useQuery({
+    query: FACTIONS_QUERY,
+    variables: computed(() => ({ campaignId: campaignId.value, first: 50 })),
+});
+
+const factions = computed(() =>
+    (factionsData.value?.factions?.edges ?? []).map((e: { node: unknown }) => e.node),
+);
+
+// ── NPCs ──────────────────────────────────────────────────────────────────
 
 const npcsAfter = ref<string | null>(null);
 const allNpcs = ref<NpcRosterItem[]>([]);
@@ -509,20 +785,12 @@ function openNpcModal(id: string): void {
 
 // ── Diary ─────────────────────────────────────────────────────────────────
 
-interface DiaryEntry {
-    id: string
-    campaignId: string
-    entryType: string
-    inGameDate: string
-    content: string
-    createdAt: string
-}
-
 const DIARY_RECENT_COUNT = 7;
 const allDiaryEntries = ref<DiaryEntry[]>([]);
 const diaryPageInfo = ref<{ hasNextPage: boolean; endCursor: string | null } | null>(null);
 const showOlderDiary = ref(false);
 const diaryLoadingMore = ref(false);
+const diarySearch = ref('');
 
 const { data: diaryData, fetching: diaryFetching } = useQuery({
     query: DIARY_ENTRIES_QUERY,
@@ -536,15 +804,28 @@ watch(diaryData, (data) => {
     diaryPageInfo.value = data.diaryEntries?.pageInfo ?? null;
 });
 
+const filteredDiaryEntries = computed(() => {
+    const q = diarySearch.value.trim().toLowerCase();
+    if (!q) return allDiaryEntries.value;
+    return allDiaryEntries.value.filter(
+        (e) => e.content.toLowerCase().includes(q) || e.inGameDate.toLowerCase().includes(q),
+    );
+});
+
 const recentDiary = computed(() => allDiaryEntries.value.slice(0, DIARY_RECENT_COUNT));
-const olderDiary = computed(() => allDiaryEntries.value.slice(DIARY_RECENT_COUNT));
+const filteredRecentDiary = computed(() => filteredDiaryEntries.value.slice(0, DIARY_RECENT_COUNT));
+const filteredOlderDiary = computed(() => filteredDiaryEntries.value.slice(DIARY_RECENT_COUNT));
 
 async function loadMoreDiary(): Promise<void> {
     if (!diaryPageInfo.value?.endCursor || diaryLoadingMore.value) return;
     diaryLoadingMore.value = true;
-    // Re-query with next cursor
+    // Re-query with next cursor — placeholder for cursor pagination implementation
     diaryLoadingMore.value = false;
 }
+
+// Expose recentDiary for template v-else-if empty check
+// (uses allDiaryEntries to avoid hiding panel when search returns nothing)
+const _recentDiary = recentDiary;
 
 // ── World Events ──────────────────────────────────────────────────────────
 

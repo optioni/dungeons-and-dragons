@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 import {
     computed,
     nextTick,
+    onActivated,
     reactive,
     readonly,
     ref,
@@ -17,6 +18,7 @@ vi.stubGlobal('watchEffect', watchEffect);
 vi.stubGlobal('nextTick', nextTick);
 vi.stubGlobal('reactive', reactive);
 vi.stubGlobal('readonly', readonly);
+vi.stubGlobal('onActivated', onActivated);
 
 // Nuxt-specific composables used in page components
 vi.stubGlobal('definePageMeta', vi.fn());

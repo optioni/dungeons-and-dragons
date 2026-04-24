@@ -120,3 +120,30 @@ export const LOCATION_QUERY = `
     }
   }
 `;
+
+export const WORLD_MAP_QUERY = `
+  query WorldMap($campaignId: ID!, $scale: MapScale) {
+    worldMap(campaignId: $campaignId, scale: $scale) {
+      selectedScale
+      availableScales
+      currentLocationId
+      discoveredNodes {
+        id
+        name
+        coordinates { x y }
+        currentState
+        connectedLocationIds
+        hasActivityMarker
+      }
+      frontierNodes {
+        id
+        coordinates { x y }
+        connectedDiscoveredIds
+      }
+      edges {
+        fromId
+        toId
+      }
+    }
+  }
+`;
