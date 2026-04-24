@@ -41,12 +41,12 @@ export class Campaign extends BaseEntity {
     status: Opt<CampaignStatus> = CampaignStatus.ACTIVE;
 
     /** Timestamp when the campaign was ended. Null for active campaigns. */
-    @Field({ nullable: true })
+    @Field(() => Date, { nullable: true })
     @Property({ type: 'timestamptz', nullable: true })
     endedAt: Date | null = null;
 
     /** Short description of why/how the campaign ended. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     endReason: string | null = null;
 
@@ -99,7 +99,7 @@ export class Campaign extends BaseEntity {
     currentLocationId: number | null = null;
 
     /** In-game calendar date expressed as a narrative string (e.g. "Day 1, Month of Frost"). */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     inGameDate: string | null = null;
 
@@ -108,16 +108,16 @@ export class Campaign extends BaseEntity {
     inGameDay: Opt<number> = 1;
 
     /** When false, travel_to skips the random encounter roll entirely. */
-    @Field()
+    @Field(() => Boolean)
     @Property({ type: 'boolean', default: true })
     travelEncounterEnabled: Opt<boolean> = true;
 
     /** Narrative facts about the world — not canonical state read by tool calls. */
-    @Field({ nullable: true })
+    @Field(() => String, { nullable: true })
     @Property({ type: 'text', nullable: true })
     loreDocument: string | null = null;
 
-    @Field()
+    @Field(() => Date)
     @Property({ type: 'date', onCreate: () => new Date() })
     createdAt: Opt<Date> = new Date();
 
