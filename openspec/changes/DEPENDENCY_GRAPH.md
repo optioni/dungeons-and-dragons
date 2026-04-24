@@ -24,5 +24,6 @@
 | 8 ✓ | `web-game-view` | session-and-llm, game-engine |
 | 9 ✓ | `campaign-info-pages` | character-system, memory-system, game-engine, world-system |
 | 10 ✓ | `web-world-map` | campaign-setup, game-engine, memory-system, campaign-info-pages |
+| 10 | `core-play-verification-coverage` | codebase-stabilization-review, web-game-view, campaign-info-pages, web-world-map |
 | 11 | `tui-client` | auth, character-system, campaign-setup, session-and-llm, game-engine |
 | 12 | `ssh-tui-server` | auth, session-and-llm, game-engine, tui-client |
