@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
 import {
@@ -148,7 +149,9 @@ describe('InnerMonologueService', () => {
             }),
         );
 
-        const secondCall = anthropicMessages.create.mock.calls[1]?.[0] as { messages: Array<{ role: string; content: unknown }> };
+        const secondCall = anthropicMessages.create.mock.calls[1]?.[0] as {
+            messages: Array<{ role: string; content: unknown }>
+        };
         expect(secondCall.messages.at(-1)).toEqual({
             role: 'user',
             content: [{

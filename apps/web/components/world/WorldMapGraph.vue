@@ -16,8 +16,8 @@
                 :y1="nodePos(edge.fromId).y"
                 :x2="nodePos(edge.toId).x"
                 :y2="nodePos(edge.toId).y"
+                class="stroke-gray-600 stroke-1"
                 :class="[
-                    'stroke-gray-600 stroke-1',
                     newEdgeKeys.has(`${edge.fromId}-${edge.toId}`) && !prefersReducedMotion
                         ? 'animate-map-edge-enter'
                         : '',
@@ -30,8 +30,8 @@
             v-for="node in frontierNodes"
             :key="`frontier-${node.id}`"
             :transform="`translate(${nodePos(node.id).x}, ${nodePos(node.id).y})`"
+            class="frontier-node"
             :class="[
-                'frontier-node',
                 newNodeKeys.has(node.id) && !prefersReducedMotion ? 'animate-map-node-enter' : '',
             ]"
             aria-hidden="true"
@@ -40,6 +40,7 @@
                 r="14"
                 class="fill-gray-800 stroke-gray-600 stroke-1"
             />
+
             <text
                 text-anchor="middle"
                 dominant-baseline="middle"
@@ -55,8 +56,8 @@
             v-for="node in discoveredNodes"
             :key="`node-${node.id}`"
             :transform="`translate(${nodePos(node.id).x}, ${nodePos(node.id).y})`"
+            class="discovered-node cursor-pointer"
             :class="[
-                'discovered-node cursor-pointer',
                 newNodeKeys.has(node.id) && !prefersReducedMotion ? 'animate-map-node-enter' : '',
             ]"
             role="button"
@@ -88,6 +89,7 @@
                     r="5"
                     class="fill-yellow-400 stroke-gray-900 stroke-1"
                 />
+
                 <text
                     x="10"
                     y="-10"
@@ -106,8 +108,8 @@
                 y="24"
                 text-anchor="middle"
                 dominant-baseline="hanging"
+                class="select-none pointer-events-none text-xs"
                 :class="[
-                    'select-none pointer-events-none text-xs',
                     node.id === currentLocationId ? 'fill-primary-300 font-semibold' : 'fill-gray-300',
                 ]"
                 font-size="10"
@@ -160,7 +162,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-    (e: 'nodeSelect', nodeId: string, name: string): void
+    (e: 'node-select', nodeId: string, name: string): void
 }>();
 
 const VIEWPORT_W = 600;
@@ -309,7 +311,7 @@ function nodeAriaLabel(node: WorldMapNode): string {
 
 function onNodeClick(node: WorldMapNode): void {
     selectedNodeId.value = node.id;
-    emit('nodeSelect', node.id, node.name);
+    emit('node-select', node.id, node.name);
 }
 
 // Expose currentLocationId as a reactive computed for template use

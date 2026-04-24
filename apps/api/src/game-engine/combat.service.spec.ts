@@ -35,6 +35,7 @@ vi.mock('@nestjs/graphql', () => ({
 }));
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
+    Optional: () => () => {},
     NotFoundException: class NotFoundException extends Error {},
     Logger: class Logger {
         log() {}

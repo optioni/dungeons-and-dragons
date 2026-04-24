@@ -299,9 +299,9 @@ describe('CombatPanel', () => {
             const buttons = wrapper.findAll('.stub-button');
             expect(buttons).toHaveLength(expectedTexts.length);
 
-            for (let i = 0; i < expectedTexts.length; i++) {
-                await buttons[i]!.trigger('click');
-                expect(wrapper.emitted('action')![i]).toEqual([expectedTexts[i]]);
+            for (const [index, expectedText] of expectedTexts.entries()) {
+                await buttons[index]!.trigger('click');
+                expect(wrapper.emitted('action')![index]).toEqual([expectedText]);
             }
         });
 

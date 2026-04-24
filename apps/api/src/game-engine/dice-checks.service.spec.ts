@@ -28,6 +28,7 @@ vi.mock('@nestjs/graphql', () => ({
 }));
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
+    Optional: () => () => {},
     NotFoundException: class NotFoundException extends Error {},
 }));
 /* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */

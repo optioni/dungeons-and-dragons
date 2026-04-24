@@ -334,9 +334,9 @@ describe('play page — death-save UI visibility', () => {
         const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
         await flushPromises();
 
-        const deathSaveEl = wrapper.find('[data-testid="death-save-ui"]');
-        expect(deathSaveEl.text()).toContain('Success');
-        expect(deathSaveEl.text()).toContain('Failure');
+        const deathSaveElement = wrapper.find('[data-testid="death-save-ui"]');
+        expect(deathSaveElement.text()).toContain('Success');
+        expect(deathSaveElement.text()).toContain('Failure');
     });
 
     it('death-save UI coexists with combat layout when sceneType is COMBAT', async () => {

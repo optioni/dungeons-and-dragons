@@ -133,8 +133,8 @@ describe('WorldMapGraph', () => {
         expect(wrapper.html()).toContain('fill-yellow-400');
     });
 
-    // 8.2 — Click interaction on discovered node emits nodeSelect
-    it('emits nodeSelect when a discovered node is clicked', async () => {
+    // 8.2 — Click interaction on discovered node emits node-select
+    it('emits node-select when a discovered node is clicked', async () => {
         const wrapper = mount(WorldMapGraph, {
             props: {
                 discoveredNodes: [makeNode({ id: '5', name: 'Click Me' })],
@@ -147,12 +147,12 @@ describe('WorldMapGraph', () => {
         const nodeGroup = wrapper.find('[role="button"]');
         await nodeGroup.trigger('click');
 
-        expect(wrapper.emitted('nodeSelect')).toHaveLength(1);
-        expect(wrapper.emitted('nodeSelect')![0]).toEqual(['5', 'Click Me']);
+        expect(wrapper.emitted('node-select')).toHaveLength(1);
+        expect(wrapper.emitted('node-select')![0]).toEqual(['5', 'Click Me']);
     });
 
     // 8.2 — Keyboard interaction
-    it('emits nodeSelect when Enter is pressed on a discovered node', async () => {
+    it('emits node-select when Enter is pressed on a discovered node', async () => {
         const wrapper = mount(WorldMapGraph, {
             props: {
                 discoveredNodes: [makeNode({ id: '6', name: 'Keyboard Town' })],
@@ -165,7 +165,7 @@ describe('WorldMapGraph', () => {
         const nodeGroup = wrapper.find('[role="button"]');
         await nodeGroup.trigger('keydown', { key: 'Enter' });
 
-        expect(wrapper.emitted('nodeSelect')).toHaveLength(1);
+        expect(wrapper.emitted('node-select')).toHaveLength(1);
     });
 
     // 8.2 — Frontier nodes have no button role (not interactive)

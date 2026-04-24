@@ -3,10 +3,12 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export interface IntegrationTestEnvironment {
     readonly DATABASE_URL: string
     readonly REDIS_URL: string
 }
+/* eslint-enable @typescript-eslint/naming-convention */
 
 const ENV_FILE_NAME = `dnd-api-integration-${createHash('sha256').update(process.cwd()).digest('hex').slice(0, 12)}.json`;
 

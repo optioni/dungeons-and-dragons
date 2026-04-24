@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
 import {
@@ -133,7 +134,6 @@ describe('ContextLoader', () => {
         });
 
         it('formats TOOL_CALL as assistant tool_use + user tool_result pair', () => {
-            /* eslint-disable @typescript-eslint/naming-convention */
             const event = makeEvent({
                 eventType: EventType.TOOL_CALL,
                 content: {
@@ -143,7 +143,6 @@ describe('ContextLoader', () => {
                     toolResult: { success: true },
                 },
             });
-            /* eslint-enable @typescript-eslint/naming-convention */
 
             const messages = service.formatEventsAsMessages([event]);
 
@@ -156,11 +155,9 @@ describe('ContextLoader', () => {
             expect(assistantContent[0].name).toBe('set_scene_type');
 
             expect(messages[1].role).toBe('user');
-            /* eslint-disable @typescript-eslint/naming-convention */
             const userContent = messages[1].content as Array<{ type: string; tool_use_id: string }>;
             expect(userContent[0].type).toBe('tool_result');
             expect(userContent[0].tool_use_id).toBe('tool_abc123');
-            /* eslint-enable @typescript-eslint/naming-convention */
         });
 
         it('preserves chronological order of mixed event types', () => {

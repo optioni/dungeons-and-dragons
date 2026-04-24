@@ -119,6 +119,7 @@ export class InnerMonologueService {
                 `DM narrative: ${narrativeText.trim()}`,
             ].join('\n');
 
+            /* eslint-disable @typescript-eslint/naming-convention */
             const tools: Anthropic.Tool[] = [{
                 name: 'roll_skill_check',
                 description: 'Roll one narratively relevant passive-style skill check for the character.',
@@ -133,6 +134,7 @@ export class InnerMonologueService {
                     required: ['skill'],
                 },
             }];
+            /* eslint-enable @typescript-eslint/naming-convention */
 
             const messages: Anthropic.MessageParam[] = [{ role: 'user', content: userTurn }];
             let toolCalls = 0;

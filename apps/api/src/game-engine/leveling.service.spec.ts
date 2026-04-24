@@ -26,6 +26,7 @@ vi.mock('@nestjs/graphql', () => ({
 }));
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
+    Optional: () => () => {},
 }));
 /* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 

@@ -30,8 +30,8 @@ vi.mock('~/graphql/session', () => ({
 const WorldMapGraphStub = {
     name: 'WorldMapGraph',
     props: ['discoveredNodes', 'frontierNodes', 'edges', 'currentLocationId', 'previousNodeIds'],
-    emits: ['nodeSelect'],
-    template: '<div data-testid="world-map-graph" @click="$emit(\'nodeSelect\', \'42\', \'Destination\')"></div>',
+    emits: ['node-select'],
+    template: '<div data-testid="world-map-graph" @click="$emit(\'node-select\', \'42\', \'Destination\')"></div>',
 };
 
 const globalStubs = {
@@ -82,24 +82,53 @@ function makeMapData(overrides: Record<string, unknown> = {}) {
     };
 }
 
+function makeDiaryConnection(entries: Array<{ id: string; content: string }>, hasNextPage = false, endCursor: string | null = null) {
+    return {
+        diaryEntries: {
+            edges: entries.map((entry) => ({
+                cursor: `cursor-${entry.id}`,
+                node: {
+                    id: entry.id,
+                    campaignId: '1',
+                    entryType: 'DAILY',
+                    inGameDate: `Day ${entry.id}`,
+                    content: entry.content,
+                    createdAt: '2026-04-24T00:00:00.000Z',
+                },
+            })),
+            pageInfo: { hasNextPage, endCursor },
+        },
+    };
+}
+
 function setupMocks(options: {
     mapData?: Record<string, unknown> | null
     activeSession?: Record<string, unknown> | null
     sendPlayerInputResult?: Record<string, unknown>
     startSessionResult?: Record<string, unknown>
+    diaryInitialData?: Record<string, unknown> | null
+    diaryNextData?: Record<string, unknown> | null
 } = {}) {
     const {
         mapData = makeMapData(),
         activeSession = { id: 'sess-1', campaignId: '1' },
         sendPlayerInputResult = { data: { sendPlayerInput: true }, error: null },
         startSessionResult = { data: { startSession: { id: 'sess-new' } }, error: null },
+        diaryInitialData = null,
+        diaryNextData = null,
     } = options;
 
     const executeQuery = vi.fn();
+    const diaryData = ref(diaryInitialData);
+    let diaryVariables: { value: { after?: string | null } } | null = null;
+    const executeDiaryQuery = vi.fn().mockImplementation(() => {
+        diaryData.value = diaryNextData;
+        return Promise.resolve({ data: diaryNextData });
+    });
     const sendMutation = vi.fn().mockResolvedValue(sendPlayerInputResult);
     const startSessionMutation = vi.fn().mockResolvedValue(startSessionResult);
 
-    vi.mocked(useQuery).mockImplementation(({ query }: { query: unknown }) => {
+    vi.mocked(useQuery).mockImplementation(({ query, variables }: { query: unknown; variables?: unknown }) => {
         if (query === 'WORLD_MAP_QUERY') {
             return {
                 data: ref(mapData),
@@ -107,6 +136,7 @@ function setupMocks(options: {
                 executeQuery,
             } as never;
         }
+
         if (query === 'ACTIVE_SESSION_QUERY') {
             return {
                 data: ref(activeSession ? { activeSession } : { activeSession: null }),
@@ -114,6 +144,16 @@ function setupMocks(options: {
                 executeQuery: vi.fn(),
             } as never;
         }
+
+        if (query === 'DIARY_ENTRIES_QUERY') {
+            diaryVariables = variables as { value: { after?: string | null } };
+            return {
+                data: diaryData,
+                fetching: ref(false),
+                executeQuery: executeDiaryQuery,
+            } as never;
+        }
+
         return {
             data: ref(null),
             fetching: ref(false),
@@ -127,7 +167,13 @@ function setupMocks(options: {
             : sendMutation,
     } as never));
 
-    return { executeQuery, sendMutation, startSessionMutation };
+    return {
+        executeQuery,
+        sendMutation,
+        startSessionMutation,
+        executeDiaryQuery,
+        getDiaryVariables: () => diaryVariables,
+    };
 }
 
 describe('WorldPage', () => {
@@ -203,7 +249,7 @@ describe('WorldPage', () => {
 
         await flushPromises();
 
-        // Simulate the map component emitting nodeSelect for node '42' (not current '10')
+        // Simulate the map component emitting node-select for node '42' (not current '10')
         const mapGraph = wrapper.find('[data-testid="world-map-graph"]');
         await mapGraph.trigger('click');
         await flushPromises();
@@ -231,8 +277,8 @@ describe('WorldPage', () => {
 
         // Click the Travel button (the second stub-button in the modal)
         const buttons = wrapper.findAll('.stub-button');
-        const travelBtn = buttons.find((b) => b.text().includes('Travel'));
-        await travelBtn?.trigger('click');
+        const travelButton = buttons.find((b) => b.text().includes('Travel'));
+        await travelButton?.trigger('click');
         await flushPromises();
 
         expect(sendMutation).toHaveBeenCalledWith(
@@ -258,8 +304,8 @@ describe('WorldPage', () => {
         await flushPromises();
 
         const buttons = wrapper.findAll('.stub-button');
-        const travelBtn = buttons.find((b) => b.text().includes('Travel'));
-        await travelBtn?.trigger('click');
+        const travelButton = buttons.find((b) => b.text().includes('Travel'));
+        await travelButton?.trigger('click');
         await flushPromises();
 
         expect(wrapper.html()).toContain('Failed to submit');
@@ -282,11 +328,40 @@ describe('WorldPage', () => {
         await flushPromises();
 
         const buttons = wrapper.findAll('.stub-button');
-        const travelBtn = buttons.find((b) => b.text().includes('Travel'));
-        await travelBtn?.trigger('click');
+        const travelButton = buttons.find((b) => b.text().includes('Travel'));
+        await travelButton?.trigger('click');
         await flushPromises();
 
         expect(startSessionMutation).toHaveBeenCalled();
         expect(sendMutation).toHaveBeenCalled();
+    });
+
+    it('loads older diary entries with the next cursor', async () => {
+        const initialEntries = Array.from({ length: 7 }, (_value, index) => ({
+            id: String(index + 1),
+            content: `Recent entry ${String(index + 1)}`,
+        }));
+        const { executeDiaryQuery, getDiaryVariables } = setupMocks({
+            diaryInitialData: makeDiaryConnection(initialEntries, true, 'cursor-7'),
+            diaryNextData: makeDiaryConnection([{ id: '8', content: 'Older entry from cursor' }], false, null),
+        });
+
+        const wrapper = mount(WorldPage, {
+            global: { stubs: globalStubs },
+        });
+
+        await flushPromises();
+
+        const showOlderButton = wrapper.findAll('.stub-button').find((button) => button.text().includes('Show older'));
+        await showOlderButton?.trigger('click');
+        await flushPromises();
+
+        const loadMoreButton = wrapper.findAll('.stub-button').find((button) => button.text().includes('Load more diary entries'));
+        await loadMoreButton?.trigger('click');
+        await flushPromises();
+
+        expect(executeDiaryQuery).toHaveBeenCalledWith({ requestPolicy: 'network-only' });
+        expect(getDiaryVariables()?.value.after).toBe('cursor-7');
+        expect(wrapper.html()).toContain('Older entry from cursor');
     });
 });

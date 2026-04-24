@@ -26,6 +26,7 @@ vi.mock('@nestjs/graphql', () => ({
 }));
 vi.mock('@nestjs/common', () => ({
     Injectable: () => () => {},
+    Optional: () => () => {},
 }));
 vi.mock('@nestjs/event-emitter', () => ({
     EventEmitter2: class EventEmitter2 {

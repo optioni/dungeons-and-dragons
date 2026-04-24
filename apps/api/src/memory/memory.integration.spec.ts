@@ -165,7 +165,7 @@ describe('MemoryService integration', () => {
 
             expect(entries.length).toBe(3);
             // Newest first: Day 3 should appear before Day 1
-            const dates = entries.map((e) => e.inGameDate);
+            const dates = entries.map((entry) => entry.inGameDate);
             expect(dates[0]).toBe('Day 3');
             expect(dates[2]).toBe('Day 1');
         });

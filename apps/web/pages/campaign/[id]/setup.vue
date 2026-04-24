@@ -27,8 +27,8 @@
 
             <u-button block
                 icon="i-lucide-play"
-                @click="router.push('/')">
-                Go to Dashboard
+                @click="router.push(`/campaign/${campaignId}/play`)">
+                Start Playing
             </u-button>
         </div>
 
@@ -788,7 +788,7 @@ async function submitGenerateWorldSeed(): Promise<void> {
         }
 
         await refetchCampaign({ requestPolicy: 'network-only' });
-        // Redirect handled by template (READY_TO_PLAY shows the complete screen)
+        await router.push(`/campaign/${campaignId.value}/play`);
     } finally {
         submitting.value = false;
     }

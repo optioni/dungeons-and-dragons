@@ -32,7 +32,7 @@ vi.mock('@nestjs/graphql', () => ({
     Scalar: () => () => {},
     registerEnumType: () => {},
 }));
-vi.mock('@nestjs/common', () => ({ Injectable: () => () => {} }));
+vi.mock('@nestjs/common', () => ({ Injectable: () => () => {}, Optional: () => () => {} }));
 /* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-extraneous-class, symbol-description */
 
 describe('dungeon navigation handlers', () => {

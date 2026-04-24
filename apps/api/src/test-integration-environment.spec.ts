@@ -16,13 +16,13 @@ import {
 
 describe('integration test environment handoff', () => {
     const originalEnvironment = { ...process.env };
-    const tempDir = mkdtempSync(join(tmpdir(), 'dnd-api-integration-env-'));
-    const environmentPath = join(tempDir, 'env.json');
+    const temporaryDirectory = mkdtempSync(join(tmpdir(), 'dnd-api-integration-env-'));
+    const environmentPath = join(temporaryDirectory, 'env.json');
 
     afterEach(() => {
         process.env = { ...originalEnvironment };
         rmSync(environmentPath, { force: true });
-        mkdirSync(tempDir, { recursive: true });
+        mkdirSync(temporaryDirectory, { recursive: true });
     });
 
     it('writes and loads dynamic database and Redis URLs', () => {
@@ -30,10 +30,12 @@ describe('integration test environment handoff', () => {
         delete process.env['DATABASE_URL'];
         delete process.env['REDIS_URL'];
 
+        /* eslint-disable @typescript-eslint/naming-convention */
         writeIntegrationTestEnvironment({
             DATABASE_URL: 'postgresql://test:test@localhost:15432/test',
             REDIS_URL: 'redis://localhost:16379',
         });
+        /* eslint-enable @typescript-eslint/naming-convention */
         loadIntegrationTestEnvironment();
 
         expect(process.env['DATABASE_URL']).toBe('postgresql://test:test@localhost:15432/test');
@@ -50,10 +52,12 @@ describe('integration test environment handoff', () => {
     it('removes generated handoff state', () => {
         process.env['INTEGRATION_TEST_ENV_FILE'] = environmentPath;
 
+        /* eslint-disable @typescript-eslint/naming-convention */
         writeIntegrationTestEnvironment({
             DATABASE_URL: 'postgresql://test:test@localhost:15432/test',
             REDIS_URL: 'redis://localhost:16379',
         });
+        /* eslint-enable @typescript-eslint/naming-convention */
         removeIntegrationTestEnvironment();
         delete process.env['DATABASE_URL'];
         delete process.env['REDIS_URL'];
@@ -72,6 +76,6 @@ describe('integration test environment handoff', () => {
     });
 
     afterAll(() => {
-        rmSync(tempDir, { recursive: true, force: true });
+        rmSync(temporaryDirectory, { recursive: true, force: true });
     });
 });

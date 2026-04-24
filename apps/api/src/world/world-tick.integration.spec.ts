@@ -13,11 +13,11 @@ import { EmbeddingService } from '../memory/embedding.service';
 import { DiaryEntry } from '../memory/entities/diary-entry.entity';
 import { Memory } from '../memory/entities/memory.entity';
 import { MemoryService } from '../memory/memory.service';
+import { QuestEntity } from '../quest/entities/quest-entity.entity';
 import {
     getRequiredIntegrationDatabaseUrl,
     getRequiredIntegrationRedisUrl,
 } from '../test-integration-environment.js';
-import { QuestEntity } from '../quest/entities/quest-entity.entity';
 import { Faction } from './entities/faction.entity';
 import { LocationDiscovery } from './entities/location-discovery.entity';
 import { Location } from './entities/location.entity';

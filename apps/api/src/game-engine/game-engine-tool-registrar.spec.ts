@@ -11,6 +11,19 @@ function makeMock(): ReturnType<typeof vi.fn> {
     return vi.fn();
 }
 
+function makeToolHandlerMocks() {
+    return [
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+    ] as const;
+}
+
 describe('GameEngineToolRegistrar — trigger_catastrophe exclusion', () => {
     let registry: ToolRegistry;
     let registrar: GameEngineToolRegistrar;
@@ -71,6 +84,7 @@ describe('GameEngineToolRegistrar — trigger_catastrophe exclusion', () => {
             { endCampaign: vi.fn().mockResolvedValue({ ended: true }) } as never,
             { publish: vi.fn() } as never,
             { exists: vi.fn().mockResolvedValue(0) } as never,
+            ...makeToolHandlerMocks(),
         );
 
         registrar.onModuleInit();
@@ -204,6 +218,7 @@ describe('GameEngineToolRegistrar — auto-checker integration', () => {
             { endCampaign: vi.fn().mockResolvedValue({ ended: true }) } as never,
             { publish: vi.fn() } as never,
             { exists: vi.fn().mockResolvedValue(0) } as never,
+            ...makeToolHandlerMocks(),
         );
         registrar.onModuleInit();
     });
@@ -356,6 +371,7 @@ describe('GameEngineToolRegistrar — update_campaign_settings', () => {
             { endCampaign: vi.fn().mockResolvedValue({ ended: true }) } as never,
             { publish: vi.fn() } as never,
             { exists: vi.fn().mockResolvedValue(0) } as never,
+            ...makeToolHandlerMocks(),
         );
         registrar.onModuleInit();
     });
@@ -488,6 +504,7 @@ describe('GameEngineToolRegistrar — end_campaign tool', () => {
             campaignService as never,
             streamPublisher as never,
             { exists: vi.fn().mockResolvedValue(0) } as never,
+            ...makeToolHandlerMocks(),
         );
         registrar.onModuleInit();
     });
@@ -675,6 +692,7 @@ describe('GameEngineToolRegistrar — permadeath auto-end', () => {
             campaignService as never,
             streamPublisher as never,
             redis as never,
+            ...makeToolHandlerMocks(),
         );
         registrar.onModuleInit();
 

@@ -29,6 +29,7 @@ import { Migration20260420103919PermadeathCampaignEnd } from './migrations/Migra
 import { Migration20260421000000 } from './migrations/Migration20260421000000.js';
 import { Migration20260421120000 } from './migrations/Migration20260421120000.js';
 import { Migration20260423000000 } from './migrations/Migration20260423000000.js';
+import { Migration20260424000000 } from './migrations/Migration20260424000000.js';
 import { SrdClass } from './srd/entities/srd-class.entity.js';
 import { SrdCondition } from './srd/entities/srd-condition.entity.js';
 import { SrdEquipment } from './srd/entities/srd-equipment.entity.js';
@@ -60,6 +61,7 @@ const MIGRATIONS = [
     Migration20260421000000,
     Migration20260421120000,
     Migration20260423000000,
+    Migration20260424000000,
 ];
 
 type Teardown = () => Promise<void>;
@@ -86,10 +88,12 @@ export default async function setup(): Promise<Teardown> {
     const redisUrl = redis.getConnectionUrl();
     process.env['DATABASE_URL'] = databaseUrl;
     process.env['REDIS_URL'] = redisUrl;
+    /* eslint-disable @typescript-eslint/naming-convention */
     writeIntegrationTestEnvironment({
         DATABASE_URL: databaseUrl,
         REDIS_URL: redisUrl,
     });
+    /* eslint-enable @typescript-eslint/naming-convention */
 
     const orm = await createMigratingOrm(databaseUrl);
 

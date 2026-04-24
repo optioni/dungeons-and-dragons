@@ -233,8 +233,7 @@ function resumeSetup(id: string): void {
 }
 
 function playCampaign(id: string): void {
-    // TODO: navigate to campaign gameplay route once SessionModule exists
-    void router.push(`/campaign/${id}/setup`);
+    void router.push(`/campaign/${id}/play`);
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

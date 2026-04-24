@@ -56,6 +56,19 @@ function makeNpcMemoryService() {
     };
 }
 
+function makeToolHandlerMocks() {
+    return [
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+    ] as const;
+}
+
 function makeEm(campaignDate = 'Day 3') {
     const mockSession = { id: 1, campaign: { id: 10 } };
     const mockCharacter = { id: 5 };
@@ -120,6 +133,7 @@ function makeRegistrar(
         { endCampaign: vi.fn() } as never,
         { publish: vi.fn() } as never,
         { exists: vi.fn().mockResolvedValue(0) } as never,
+        ...makeToolHandlerMocks(),
     );
     registrar.onModuleInit();
 

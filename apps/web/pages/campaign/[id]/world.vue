@@ -728,18 +728,28 @@ const diaryPageInfo = ref<{ hasNextPage: boolean; endCursor: string | null } | n
 const showOlderDiary = ref(false);
 const diaryLoadingMore = ref(false);
 const diarySearch = ref('');
+const diaryAfter = ref<string | null>(null);
+const diaryAppending = ref(false);
 
-const { data: diaryData, fetching: diaryFetching } = useQuery({
+const { data: diaryData, fetching: diaryFetching, executeQuery: refetchDiary } = useQuery({
     query: DIARY_ENTRIES_QUERY,
-    variables: computed(() => ({ campaignId: campaignId.value, first: 20 })),
+    variables: computed(() => ({
+        campaignId: campaignId.value,
+        first: 20,
+        after: diaryAfter.value,
+    })),
 });
 
 watch(diaryData, (data) => {
     if (!data) return;
     const edges = data.diaryEntries?.edges ?? [];
-    allDiaryEntries.value = edges.map((edge) => edge.node);
+    const entries = edges.map((edge) => edge.node);
+    allDiaryEntries.value = diaryAppending.value
+        ? [...allDiaryEntries.value, ...entries]
+        : entries;
     diaryPageInfo.value = data.diaryEntries?.pageInfo ?? null;
-});
+    diaryAppending.value = false;
+}, { immediate: true });
 
 const filteredDiaryEntries = computed(() => {
     const q = diarySearch.value.trim().toLowerCase();
@@ -756,8 +766,14 @@ const filteredOlderDiary = computed(() => filteredDiaryEntries.value.slice(DIARY
 async function loadMoreDiary(): Promise<void> {
     if (!diaryPageInfo.value?.endCursor || diaryLoadingMore.value) return;
     diaryLoadingMore.value = true;
-    // Re-query with next cursor — placeholder for cursor pagination implementation
-    diaryLoadingMore.value = false;
+    diaryAppending.value = true;
+    diaryAfter.value = diaryPageInfo.value.endCursor;
+
+    try {
+        await refetchDiary({ requestPolicy: 'network-only' });
+    } finally {
+        diaryLoadingMore.value = false;
+    }
 }
 
 // ── World Events ──────────────────────────────────────────────────────────
