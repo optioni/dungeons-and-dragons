@@ -2,6 +2,8 @@
 import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
 import { defineConfig, type EntityManager } from '@mikro-orm/postgresql';
+import { LazyMetadataStorage } from '@nestjs/graphql/dist/schema-builder/storages/lazy-metadata.storage.js';
+import { TypeMetadataStorage } from '@nestjs/graphql/dist/schema-builder/storages/type-metadata.storage.js';
 import {
     afterEach, beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -74,10 +76,10 @@ describe('MemoryService integration', () => {
 
     afterEach(async () => {
         const conn = em.getConnection();
-        await conn.execute('DELETE FROM diary_entry WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM memory WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM campaign WHERE id = $1', [campaignId]);
-        await conn.execute('DELETE FROM "user" WHERE id = $1', [userId]);
+        await conn.execute('DELETE FROM diary_entry WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM memory WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM campaign WHERE id = ?', [campaignId]);
+        await conn.execute('DELETE FROM "user" WHERE id = ?', [userId]);
         await orm.close();
     });
 
@@ -117,14 +119,14 @@ describe('MemoryService integration', () => {
                 campaignId,
                 SubjectType.NPC,
                 'The goblin chief has a distinctive scar across his face.',
-                'npc-uuid-001',
+                '00000000-0000-4000-8000-000000000001',
             );
 
             const fork = em.fork();
             const memory = await fork.findOne(Memory, { campaign: { id: campaignId } });
             expect(memory).not.toBeNull();
             expect(memory!.subjectType).toBe(SubjectType.NPC);
-            expect(memory!.subjectId).toBe('npc-uuid-001');
+            expect(memory!.subjectId).toBe('00000000-0000-4000-8000-000000000001');
             expect(memory!.content).toContain('goblin chief');
         });
     });
@@ -146,6 +148,75 @@ describe('MemoryService integration', () => {
             const types = results.map((result) => result.type);
             expect(types).toContain('diary');
             expect(types).toContain('fact');
+        });
+    });
+
+    // ── 2.2: getRecentDiaryEntries ordering and owner scoping ─────────────────
+    describe('getRecentDiaryEntries', () => {
+        it('returns entries newest-first up to the requested limit', async () => {
+            const service = buildService(em.fork());
+
+            // Write three entries — each flush increments createdAt slightly
+            await service.writeDiaryEntry(campaignId, 'Day 1', []);
+            await service.writeDiaryEntry(campaignId, 'Day 2', []);
+            await service.writeDiaryEntry(campaignId, 'Day 3', []);
+
+            const entries = await service.getRecentDiaryEntries(campaignId, 10);
+
+            expect(entries.length).toBe(3);
+            // Newest first: Day 3 should appear before Day 1
+            const dates = entries.map((e) => e.inGameDate);
+            expect(dates[0]).toBe('Day 3');
+            expect(dates[2]).toBe('Day 1');
+        });
+
+        it('respects the limit argument', async () => {
+            const service = buildService(em.fork());
+
+            await service.writeDiaryEntry(campaignId, 'Day 1', []);
+            await service.writeDiaryEntry(campaignId, 'Day 2', []);
+            await service.writeDiaryEntry(campaignId, 'Day 3', []);
+
+            const entries = await service.getRecentDiaryEntries(campaignId, 2);
+            expect(entries.length).toBe(2);
+        });
+
+        it('returns empty list for a campaign with no diary entries', async () => {
+            // Use a fresh campaign that has no entries
+            const freshEm = em.fork();
+            const user = freshEm.create(User, { email: `diary-scope-${Date.now()}@test.com`, passwordHash: 'x' });
+            freshEm.persist(user);
+            await freshEm.flush();
+
+            const otherCampaign = freshEm.create(Campaign, { userId: user.id, name: 'Other' });
+            freshEm.persist(otherCampaign);
+            await freshEm.flush();
+
+            const entries = await buildService(freshEm.fork()).getRecentDiaryEntries(otherCampaign.id, 10);
+            expect(entries).toHaveLength(0);
+
+            await freshEm.nativeDelete(Campaign, { id: otherCampaign.id });
+            await freshEm.nativeDelete(User, { id: user.id });
+        });
+    });
+
+    // ── 2.4: DiaryEntry does not expose embedding field via GraphQL ───────────
+    describe('DiaryEntry GraphQL type safety', () => {
+        it('does not expose embedding on the DiaryEntry GraphQL object type', async () => {
+            const service = buildService(em.fork());
+            await service.writeDiaryEntry(campaignId, 'Day 10', []);
+
+            const entry = await em.fork().findOne(DiaryEntry, { campaign: { id: campaignId } });
+            expect(entry).not.toBeNull();
+
+            LazyMetadataStorage.load([DiaryEntry]);
+            TypeMetadataStorage.compile([DiaryEntry]);
+            const objectType = TypeMetadataStorage.getObjectTypeMetadataByTarget(DiaryEntry);
+            const exposedFields = objectType?.properties?.map((property) => property.name) ?? [];
+
+            expect((entry as unknown as Record<string, unknown>)['embedding']).toEqual(FIXED_EMBEDDING);
+            expect(exposedFields).toContain('content');
+            expect(exposedFields).not.toContain('embedding');
         });
     });
 
