@@ -4,6 +4,7 @@ import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 
 import { NpcPartyStatus } from '../world.enums.js';
+import { NpcRelationship } from './npc-relationship.entity.js';
 
 /**
  * A non-player character in the campaign world. Antagonists are stored here as normal
@@ -93,4 +94,11 @@ export class Npc extends BaseEntity {
     @Field({ nullable: true })
     @Property({ type: 'datetime', nullable: true })
     lastConversedAt: Date | null = null;
+
+    /**
+     * Relationships where this NPC is the source. Populated on demand by the
+     * `npc(id)` resolver; not persisted as a MikroORM collection.
+     */
+    @Field(() => [NpcRelationship], { nullable: true })
+    relationships?: NpcRelationship[];
 }
