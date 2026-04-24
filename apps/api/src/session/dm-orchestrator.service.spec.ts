@@ -51,6 +51,7 @@ describe('DmOrchestrator', () => {
     let sessionService: Record<string, ReturnType<typeof vi.fn>>;
     let contextLoader: Record<string, ReturnType<typeof vi.fn>>;
     let toolRegistry: Record<string, ReturnType<typeof vi.fn>>;
+    let innerMonologueService: Record<string, ReturnType<typeof vi.fn>>;
     let streamPublisher: Record<string, ReturnType<typeof vi.fn>>;
     let mockAnthropicMessages: Record<string, ReturnType<typeof vi.fn>>;
     let em: Record<string, ReturnType<typeof vi.fn>>;
@@ -76,6 +77,10 @@ describe('DmOrchestrator', () => {
 
         toolRegistry = {
             dispatch: vi.fn().mockResolvedValue({ success: true }),
+        };
+
+        innerMonologueService = {
+            runIfApplicable: vi.fn().mockResolvedValue(undefined),
         };
 
         streamPublisher = {
@@ -120,6 +125,7 @@ describe('DmOrchestrator', () => {
         orchestrator = new DmOrchestrator(
             sessionService as never,
             contextLoader as never,
+            innerMonologueService as never,
             toolRegistry as never,
             streamPublisher as never,
             em as never,
@@ -418,6 +424,7 @@ describe('DmOrchestrator', () => {
         orchestrator = new DmOrchestrator(
             sessionService as never,
             contextLoader as never,
+            innerMonologueService as never,
             toolRegistry as never,
             streamPublisher as never,
             em as never,

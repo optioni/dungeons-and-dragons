@@ -22,7 +22,7 @@ import { StreamPublisher } from './stream-publisher.service.js';
         GraphqlModule,
         MikroOrmModule.forFeature([GameSession, GameEvent]),
         forwardRef(() => CampaignModule),
-        LlmModule,
+        forwardRef(() => LlmModule),
         WorldModule,
     ],
     providers: [

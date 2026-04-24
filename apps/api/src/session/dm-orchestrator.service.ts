@@ -6,7 +6,9 @@ import { ConfigService } from '@nestjs/config';
 import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { ContextLoader } from '../llm/context-loader.service.js';
+import { InnerMonologueService } from '../llm/inner-monologue.service.js';
 import { ToolRegistry } from '../llm/tool-registry.service.js';
+import { Character } from '../character/entities/character.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { NpcMemoryService } from '../world/npc-memory.service.js';
 import { DmStreamChunkType } from './dto/dm-stream-chunk.dto.js';
@@ -107,6 +109,7 @@ export class DmOrchestrator {
     constructor(
         private readonly sessionService: SessionService,
         private readonly contextLoader: ContextLoader,
+        private readonly innerMonologueService: InnerMonologueService,
         private readonly toolRegistry: ToolRegistry,
         private readonly streamPublisher: StreamPublisher,
         private readonly em: EntityManager,
@@ -134,7 +137,8 @@ export class DmOrchestrator {
 
         const baseBlock = this.contextLoader.loadBaseBlock(sceneType);
         const campaignBlock = await this.contextLoader.loadCampaignBlock(campaignId);
-        const worldBlock = await this.contextLoader.loadWorldBlock(campaignId, undefined, npcMemories);
+        const character = await this.em.findOne(Character, { campaign: { id: campaignId } } as never);
+        const worldBlock = await this.contextLoader.loadWorldBlock(campaignId, character?.id, npcMemories);
         const historyMessages = await this.contextLoader.loadHistoryBlock(sessionId);
 
         // historyMessages includes the player input we just persisted as the last item;
@@ -181,6 +185,7 @@ export class DmOrchestrator {
             }
 
             this.streamPublisher.publish(sessionId, { type: DmStreamChunkType.DONE });
+            await this.innerMonologueService.runIfApplicable(sessionId, sceneType, narrativeRef.text);
         }
     }
 

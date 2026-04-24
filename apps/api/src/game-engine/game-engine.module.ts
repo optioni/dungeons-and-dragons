@@ -68,7 +68,7 @@ import { WorldMutationService } from './world-mutation.service.js';
             Quest,
             WorldEvent,
         ]),
-        LlmModule,
+        forwardRef(() => LlmModule),
         MemoryModule,
         QueueModule,
         QuestModule,
