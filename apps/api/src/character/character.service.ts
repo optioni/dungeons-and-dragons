@@ -271,6 +271,25 @@ export class CharacterService {
     }
 
     /**
+     * Finds the character for a campaign the authenticated user owns.
+     * @throws NotFoundException if not found or user does not own the campaign.
+     */
+    async findByCampaignId(campaignId: number, userId: number): Promise<Character> {
+        const em = this.characterRepository.getEntityManager();
+        const character = await em.findOne(
+            Character,
+            { campaign: { id: campaignId } },
+            { populate: ['race', 'srdClass', 'campaign'] as Populate<Character, 'race' | 'srdClass' | 'campaign'> },
+        );
+
+        if (!character || character.campaign.userId !== userId) {
+            throw new NotFoundException('Character not found');
+        }
+
+        return character;
+    }
+
+    /**
      * Finds a character by ID, verifying the authenticated user owns the campaign it belongs to.
      * @throws NotFoundException if not found or user does not own the campaign.
      */

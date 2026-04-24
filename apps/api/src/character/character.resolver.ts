@@ -42,6 +42,18 @@ export class CharacterResolver {
     }
 
     /**
+     * Returns the character for the campaign the authenticated user owns.
+     * Supports info-page navigation without requiring the player to know the character id.
+     */
+    @Query(() => Character)
+    async characterByCampaign(
+        @Args('campaignId', { type: () => ID }) campaignId: string,
+        @CurrentUser() user: User,
+    ): Promise<Character> {
+        return this.characterService.findByCampaignId(Number(campaignId), user.id);
+    }
+
+    /**
      * Returns all inventory items for a character the authenticated user owns.
      */
     @Query(() => [CharacterItem])

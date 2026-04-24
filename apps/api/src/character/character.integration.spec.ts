@@ -282,6 +282,50 @@ describe('CharacterService integration', () => {
         });
     });
 
+    // Task 2.1 — characterByCampaign owner and non-owner behavior
+    describe('findByCampaignId', () => {
+        it('returns the campaign character for the owning user', async () => {
+            const character = await service.create(
+                {
+                    name: 'SheetHero',
+                    raceId: testRace.id,
+                    classId: testClass.id,
+                    campaignId: testCampaign.id,
+                    abilityScores: STANDARD_ARRAY,
+                },
+                testUser,
+            );
+            createdCharacterIds.push(character.id);
+
+            const found = await service.findByCampaignId(testCampaign.id, testUser.id);
+            expect(found.id).toBe(character.id);
+            expect(found.name).toBe('SheetHero');
+        });
+
+        it('throws NotFoundException when a non-owner requests campaign character data', async () => {
+            const character = await service.create(
+                {
+                    name: 'NonOwnerTarget',
+                    raceId: testRace.id,
+                    classId: testClass.id,
+                    campaignId: testCampaign.id,
+                    abilityScores: STANDARD_ARRAY,
+                },
+                testUser,
+            );
+            createdCharacterIds.push(character.id);
+
+            const em = orm.em.fork();
+            const otherUser = em.create(User, { email: `other-bycampaign-${Date.now()}@example.com`, passwordHash: 'x' });
+            em.persist(otherUser);
+            await em.flush();
+
+            await expect(service.findByCampaignId(testCampaign.id, otherUser.id)).rejects.toThrow('not found');
+
+            await em.nativeDelete(User, { id: otherUser.id });
+        });
+    });
+
     // Task 7.5 — non-owner access → forbidden errors
     describe('ownership verification', () => {
         it('throws NotFoundException for character query by non-owner', async () => {
