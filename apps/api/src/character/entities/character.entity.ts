@@ -57,6 +57,22 @@ export class Character extends BaseEntity {
     @Property({ type: 'jsonb', default: [] })
     preparedSpells: Opt<string[]> = [];
 
+    @Field(() => [String])
+    @Property({ type: 'jsonb', nullable: true, default: [] })
+    personalityTraits: Opt<string[]> = [];
+
+    @Field(() => [String])
+    @Property({ type: 'jsonb', nullable: true, default: [] })
+    ideals: Opt<string[]> = [];
+
+    @Field(() => [String])
+    @Property({ type: 'jsonb', nullable: true, default: [] })
+    bonds: Opt<string[]> = [];
+
+    @Field(() => [String])
+    @Property({ type: 'jsonb', nullable: true, default: [] })
+    flaws: Opt<string[]> = [];
+
     /** Map of all 18 skill names to proficiency level: 'none' | 'proficient' | 'expert'. */
     @Field(() => Object)
     @Property({ type: 'jsonb' })
