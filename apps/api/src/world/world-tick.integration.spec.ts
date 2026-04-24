@@ -151,16 +151,16 @@ describe('WorldTickWorker integration', () => {
         await redis.quit();
 
         const conn = em.getConnection();
-        await conn.execute('DELETE FROM diary_entry WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM npc_memory WHERE npc_id IN (SELECT id FROM npc WHERE campaign_id = $1)', [campaignId]);
-        await conn.execute('DELETE FROM npc_item WHERE npc_id IN (SELECT id FROM npc WHERE campaign_id = $1)', [campaignId]);
-        await conn.execute('DELETE FROM npc_relationship WHERE source_npc_id IN (SELECT id FROM npc WHERE campaign_id = $1)', [campaignId]);
-        await conn.execute('DELETE FROM npc WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM world_event WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM location_discovery WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM location WHERE campaign_id = $1', [campaignId]);
-        await conn.execute('DELETE FROM campaign WHERE id = $1', [campaignId]);
-        await conn.execute('DELETE FROM "user" WHERE id = $1', [userId]);
+        await conn.execute('DELETE FROM diary_entry WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM npc_memory WHERE npc_id IN (SELECT id FROM npc WHERE campaign_id = ?)', [campaignId]);
+        await conn.execute('DELETE FROM npc_item WHERE npc_id IN (SELECT id FROM npc WHERE campaign_id = ?)', [campaignId]);
+        await conn.execute('DELETE FROM npc_relationship WHERE source_npc_id IN (SELECT id FROM npc WHERE campaign_id = ?)', [campaignId]);
+        await conn.execute('DELETE FROM npc WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM world_event WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM location_discovery WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM location WHERE campaign_id = ?', [campaignId]);
+        await conn.execute('DELETE FROM campaign WHERE id = ?', [campaignId]);
+        await conn.execute('DELETE FROM "user" WHERE id = ?', [userId]);
         await orm.close();
     });
 

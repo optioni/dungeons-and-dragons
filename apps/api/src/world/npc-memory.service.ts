@@ -89,12 +89,12 @@ export class NpcMemoryService {
                     in_game_date as "inGameDate",
                     source_npc_id as "sourceNpcId",
                     created_at as "createdAt",
-                    (embedding <=> $1::vector) as score
+                    (embedding <=> ?::vector) as score
              from npc_memory
-             where npc_id = $2
+             where npc_id = ?
                and embedding is not null
              order by score asc
-             limit $3`,
+             limit ?`,
             [`[${embedding.join(',')}]`, npcId, effectiveLimit],
         );
 

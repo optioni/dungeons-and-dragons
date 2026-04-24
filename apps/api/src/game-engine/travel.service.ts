@@ -77,7 +77,7 @@ export class TravelService {
 
         const conn = this.em.getConnection();
         const rows = await conn.execute<MonsterRow[]>(
-            'SELECT id, name, hit_points, challenge_rating FROM srd_monster WHERE challenge_rating >= $1 AND challenge_rating <= $2 ORDER BY RANDOM() LIMIT $3',
+            'SELECT id, name, hit_points, challenge_rating FROM srd_monster WHERE challenge_rating >= ? AND challenge_rating <= ? ORDER BY RANDOM() LIMIT ?',
             [minCR, maxCR, count],
             'all',
         );
