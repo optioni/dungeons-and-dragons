@@ -5,6 +5,7 @@
 | Tier | Change | Blocked by |
 |------|--------|------------|
 | 0 ✓ | `srd-seed` | nothing |
+| 0 ✓ | `testcontainers-integration-tests` | nothing |
 | 1 ✓ | `character-system` | srd-seed |
 | 1 ✓ | `campaign-setup` | srd-seed, auth ✓ |
 | 2 ✓ | `session-and-llm` | campaign-setup, character-system, auth ✓ |
