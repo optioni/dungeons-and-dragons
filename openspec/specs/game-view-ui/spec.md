@@ -47,6 +47,8 @@ The main gameplay view SHALL include:
 
 The route SHALL disable duplicate sends while a turn is already in progress for the active session. The route SHALL also disable the standard player input while a blocking play-state overlay such as level-up or spell preparation is open. When the player taps a suggested action chip, the route SHALL pre-fill the current text input with that action rather than auto-submitting it.
 
+The play route SHALL also accept controlled travel requests initiated from the world map. When the world page confirms travel to a discovered location, the request SHALL be sent through the active session's player-input flow so the DM session can narrate and invoke the existing `travel_to` tool. The play UI SHALL process the resulting stream, tool results, encounters, quest auto-checks, transcript reconciliation, and state refreshes through the same path as any other player turn.
+
 #### Scenario: Player can submit a turn from the play route
 - **WHEN** the player enters non-empty text and submits it while no turn is in progress
 - **THEN** the UI calls the player-input mutation and shows the submitted text in the transcript
@@ -66,6 +68,14 @@ The route SHALL disable duplicate sends while a turn is already in progress for 
 #### Scenario: Blocking overlays disable freeform input
 - **WHEN** the play route shows a level-up or spell-preparation overlay
 - **THEN** the standard text input and send control are disabled until that blocking flow resolves
+
+#### Scenario: Travel request from world map enters session flow
+- **WHEN** the player confirms travel to a discovered location from the world map
+- **THEN** the web app submits a controlled player input for the active session instead of calling `travel_to` directly from the browser
+
+#### Scenario: Travel stream updates play state
+- **WHEN** the DM session resolves a world-map travel request through the existing `travel_to` tool
+- **THEN** the play route handles streamed narrative, tool results, encounter state, quest updates, transcript reconciliation, and durable state refreshes through the normal turn-completion flow
 
 ### Requirement: The character sidebar reflects durable gameplay state
 The play route SHALL render a sidebar containing at least the character's name, HP, max HP, AC, level, active conditions, and spell-slot summary when applicable. The sidebar SHALL update from durable server state rather than inferring long-lived character state from narrative text.
