@@ -14,6 +14,13 @@
 
                 <div class="flex gap-3 ml-auto">
                     <nuxt-link
+                        :to="`/campaign/${campaignId}/quests`"
+                        class="text-primary-400 font-medium text-sm"
+                    >
+                        Quests
+                    </nuxt-link>
+
+                    <nuxt-link
                         :to="`/campaign/${campaignId}/character`"
                         class="text-gray-400 hover:text-white transition-colors text-sm"
                     >
@@ -21,10 +28,10 @@
                     </nuxt-link>
 
                     <nuxt-link
-                        :to="`/campaign/${campaignId}/quests`"
-                        class="text-primary-400 font-medium text-sm"
+                        :to="`/campaign/${campaignId}/world`"
+                        class="text-gray-400 hover:text-white transition-colors text-sm"
                     >
-                        Quests
+                        World
                     </nuxt-link>
                 </div>
             </div>
