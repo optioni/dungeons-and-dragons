@@ -27,11 +27,16 @@ beforeAll(async () => {
         }),
     );
 
-    // Drop and recreate only the SRD tables so the seeder starts from an empty slate.
-    // drop() uses DROP TABLE IF EXISTS so it is safe whether or not tables exist.
-    const generator = sharedOrm.schema;
-    await generator.drop({ wrap: false });
-    await generator.create({ wrap: false });
+    await sharedOrm.em.getConnection().execute(`
+        TRUNCATE TABLE
+            srd_condition,
+            srd_equipment,
+            srd_monster,
+            srd_spell,
+            srd_race,
+            srd_class
+        RESTART IDENTITY CASCADE
+    `);
 
     // Seed data so all tests in this file can rely on it being present
     const em = sharedOrm.em.fork();

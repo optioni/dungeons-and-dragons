@@ -10,10 +10,31 @@ import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { RedisContainer, type StartedRedisContainer } from '@testcontainers/redis';
 
+import { Migration20260413000000 } from './migrations/Migration20260413000000.js';
+import { Migration20260413000001 } from './migrations/Migration20260413000001.js';
+import { Migration20260413000002 } from './migrations/Migration20260413000002.js';
+import { Migration20260414000000 } from './migrations/Migration20260414000000.js';
+import { Migration20260415000000 } from './migrations/Migration20260415000000.js';
+import { Migration20260416000000 } from './migrations/Migration20260416000000.js';
+import { Migration20260417000000 } from './migrations/Migration20260417000000.js';
+import { Migration20260418000000 } from './migrations/Migration20260418000000.js';
+import { Migration20260419000000 } from './migrations/Migration20260419000000.js';
+import { Migration20260419092811 } from './migrations/Migration20260419092811.js';
+import { Migration20260419110000 } from './migrations/Migration20260419110000.js';
+import { Migration20260420000000 } from './migrations/Migration20260420000000.js';
+import { Migration20260420103919PermadeathCampaignEnd } from './migrations/Migration20260420103919PermadeathCampaignEnd.js';
+import { Migration20260421000000 } from './migrations/Migration20260421000000.js';
+import { Migration20260421120000 } from './migrations/Migration20260421120000.js';
+import { Migration20260423000000 } from './migrations/Migration20260423000000.js';
+import { SrdClass } from './srd/entities/srd-class.entity.js';
+import { SrdCondition } from './srd/entities/srd-condition.entity.js';
+import { SrdEquipment } from './srd/entities/srd-equipment.entity.js';
+import { SrdMonster } from './srd/entities/srd-monster.entity.js';
+import { SrdRace } from './srd/entities/srd-race.entity.js';
+import { SrdSpell } from './srd/entities/srd-spell.entity.js';
 import { SrdSeeder } from './srd/srd.seeder.js';
 import {
     removeIntegrationTestEnvironment,
@@ -22,6 +43,24 @@ import {
 
 const PGVECTOR_POSTGRES_IMAGE = 'pgvector/pgvector:pg17';
 const REDIS_IMAGE = 'redis:7-alpine';
+const MIGRATIONS = [
+    Migration20260413000000,
+    Migration20260413000001,
+    Migration20260413000002,
+    Migration20260414000000,
+    Migration20260415000000,
+    Migration20260416000000,
+    Migration20260417000000,
+    Migration20260418000000,
+    Migration20260419000000,
+    Migration20260419092811,
+    Migration20260419110000,
+    Migration20260420000000,
+    Migration20260420103919PermadeathCampaignEnd,
+    Migration20260421000000,
+    Migration20260421120000,
+    Migration20260423000000,
+];
 
 type Teardown = () => Promise<void>;
 
@@ -73,13 +112,10 @@ export default async function setup(): Promise<Teardown> {
 async function createMigratingOrm(databaseUrl: string): Promise<MikroORM> {
     return MikroORM.init(
         defineConfig({
-            metadataProvider: TsMorphMetadataProvider,
             clientUrl: databaseUrl,
-            entities: ['./dist/src/**/*.entity.js'],
-            entitiesTs: ['./src/**/*.entity.ts'],
+            entities: [SrdClass, SrdRace, SrdSpell, SrdMonster, SrdEquipment, SrdCondition],
             migrations: {
-                path: './migrations',
-                pathTs: './src/migrations',
+                migrationsList: MIGRATIONS,
             },
             extensions: [Migrator],
         }),
