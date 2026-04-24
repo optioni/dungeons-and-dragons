@@ -22,7 +22,7 @@
 | 7 ✓ | `character-inner-monologue` | character-system, campaign-setup, session-and-llm |
 | 7 ✓ | `interactive-stream-signals` | session-and-llm, game-engine, permadeath-campaign-end ✓, web-game-view |
 | 8 ✓ | `web-game-view` | session-and-llm, game-engine |
-| 9 | `campaign-info-pages` | character-system, memory-system, game-engine, world-system |
+| 9 ✓ | `campaign-info-pages` | character-system, memory-system, game-engine, world-system |
 | 10 | `web-world-map` | campaign-setup, game-engine, memory-system, campaign-info-pages |
 | 11 | `tui-client` | auth, character-system, campaign-setup, session-and-llm, game-engine |
 | 12 | `ssh-tui-server` | auth, session-and-llm, game-engine, tui-client |
