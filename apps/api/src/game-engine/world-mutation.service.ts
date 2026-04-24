@@ -33,7 +33,7 @@ export class WorldMutationService {
         disposition: string
         currentLocationId: number | null
         agenda: string | null
-        nextTickInGameDate: string | null
+        nextTickInGameDay: number | null
     }>): Promise<WorldOutcome> {
         const npc = await this.em.findOne(Npc, { id: npcId });
         if (!npc) {

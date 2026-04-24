@@ -37,7 +37,7 @@ vi.mock('@nestjs/event-emitter', () => ({
 
 function makeNpc(overrides: Record<string, unknown> = {}) {
     return {
-        id: 1, alive: true, disposition: 'neutral', partyStatus: 'NONE', nextTickInGameDate: '3', ...overrides,
+        id: 1, alive: true, disposition: 'neutral', partyStatus: 'NONE', nextTickInGameDay: 3, ...overrides,
     };
 }
 
@@ -128,13 +128,13 @@ describe('WorldMutationService', () => {
     });
 
     describe('addToParty / removeFromParty', () => {
-        it('sets partyStatus=COMPANION and clears nextTickInGameDate', async () => {
-            const npc = makeNpc({ nextTickInGameDate: 'Day 5' });
+        it('sets partyStatus=COMPANION and clears nextTickInGameDay', async () => {
+            const npc = makeNpc({ nextTickInGameDay: 5 });
             const em = makeEm({ npc });
             const service = new WorldMutationService(em as never, null as never);
             await service.addToParty(1, 10);
             expect(npc.partyStatus).toBe('COMPANION');
-            expect(npc.nextTickInGameDate).toBeNull();
+            expect(npc.nextTickInGameDay).toBeNull();
         });
 
         it('sets partyStatus=NONE on remove', async () => {
