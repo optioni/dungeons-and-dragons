@@ -281,6 +281,81 @@ describe('CombatPanel', () => {
             expect(wrapper.emitted('action')).toBeTruthy();
             expect(wrapper.emitted('action')![0]).toEqual(['I attack with my weapon.']);
         });
+
+        it('each quick action emits a distinct pre-fill text without submitting', async () => {
+            const session = makeCombatSession();
+            const wrapper = mount(CombatPanel, {
+                props: { combatSession: session, isStreaming: false },
+                global: { stubs: globalStubs },
+            });
+
+            const expectedTexts = [
+                'I attack with my weapon.',
+                'I cast a spell.',
+                'I use my action to Dash.',
+                'I take the Dodge action.',
+                'I take an action: ',
+            ];
+            const buttons = wrapper.findAll('.stub-button');
+            expect(buttons).toHaveLength(expectedTexts.length);
+
+            for (let i = 0; i < expectedTexts.length; i++) {
+                await buttons[i]!.trigger('click');
+                expect(wrapper.emitted('action')![i]).toEqual([expectedTexts[i]]);
+            }
+        });
+
+        it('does not auto-submit: emits action event and leaves submission to the parent', async () => {
+            const session = makeCombatSession();
+            const wrapper = mount(CombatPanel, {
+                props: { combatSession: session, isStreaming: false },
+                global: { stubs: globalStubs },
+            });
+
+            await wrapper.findAll('.stub-button')[0]!.trigger('click');
+
+            // Only 'action' is emitted — no 'submit' or similar event
+            expect(wrapper.emitted('action')).toBeTruthy();
+            expect(wrapper.emitted('submit')).toBeFalsy();
+        });
+    });
+
+    describe('combat panel visibility (durable session state)', () => {
+        it('renders given a valid combatSession prop', () => {
+            const session = makeCombatSession();
+            const wrapper = mount(CombatPanel, {
+                props: { combatSession: session },
+                global: { stubs: globalStubs },
+            });
+
+            expect(wrapper.find('.w-72').exists()).toBe(true);
+        });
+
+        it('shows the round number from combatSession', () => {
+            const session = makeCombatSession({ roundNumber: 5 });
+            const wrapper = mount(CombatPanel, {
+                props: { combatSession: session },
+                global: { stubs: globalStubs },
+            });
+
+            expect(wrapper.text()).toContain('Round 5');
+        });
+
+        it('renders all combatants from the session', () => {
+            const session = makeCombatSession({
+                combatants: [
+                    makeCombatant({ id: 'c1', name: 'Aragorn' }),
+                    makeCombatant({ id: 'c2', name: 'Goblin', type: 'NPC' }),
+                ],
+            });
+            const wrapper = mount(CombatPanel, {
+                props: { combatSession: session },
+                global: { stubs: globalStubs },
+            });
+
+            expect(wrapper.text()).toContain('Aragorn');
+            expect(wrapper.text()).toContain('Goblin');
+        });
     });
 
     describe('spell slots section', () => {
