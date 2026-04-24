@@ -29,6 +29,11 @@ const BASE_SYSTEM_PROMPT = `You are the Dungeon Master for a solo D&D 5e campaig
 
 Always use tool calls for mechanical actions (dice rolls, stat changes, scene transitions). Never invent mechanical outcomes in prose.`;
 
+function formatAbilityModifier(score: number): string {
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier >= 0 ? `+${modifier}` : String(modifier);
+}
+
 /**
  * Assembles the four prompt cache blocks for a DM turn, aligned to the four
  * cache breakpoints defined in the prompt caching strategy.
@@ -98,9 +103,52 @@ export class ContextLoader {
         const parts: string[] = [];
 
         if (characterId) {
-            const character = await this.characterRepository.getEntityManager().findOne(Character, characterId);
+            const character = await this.characterRepository.getEntityManager().findOne(
+                Character,
+                characterId,
+                { populate: ['race', 'srdClass'] as never },
+            );
             if (character) {
-                parts.push(`## Character Sheet\nName: ${character.name}\nLevel: ${character.level}\nHP: ${character.hp}/${character.maxHp}\nAC: ${character.ac}\nConditions: ${character.conditions.join(', ') || 'none'}\nSpell Slots: ${JSON.stringify(character.spellSlots)}`);
+                const abilityLines = [
+                    `STR: ${character.abilityScores.STR} (${formatAbilityModifier(character.abilityScores.STR)})`,
+                    `DEX: ${character.abilityScores.DEX} (${formatAbilityModifier(character.abilityScores.DEX)})`,
+                    `CON: ${character.abilityScores.CON} (${formatAbilityModifier(character.abilityScores.CON)})`,
+                    `INT: ${character.abilityScores.INT} (${formatAbilityModifier(character.abilityScores.INT)})`,
+                    `WIS: ${character.abilityScores.WIS} (${formatAbilityModifier(character.abilityScores.WIS)})`,
+                    `CHA: ${character.abilityScores.CHA} (${formatAbilityModifier(character.abilityScores.CHA)})`,
+                ].join(', ');
+
+                const skillProficiencies = Object.entries(character.skillProficiencies)
+                    .filter(([, proficiency]) => proficiency !== 'none')
+                    .map(([skill, proficiency]) => `${skill} (${proficiency})`)
+                    .join(', ');
+
+                parts.push(
+                    [
+                        '## Character Sheet',
+                        `Name: ${character.name}`,
+                        `Race: ${character.race.name}`,
+                        `Class: ${character.srdClass.name}`,
+                        `Level: ${character.level}`,
+                        `HP: ${character.hp}/${character.maxHp}`,
+                        `AC: ${character.ac}`,
+                        `Conditions: ${character.conditions.join(', ') || 'none'}`,
+                        `Spell Slots: ${JSON.stringify(character.spellSlots)}`,
+                        `Ability Scores: ${abilityLines}`,
+                        `Skill Proficiencies: ${skillProficiencies || 'none'}`,
+                    ].join('\n'),
+                );
+
+                const personalitySections = [
+                    character.personalityTraits.length > 0 ? `Traits: ${character.personalityTraits.join('; ')}` : null,
+                    character.ideals.length > 0 ? `Ideals: ${character.ideals.join('; ')}` : null,
+                    character.bonds.length > 0 ? `Bonds: ${character.bonds.join('; ')}` : null,
+                    character.flaws.length > 0 ? `Flaws: ${character.flaws.join('; ')}` : null,
+                ].filter((line): line is string => line !== null);
+
+                if (personalitySections.length > 0) {
+                    parts.push(`## Personality\n${personalitySections.join('\n')}`);
+                }
             }
         }
 

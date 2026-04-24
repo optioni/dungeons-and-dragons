@@ -180,6 +180,110 @@ describe('ContextLoader', () => {
     });
 
     describe('loadWorldBlock — diary entries at breakpoint 3', () => {
+        it('includes expanded character sheet details and personality when present', async () => {
+            em.findOne.mockResolvedValueOnce({
+                id: 7,
+                name: 'Seraphina',
+                level: 4,
+                hp: 22,
+                maxHp: 27,
+                ac: 15,
+                abilityScores: {
+                    STR: 8, DEX: 14, CON: 12, INT: 16, WIS: 13, CHA: 10,
+                },
+                conditions: ['poisoned'],
+                spellSlots: [{ level: 1, total: 4, used: 1 }],
+                skillProficiencies: {
+                    Acrobatics: 'none',
+                    'Animal Handling': 'none',
+                    Arcana: 'expert',
+                    Athletics: 'none',
+                    Deception: 'none',
+                    History: 'proficient',
+                    Insight: 'none',
+                    Intimidation: 'none',
+                    Investigation: 'proficient',
+                    Medicine: 'none',
+                    Nature: 'none',
+                    Perception: 'none',
+                    Performance: 'none',
+                    Persuasion: 'none',
+                    Religion: 'none',
+                    'Sleight of Hand': 'none',
+                    Stealth: 'none',
+                    Survival: 'none',
+                },
+                personalityTraits: ['I notice the details others miss.'],
+                ideals: ['Truth matters more than comfort.'],
+                bonds: ['My mentor deserves answers.'],
+                flaws: ['I overthink every danger.'],
+                race: { name: 'Elf' },
+                srdClass: { name: 'Wizard' },
+            });
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: null });
+
+            const result = await service.loadWorldBlock(1, 7);
+
+            expect(result).toContain('Race: Elf');
+            expect(result).toContain('Class: Wizard');
+            expect(result).toContain('STR: 8 (-1)');
+            expect(result).toContain('INT: 16 (+3)');
+            expect(result).toContain('Skill Proficiencies: Arcana (expert), History (proficient), Investigation (proficient)');
+            expect(result).toContain('## Personality');
+            expect(result).toContain('Traits: I notice the details others miss.');
+            expect(result).toContain('Ideals: Truth matters more than comfort.');
+            expect(result).toContain('Bonds: My mentor deserves answers.');
+            expect(result).toContain('Flaws: I overthink every danger.');
+        });
+
+        it('omits the personality section when all personality arrays are empty', async () => {
+            em.findOne.mockResolvedValueOnce({
+                id: 7,
+                name: 'Tarin',
+                level: 2,
+                hp: 14,
+                maxHp: 14,
+                ac: 13,
+                abilityScores: {
+                    STR: 15, DEX: 12, CON: 14, INT: 10, WIS: 8, CHA: 13,
+                },
+                conditions: [],
+                spellSlots: [],
+                skillProficiencies: {
+                    Acrobatics: 'none',
+                    'Animal Handling': 'none',
+                    Arcana: 'none',
+                    Athletics: 'proficient',
+                    Deception: 'none',
+                    History: 'none',
+                    Insight: 'none',
+                    Intimidation: 'proficient',
+                    Investigation: 'none',
+                    Medicine: 'none',
+                    Nature: 'none',
+                    Perception: 'none',
+                    Performance: 'none',
+                    Persuasion: 'none',
+                    Religion: 'none',
+                    'Sleight of Hand': 'none',
+                    Stealth: 'none',
+                    Survival: 'proficient',
+                },
+                personalityTraits: [],
+                ideals: [],
+                bonds: [],
+                flaws: [],
+                race: { name: 'Human' },
+                srdClass: { name: 'Fighter' },
+            });
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: null });
+
+            const result = await service.loadWorldBlock(1, 7);
+
+            expect(result).not.toContain('## Personality');
+            expect(result).toContain('Skill Proficiencies: Athletics (proficient), Intimidation (proficient), Survival (proficient)');
+        });
+
         it('includes diary entries in the world block when present', async () => {
             memoryService = makeMockMemoryService([
                 { inGameDate: 'Day 2', content: 'The second day was eventful.' },
