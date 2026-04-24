@@ -101,6 +101,48 @@
                         :inner-voice-text="innerVoiceText || undefined" />
                 </div>
 
+                <!-- Death-save status -->
+                <div v-if="isDying"
+                    class="px-6 py-2 border-t border-red-900 bg-red-950/50"
+                    data-testid="death-save-ui">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <u-icon name="i-lucide-skull"
+                                class="text-red-400 text-sm" />
+
+                            <span class="text-xs text-red-300 font-semibold uppercase tracking-wider">Death Saves</span>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs text-gray-400 mr-1">Success</span>
+
+                                <span
+                                    v-for="i in 3"
+                                    :key="`ds${i}`"
+                                    class="w-3 h-3 rounded-full border transition-colors"
+                                    :class="i <= (character?.deathSaveSuccesses ?? 0)
+                                        ? 'bg-green-500 border-green-500'
+                                        : 'bg-transparent border-gray-600'"
+                                />
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs text-gray-400 mr-1">Failure</span>
+
+                                <span
+                                    v-for="i in 3"
+                                    :key="`df${i}`"
+                                    class="w-3 h-3 rounded-full border transition-colors"
+                                    :class="i <= (character?.deathSaveFailures ?? 0)
+                                        ? 'bg-red-500 border-red-500'
+                                        : 'bg-transparent border-gray-600'"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Suggested action chips -->
                 <div v-if="suggestedActions.length"
                     class="px-6 pb-2 flex flex-wrap gap-2">
@@ -646,6 +688,12 @@ const { data: characterData, fetching: characterFetching, executeQuery: refetchC
 });
 
 const character = computed(() => characterData.value?.character ?? null);
+
+const isDying = computed(() => {
+    if (!character.value) return false;
+    return character.value.hp === 0 && !character.value.isDead;
+});
+
 interface SpellOption { index: string; name: string; level: number; classes: string[] }
 
 const { data: spellOptionsData, fetching: spellOptionsFetching } = useQuery({

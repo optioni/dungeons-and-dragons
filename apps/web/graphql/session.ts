@@ -106,6 +106,9 @@ export const CHARACTER_QUERY_FOR_PLAY = `
       conditions
       spellSlots
       preparedSpells
+      deathSaveSuccesses
+      deathSaveFailures
+      isDead
       class {
         name
         index

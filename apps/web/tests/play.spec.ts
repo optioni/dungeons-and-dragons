@@ -32,8 +32,21 @@ interface SessionOverrides {
     combatSession?: object | null
 }
 
+interface CharacterOverrides {
+    hp?: number
+    maxHp?: number
+    isDead?: boolean
+    deathSaveSuccesses?: number
+    deathSaveFailures?: number
+    level?: number
+}
+
 /** Configure useQuery/useMutation/useSubscription mocks for one component mount. */
-function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutation?: ReturnType<typeof vi.fn>) {
+function setupQueryMocks(
+    sessionOverrides: SessionOverrides = {},
+    levelUpMutation?: ReturnType<typeof vi.fn>,
+    characterOverrides: CharacterOverrides = {},
+) {
     const streamRef = ref<any>(null);
     const session = {
         id: 'sess-1',
@@ -79,11 +92,15 @@ function setupQueryMocks(sessionOverrides: SessionOverrides = {}, levelUpMutatio
                     conditions: [],
                     spellSlots: [],
                     preparedSpells: [],
+                    deathSaveSuccesses: 0,
+                    deathSaveFailures: 0,
+                    isDead: false,
                     class: {
                         name: 'Wizard',
                         index: 'wizard',
                         spellcastingAbility: 'INT',
                     },
+                    ...characterOverrides,
                 },
             }),
             fetching: ref(false),
@@ -280,5 +297,64 @@ describe('play page — level-up panel open/close', () => {
         await flushPromises();
 
         expect(wrapper.text()).not.toContain('Level Up!');
+    });
+});
+
+describe('play page — death-save UI visibility', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('does not render death-save UI when character HP is above 0', async () => {
+        setupQueryMocks({}, undefined, { hp: 20, isDead: false });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        expect(wrapper.find('[data-testid="death-save-ui"]').exists()).toBe(false);
+    });
+
+    it('renders death-save UI when character HP is 0 and not dead', async () => {
+        setupQueryMocks({}, undefined, { hp: 0, isDead: false, deathSaveSuccesses: 0, deathSaveFailures: 0 });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        expect(wrapper.find('[data-testid="death-save-ui"]').exists()).toBe(true);
+    });
+
+    it('does not render death-save UI when character is dead (isDead = true)', async () => {
+        setupQueryMocks({}, undefined, { hp: 0, isDead: true });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        expect(wrapper.find('[data-testid="death-save-ui"]').exists()).toBe(false);
+    });
+
+    it('shows death-save success and failure labels when dying', async () => {
+        setupQueryMocks({}, undefined, { hp: 0, isDead: false, deathSaveSuccesses: 1, deathSaveFailures: 2 });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        const deathSaveEl = wrapper.find('[data-testid="death-save-ui"]');
+        expect(deathSaveEl.text()).toContain('Success');
+        expect(deathSaveEl.text()).toContain('Failure');
+    });
+
+    it('death-save UI coexists with combat layout when sceneType is COMBAT', async () => {
+        const combatSession = { id: 'cs-1', combatants: [], currentTurnIndex: 0, roundNumber: 1 };
+        setupQueryMocks({ sceneType: 'COMBAT', combatSession }, undefined, { hp: 0, isDead: false });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        expect(wrapper.find('[data-testid="combat-panel"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="death-save-ui"]').exists()).toBe(true);
+    });
+
+    it('player input remains enabled during death-save state', async () => {
+        setupQueryMocks({}, undefined, { hp: 0, isDead: false });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        const textarea = wrapper.find('textarea');
+        expect(textarea.attributes('disabled')).toBeUndefined();
     });
 });
