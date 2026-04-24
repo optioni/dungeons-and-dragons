@@ -3,7 +3,7 @@ import createConfig from '@juuso.piikkila/eslint-config-typescript';
 export default createConfig({
     vue: true,
     tsconfigPath: './.nuxt/tsconfig.json',
-    ignores: ['dist/', 'node_modules/', '.nuxt/', '.output/', 'vitest.config.ts'],
+    ignores: ['dist/', 'node_modules/', '.nuxt/', '.output/', 'vitest.config.ts', 'introspect.d.ts'],
 }, {
     files: ['**/*.vue'],
     rules: {

@@ -187,6 +187,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ResultOf } from 'gql.tada';
+
 import { useQuery } from '@urql/vue';
 
 import { QUESTS_QUERY } from '~/graphql/quests';
@@ -196,24 +198,7 @@ definePageMeta({ middleware: 'require-auth' });
 const route = useRoute();
 const campaignId = computed(() => route.params.id as string);
 
-interface QuestObjective {
-    id: string
-    description: string
-    type: string
-    status: 'INCOMPLETE' | 'COMPLETE'
-    order: number
-}
-
-interface Quest {
-    id: string
-    title: string
-    description: string
-    status: 'ACTIVE' | 'COMPLETED' | 'FAILED'
-    rewardNarrative: string | null
-    rewardXp: number | null
-    rewardGold: number | null
-    objectives: QuestObjective[]
-}
+type Quest = ResultOf<typeof QUESTS_QUERY>['quests']['edges'][number]['node'];
 
 const { data: activeData, fetching: activeFetching } = useQuery({
     query: QUESTS_QUERY,
@@ -225,14 +210,14 @@ const { data: completedData, fetching: completedFetching } = useQuery({
     variables: computed(() => ({ campaignId: campaignId.value, first: 50 })),
 });
 
-const activeQuests = computed<Quest[]>(() =>
-    (activeData.value?.quests?.edges ?? []).map((e: { node: Quest }) => e.node),
+const activeQuests = computed(() =>
+    (activeData.value?.quests?.edges ?? []).map((edge) => edge.node),
 );
 
 const finishedQuests = computed<Quest[]>(() =>
     (completedData.value?.quests?.edges ?? [])
-        .map((e: { node: Quest }) => e.node)
-        .filter((q: Quest) => q.status === 'COMPLETED' || q.status === 'FAILED'),
+        .map((edge) => edge.node)
+        .filter((quest) => quest.status === 'COMPLETED' || quest.status === 'FAILED'),
 );
 
 const showCompleted = ref(false);

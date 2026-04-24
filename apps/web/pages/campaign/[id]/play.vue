@@ -399,10 +399,10 @@
 </template>
 
 <script setup lang="ts">
-import type { CombatSession } from '~/components/session/CombatPanel.vue';
-
 import { useQuery, useMutation, useSubscription } from '@urql/vue';
+import { type ResultOf } from 'gql.tada';
 
+import { type CombatSession } from '~/components/session/CombatPanel.vue';
 import {
     ACTIVE_SESSION_QUERY,
     APPLY_LEVEL_UP_MUTATION,
@@ -421,6 +421,12 @@ definePageMeta({ middleware: 'require-auth' });
 const route = useRoute();
 const router = useRouter();
 const campaignId = computed(() => route.params.id as string);
+
+type ActiveSession = NonNullable<ResultOf<typeof ACTIVE_SESSION_QUERY>['activeSession']>;
+type PersistedGameEvent = Omit<ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents'][number], 'content'> & {
+    content: Record<string, unknown>
+};
+type SpellOption = ResultOf<typeof SPELL_OPTIONS_QUERY>['srdSpells']['edges'][number]['node'];
 
 // ── Campaign ─────────────────────────────────────────────────────────────────
 const { data: campaignData, fetching: campaignFetching } = useQuery({
@@ -481,18 +487,12 @@ const { data: activeSessionData, executeQuery: refetchActiveSession } = useQuery
 
 const { executeMutation: startSessionMutation } = useMutation(START_SESSION_MUTATION);
 
-function applySessionData(session: {
-    id: string
-    characterId: string | null
-    sceneType: string
-    levelUpPending: boolean
-    combatSession: CombatSession | null
-}): void {
+function applySessionData(session: ActiveSession): void {
     sessionId.value = session.id;
     characterId.value = session.characterId;
     sceneType.value = session.sceneType;
     levelUpPending.value = session.levelUpPending;
-    combatSession.value = session.combatSession;
+    combatSession.value = session.combatSession as CombatSession | null;
 }
 
 watch(
@@ -513,14 +513,7 @@ watch(
 const isCombat = computed(() => sceneType.value === 'COMBAT');
 
 // ── Events / Transcript ───────────────────────────────────────────────────────
-interface GameEvent {
-    id: string
-    eventType: 'PLAYER_INPUT' | 'DM_NARRATIVE' | 'TOOL_CALL' | 'SYSTEM'
-    content: Record<string, unknown>
-    createdAt: string
-}
-
-const persistedEvents = ref<GameEvent[]>([]);
+const persistedEvents = ref<PersistedGameEvent[]>([]);
 const inProgressNarrative = ref('');
 const innerVoiceText = ref('');
 const lastSeenSequence = ref(0);
@@ -535,7 +528,7 @@ const { executeQuery: refetchEvents } = useQuery({
 watch(sessionId, async (id) => {
     if (!id) return;
     const { data } = await refetchEvents({ requestPolicy: 'network-only' });
-    persistedEvents.value = (data?.gameEvents ?? []) as GameEvent[];
+    persistedEvents.value = (data?.gameEvents ?? []) as PersistedGameEvent[];
 });
 
 // ── DM Stream Subscription ───────────────────────────────────────────────────
@@ -589,7 +582,7 @@ watch(streamData, async (data) => {
 
             isStreaming.value = false;
             const { data: eventsData } = await refetchEvents({ requestPolicy: 'network-only' });
-            persistedEvents.value = (eventsData?.gameEvents ?? []) as GameEvent[];
+            persistedEvents.value = (eventsData?.gameEvents ?? []) as PersistedGameEvent[];
             inProgressNarrative.value = '';
             // Refetch session to pick up levelUpPending and combatSession changes
             const { data: sessionData } = await refetchActiveSession({ requestPolicy: 'network-only' });
@@ -613,6 +606,7 @@ async function handleSend() {
 
     persistedEvents.value.push({
         id: `local-${Date.now()}`,
+        sessionId: sessionId.value,
         eventType: 'PLAYER_INPUT',
         content: { text },
         createdAt: new Date().toISOString(),
@@ -694,8 +688,6 @@ const isDying = computed(() => {
     return character.value.hp === 0 && !character.value.isDead;
 });
 
-interface SpellOption { index: string; name: string; level: number; classes: string[] }
-
 const { data: spellOptionsData, fetching: spellOptionsFetching } = useQuery({
     query: SPELL_OPTIONS_QUERY,
     variables: { first: 400 },
@@ -710,7 +702,7 @@ const availablePreparedSpells = computed<SpellOption[]>(() => {
 
     const edges = spellOptionsData.value?.srdSpells?.edges ?? [];
     return edges
-        .map((edge: { node?: SpellOption | null }) => edge.node)
+        .map((edge) => edge.node)
         .filter((spell: SpellOption | null | undefined): spell is SpellOption => Boolean(spell))
         .filter((spell) => spell.classes.includes(className))
         .sort((left, right) => left.level - right.level || left.name.localeCompare(right.name));

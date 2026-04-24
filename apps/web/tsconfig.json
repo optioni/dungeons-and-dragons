@@ -2,6 +2,13 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "plugins": [
+      {
+        "name": "@0no-co/graphqlsp",
+        "schema": "../../schema.graphql",
+        "tadaOutputLocation": "./introspect.d.ts"
+      }
+    ]
   }
 }

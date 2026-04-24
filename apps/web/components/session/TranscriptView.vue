@@ -38,18 +38,20 @@
 </template>
 
 <script setup lang="ts">
-interface GameEvent {
-    id: string
-    eventType: 'PLAYER_INPUT' | 'DM_NARRATIVE' | 'TOOL_CALL' | 'SYSTEM'
-    content: Record<string, unknown>
-    createdAt: string
-}
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
+import { type ResultOf } from 'gql.tada';
 
-interface Props {
+import { type GAME_EVENTS_QUERY } from '~/graphql/session';
+
+type GameEvent = Omit<ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents'][number], 'content'> & {
+    content: Record<string, unknown>
+};
+
+type Props = {
     events: GameEvent[]
     inProgressText?: string
     innerVoiceText?: string
-}
+};
 
 const props = withDefaults(defineProps<Props>(), {
     inProgressText: undefined,

@@ -375,7 +375,9 @@
 </template>
 
 <script setup lang="ts">
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { useQuery, useMutation } from '@urql/vue';
+
 import {
     CHARACTER_BY_CAMPAIGN_QUERY,
     CHARACTER_QUERY,
@@ -429,27 +431,21 @@ const inventory = computed(() => invData.value?.characterInventory ?? []);
 
 const ABILITY_KEYS = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'] as const;
 type AbilityKey = typeof ABILITY_KEYS[number];
-
-interface SpellSlot {
+type AbilityScores = Record<AbilityKey, number>;
+type SkillProficiencies = Record<string, string>;
+type SpellSlot = {
     level: number
     total: number
     used: number
-}
+};
 
-interface SrdEquipment {
-    id: string
-    name: string
-    category: string
-    damage: Record<string, unknown> | null
-    properties: string[]
-}
-
-interface SkillRow {
+type SkillRow = {
     name: string
     proficiency: string
     bonus: number
-}
+};
 
+/* eslint-disable @typescript-eslint/naming-convention */
 const SKILL_ABILITY_MAP: Record<string, AbilityKey> = {
     Acrobatics: 'DEX',
     'Animal Handling': 'WIS',
@@ -470,6 +466,7 @@ const SKILL_ABILITY_MAP: Record<string, AbilityKey> = {
     Stealth: 'DEX',
     Survival: 'WIS',
 };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function abilityModifier(score: number): number {
     return Math.floor((score - 10) / 2);
@@ -481,9 +478,9 @@ function signedModifier(mod: number): string {
 
 const skillRows = computed((): SkillRow[] => {
     if (!character.value) return [];
-    const scores = character.value.abilityScores as Record<AbilityKey, number>;
-    const profs = character.value.skillProficiencies as Record<string, string>;
-    const profBonus = character.value.proficiencyBonus as number;
+    const scores = character.value.abilityScores as AbilityScores;
+    const profs = character.value.skillProficiencies as SkillProficiencies;
+    const profBonus = character.value.proficiencyBonus;
 
     return Object.entries(SKILL_ABILITY_MAP).map(([skill, ability]) => {
         const proficiency = profs[skill] ?? 'none';

@@ -1,36 +1,34 @@
-const QUEST_FIELDS = `
-  id
-  campaignId
-  title
-  description
-  status
-  agendaImpact
-  rewardNarrative
-  rewardXp
-  rewardGold
-  createdAt
-  objectives {
-    id
-    description
-    type
-    status
-    entityId
-    order
-  }
-  entities {
-    id
-    entityType
-    entityId
-  }
-`;
+import { graphql } from './tada';
 
-export const QUESTS_QUERY = `
+export const QUESTS_QUERY = graphql(`
   query Quests($campaignId: ID!, $status: QuestStatus, $first: Int, $after: String) {
     quests(campaignId: $campaignId, status: $status, first: $first, after: $after) {
       edges {
         cursor
         node {
-          ${QUEST_FIELDS}
+          id
+          campaignId
+          title
+          description
+          status
+          agendaImpact
+          rewardNarrative
+          rewardXp
+          rewardGold
+          createdAt
+          objectives {
+            id
+            description
+            type
+            status
+            entityId
+            order
+          }
+          entities {
+            id
+            entityType
+            entityId
+          }
         }
       }
       pageInfo {
@@ -39,12 +37,34 @@ export const QUESTS_QUERY = `
       }
     }
   }
-`;
+`);
 
-export const QUEST_QUERY = `
+export const QUEST_QUERY = graphql(`
   query Quest($id: ID!) {
     quest(id: $id) {
-      ${QUEST_FIELDS}
+      id
+      campaignId
+      title
+      description
+      status
+      agendaImpact
+      rewardNarrative
+      rewardXp
+      rewardGold
+      createdAt
+      objectives {
+        id
+        description
+        type
+        status
+        entityId
+        order
+      }
+      entities {
+        id
+        entityType
+        entityId
+      }
     }
   }
-`;
+`);

@@ -86,27 +86,26 @@
 </template>
 
 <script setup lang="ts">
-interface SpellSlot {
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
+import { type ResultOf } from 'gql.tada';
+
+import { type CHARACTER_QUERY_FOR_PLAY } from '~/graphql/session';
+
+type SpellSlot = {
     level: number
     total: number
     used: number
-}
+};
 
-interface Character {
-    id: string
-    name: string
-    level: number
-    hp: number
-    maxHp: number
-    ac: number
-    conditions: string[]
+type CharacterForPlay = NonNullable<ResultOf<typeof CHARACTER_QUERY_FOR_PLAY>['character']>;
+type Character = Omit<CharacterForPlay, 'spellSlots'> & {
     spellSlots: SpellSlot[]
-}
+};
 
-interface Props {
+type Props = {
     character: Character | null
     fetching?: boolean
-}
+};
 
 const props = withDefaults(defineProps<Props>(), {
     fetching: false,

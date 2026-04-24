@@ -171,7 +171,12 @@
 </template>
 
 <script setup lang="ts">
-export interface Combatant {
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
+import { type ResultOf } from 'gql.tada';
+
+import { type ACTIVE_SESSION_QUERY } from '~/graphql/session';
+
+export type Combatant = {
     id: string
     type: 'CHARACTER' | 'NPC'
     name: string
@@ -183,27 +188,26 @@ export interface Combatant {
     usedBonusAction: boolean
     usedReaction: boolean
     movementUsed: number
-}
+};
 
-export interface CombatSession {
-    id: string
+type ActiveSession = NonNullable<ResultOf<typeof ACTIVE_SESSION_QUERY>['activeSession']>;
+
+export type CombatSession = Omit<NonNullable<ActiveSession['combatSession']>, 'combatants'> & {
     combatants: Combatant[]
-    currentTurnIndex: number
-    roundNumber: number
-}
+};
 
-export interface SpellSlot {
+export type SpellSlot = {
     level: number
     total: number
     used: number
-}
+};
 
-interface Props {
+type Props = {
     combatSession: CombatSession
     characterId?: string
     spellSlots?: SpellSlot[]
     isStreaming?: boolean
-}
+};
 
 const props = withDefaults(defineProps<Props>(), {
     characterId: undefined,

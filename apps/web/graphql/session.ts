@@ -1,4 +1,6 @@
-export const ACTIVE_SESSION_QUERY = `
+import { graphql } from './tada';
+
+export const ACTIVE_SESSION_QUERY = graphql(`
   query ActiveSession($campaignId: ID!) {
     activeSession(campaignId: $campaignId) {
       id
@@ -16,9 +18,9 @@ export const ACTIVE_SESSION_QUERY = `
       }
     }
   }
-`;
+`);
 
-export const GAME_EVENTS_QUERY = `
+export const GAME_EVENTS_QUERY = graphql(`
   query GameEvents($sessionId: ID!) {
     gameEvents(sessionId: $sessionId) {
       id
@@ -28,9 +30,9 @@ export const GAME_EVENTS_QUERY = `
       createdAt
     }
   }
-`;
+`);
 
-export const START_SESSION_MUTATION = `
+export const START_SESSION_MUTATION = graphql(`
   mutation StartSession($campaignId: ID!) {
     startSession(campaignId: $campaignId) {
       id
@@ -48,36 +50,36 @@ export const START_SESSION_MUTATION = `
       }
     }
   }
-`;
+`);
 
-export const APPLY_LEVEL_UP_MUTATION = `
-  mutation ApplyLevelUp($sessionId: ID!, $hitPointsRolled: Int!, $abilityScoreImprovements: Object, $feat: String) {
+export const APPLY_LEVEL_UP_MUTATION = graphql(`
+  mutation ApplyLevelUp($sessionId: ID!, $hitPointsRolled: Int!, $abilityScoreImprovements: AbilityScoreImprovementsInput, $feat: String) {
     applyLevelUp(sessionId: $sessionId, hitPointsRolled: $hitPointsRolled, abilityScoreImprovements: $abilityScoreImprovements, feat: $feat)
   }
-`;
+`);
 
-export const PREPARE_SPELLS_MUTATION = `
+export const PREPARE_SPELLS_MUTATION = graphql(`
   mutation PrepareSpells($sessionId: ID!, $spells: [String!]!) {
     prepareSpells(sessionId: $sessionId, spells: $spells)
   }
-`;
+`);
 
-export const END_SESSION_MUTATION = `
+export const END_SESSION_MUTATION = graphql(`
   mutation EndSession($sessionId: ID!) {
     endSession(sessionId: $sessionId) {
       id
       endedAt
     }
   }
-`;
+`);
 
-export const SEND_PLAYER_INPUT_MUTATION = `
+export const SEND_PLAYER_INPUT_MUTATION = graphql(`
   mutation SendPlayerInput($sessionId: ID!, $text: String!) {
     sendPlayerInput(sessionId: $sessionId, text: $text)
   }
-`;
+`);
 
-export const DM_STREAM_SUBSCRIPTION = `
+export const DM_STREAM_SUBSCRIPTION = graphql(`
   subscription DmStream($sessionId: ID!) {
     dmStream(sessionId: $sessionId) {
       type
@@ -91,9 +93,9 @@ export const DM_STREAM_SUBSCRIPTION = `
       sessionId
     }
   }
-`;
+`);
 
-export const CHARACTER_QUERY_FOR_PLAY = `
+export const CHARACTER_QUERY_FOR_PLAY = graphql(`
   query CharacterForPlay($id: ID!) {
     character(id: $id) {
       id
@@ -116,9 +118,9 @@ export const CHARACTER_QUERY_FOR_PLAY = `
       }
     }
   }
-`;
+`);
 
-export const SPELL_OPTIONS_QUERY = `
+export const SPELL_OPTIONS_QUERY = graphql(`
   query SpellOptionsForPlay($first: Int!) {
     srdSpells(first: $first) {
       edges {
@@ -131,9 +133,9 @@ export const SPELL_OPTIONS_QUERY = `
       }
     }
   }
-`;
+`);
 
-export const CAMPAIGN_QUERY_FOR_PLAY = `
+export const CAMPAIGN_QUERY_FOR_PLAY = graphql(`
   query CampaignForPlay($id: ID!) {
     campaign(id: $id) {
       id
@@ -145,4 +147,4 @@ export const CAMPAIGN_QUERY_FOR_PLAY = `
       endReason
     }
   }
-`;
+`);

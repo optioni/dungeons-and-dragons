@@ -523,6 +523,13 @@
 
 <script setup lang="ts">
 import { useMutation, useQuery } from '@urql/vue';
+import { type ResultOf } from 'gql.tada';
+
+import {
+    ACTIVE_SESSION_QUERY,
+    SEND_PLAYER_INPUT_MUTATION,
+    START_SESSION_MUTATION,
+} from '~/graphql/session';
 import {
     FACTIONS_QUERY,
     NPCS_QUERY,
@@ -531,83 +538,14 @@ import {
     WORLD_EVENTS_QUERY,
     WORLD_MAP_QUERY,
 } from '~/graphql/world';
-import {
-    ACTIVE_SESSION_QUERY,
-    START_SESSION_MUTATION,
-    SEND_PLAYER_INPUT_MUTATION,
-} from '~/graphql/session';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type MapScale = 'WORLD' | 'REGIONAL' | 'LOCAL' | 'DUNGEON'
-
-interface WorldMapCoords {
-    x: number
-    y: number
-}
-
-interface WorldMapNode {
-    id: string
-    name: string
-    coordinates: WorldMapCoords | null
-    currentState: string | null
-    connectedLocationIds: string[]
-    hasActivityMarker: boolean
-}
-
-interface WorldMapFrontierNode {
-    id: string
-    coordinates: WorldMapCoords | null
-    connectedDiscoveredIds: string[]
-}
-
-interface WorldMapEdge {
-    fromId: string
-    toId: string
-}
-
-interface WorldMapData {
-    selectedScale: MapScale
-    availableScales: MapScale[]
-    currentLocationId: string | null
-    discoveredNodes: WorldMapNode[]
-    frontierNodes: WorldMapFrontierNode[]
-    edges: WorldMapEdge[]
-}
-
-interface NpcRosterItem {
-    id: string
-    name: string
-    profession: string | null
-    disposition: string | null
-    currentLocationId: string | null
-    partyStatus: string
-    alive: boolean
-}
-
-interface NpcRelationship {
-    id: string
-    targetNpcId: string
-    type: string
-    description: string | null
-    disposition: string | null
-}
-
-interface NpcProfile extends NpcRosterItem {
-    description: string | null
-    coreMotivation: string | null
-    speechStyle: string | null
-    relationships: NpcRelationship[] | null
-}
-
-interface DiaryEntry {
-    id: string
-    campaignId: string
-    entryType: string
-    inGameDate: string
-    content: string
-    createdAt: string
-}
+type WorldMapData = ResultOf<typeof WORLD_MAP_QUERY>['worldMap'];
+type MapScale = WorldMapData['selectedScale'];
+type NpcRosterItem = ResultOf<typeof NPCS_QUERY>['npcs']['edges'][number]['node'];
+type NpcProfile = ResultOf<typeof NPC_PROFILE_QUERY>['npc'];
+type DiaryEntry = ResultOf<typeof DIARY_ENTRIES_QUERY>['diaryEntries']['edges'][number]['node'];
 
 // ── Route ─────────────────────────────────────────────────────────────────
 
@@ -629,7 +567,6 @@ const { data: mapData, fetching: mapFetching, executeQuery: refetchMap } = useQu
 
 watch(mapData, (data) => {
     if (!data?.worldMap) return;
-    const newMap = data.worldMap as WorldMapData;
 
     // Capture current visible ids BEFORE updating for animation diffing
     if (worldMap.value) {
@@ -639,7 +576,7 @@ watch(mapData, (data) => {
         previousNodeIds.value = currentIds;
     }
 
-    worldMap.value = newMap;
+    worldMap.value = data.worldMap;
 }, { immediate: true });
 
 const availableScales = computed<MapScale[]>(() => worldMap.value?.availableScales ?? []);
@@ -691,7 +628,7 @@ async function confirmTravel(): Promise<void> {
 
     try {
         // Resolve or start an active session
-        let sessionId = (activeSessionData.value?.activeSession as { id: string } | null | undefined)?.id ?? null;
+        let sessionId = activeSessionData.value?.activeSession?.id ?? null;
 
         if (!sessionId) {
             const sessionResult = await startSessionMutation({ campaignId: campaignId.value });
@@ -699,7 +636,7 @@ async function confirmTravel(): Promise<void> {
                 travelError.value = 'Could not start a session. Please try again.';
                 return;
             }
-            sessionId = (sessionResult.data.startSession as { id: string }).id;
+            sessionId = sessionResult.data.startSession.id;
         }
 
         // Send the travel input through the DM session flow
@@ -729,7 +666,7 @@ const { data: factionsData, fetching: factionsFetching } = useQuery({
 });
 
 const factions = computed(() =>
-    (factionsData.value?.factions?.edges ?? []).map((e: { node: unknown }) => e.node),
+    (factionsData.value?.factions?.edges ?? []).map((edge) => edge.node),
 );
 
 // ── NPCs ──────────────────────────────────────────────────────────────────
@@ -747,7 +684,7 @@ const { data: npcsData, fetching: npcsFetching } = useQuery({
 watch(npcsData, (data) => {
     if (!data) return;
     const edges = data.npcs?.edges ?? [];
-    allNpcs.value = edges.map((e: { node: NpcRosterItem }) => e.node);
+    allNpcs.value = edges.map((edge) => edge.node);
     npcsPageInfo.value = data.npcs?.pageInfo ?? null;
 });
 
@@ -774,7 +711,7 @@ const { data: npcProfileData, fetching: npcProfileFetching } = useQuery({
 
 watch(npcProfileData, (data) => {
     if (data?.npc) {
-        selectedNpc.value = data.npc as NpcProfile;
+        selectedNpc.value = data.npc;
     }
 });
 
@@ -800,7 +737,7 @@ const { data: diaryData, fetching: diaryFetching } = useQuery({
 watch(diaryData, (data) => {
     if (!data) return;
     const edges = data.diaryEntries?.edges ?? [];
-    allDiaryEntries.value = edges.map((e: { node: DiaryEntry }) => e.node);
+    allDiaryEntries.value = edges.map((edge) => edge.node);
     diaryPageInfo.value = data.diaryEntries?.pageInfo ?? null;
 });
 
@@ -823,10 +760,6 @@ async function loadMoreDiary(): Promise<void> {
     diaryLoadingMore.value = false;
 }
 
-// Expose recentDiary for template v-else-if empty check
-// (uses allDiaryEntries to avoid hiding panel when search returns nothing)
-const _recentDiary = recentDiary;
-
 // ── World Events ──────────────────────────────────────────────────────────
 
 const { data: eventsData, fetching: eventsFetching } = useQuery({
@@ -839,7 +772,7 @@ const { data: eventsData, fetching: eventsFetching } = useQuery({
 });
 
 const worldEvents = computed(() =>
-    (eventsData.value?.worldEvents?.edges ?? []).map((e: { node: unknown }) => e.node),
+    (eventsData.value?.worldEvents?.edges ?? []).map((edge) => edge.node),
 );
 
 // ── Helpers ───────────────────────────────────────────────────────────────

@@ -1,53 +1,80 @@
-const CHARACTER_FIELDS = `
-  id
-  name
-  level
-  proficiencyBonus
-  hp
-  maxHp
-  ac
-  xp
-  isDead
-  deathSaveSuccesses
-  deathSaveFailures
-  hitDiceRemaining
-  conditions
-  abilityScores
-  spellSlots
-  preparedSpells
-  skillProficiencies
-  goldPieces
-  silverPieces
-  copperPieces
-  race {
-    id
-    name
-    speed
-  }
-  class {
-    id
-    name
-    hitDie
-  }
-`;
+import { graphql } from './tada';
 
-export const CHARACTER_BY_CAMPAIGN_QUERY = `
+export const CHARACTER_BY_CAMPAIGN_QUERY = graphql(`
   query CharacterByCampaign($campaignId: ID!) {
     characterByCampaign(campaignId: $campaignId) {
-      ${CHARACTER_FIELDS}
+      id
+      name
+      level
+      proficiencyBonus
+      hp
+      maxHp
+      ac
+      xp
+      isDead
+      deathSaveSuccesses
+      deathSaveFailures
+      hitDiceRemaining
+      conditions
+      abilityScores
+      spellSlots
+      preparedSpells
+      skillProficiencies
+      goldPieces
+      silverPieces
+      copperPieces
+      race {
+        id
+        name
+        speed
+      }
+      class {
+        id
+        name
+        hitDie
+      }
     }
   }
-`;
+`);
 
-export const CHARACTER_QUERY = `
+export const CHARACTER_QUERY = graphql(`
   query Character($id: ID!) {
     character(id: $id) {
-      ${CHARACTER_FIELDS}
+      id
+      name
+      level
+      proficiencyBonus
+      hp
+      maxHp
+      ac
+      xp
+      isDead
+      deathSaveSuccesses
+      deathSaveFailures
+      hitDiceRemaining
+      conditions
+      abilityScores
+      spellSlots
+      preparedSpells
+      skillProficiencies
+      goldPieces
+      silverPieces
+      copperPieces
+      race {
+        id
+        name
+        speed
+      }
+      class {
+        id
+        name
+        hitDie
+      }
     }
   }
-`;
+`);
 
-export const CHARACTER_INVENTORY_QUERY = `
+export const CHARACTER_INVENTORY_QUERY = graphql(`
   query CharacterInventory($characterId: ID!) {
     characterInventory(characterId: $characterId) {
       id
@@ -71,13 +98,13 @@ export const CHARACTER_INVENTORY_QUERY = `
       }
     }
   }
-`;
+`);
 
-export const UNEQUIP_MUTATION = `
+export const UNEQUIP_MUTATION = graphql(`
   mutation UnequipItem($characterItemId: ID!) {
     unequipItem(characterItemId: $characterItemId) {
       id
       slot
     }
   }
-`;
+`);
