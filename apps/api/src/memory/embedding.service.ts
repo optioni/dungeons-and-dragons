@@ -16,14 +16,20 @@ export class EmbeddingService {
     constructor(@Inject(VOYAGE_CLIENT) private readonly client: VoyageClient) {}
 
     async generateEmbedding(text: string): Promise<number[] | null> {
+        const callStartedAt = Date.now();
         try {
             const result = await this.client.embed({
                 input: [text],
                 model: 'voyage-3-large',
             });
-            return (result.data?.[0] as { embedding: number[] } | undefined)?.embedding ?? null;
+            const embedding = (result.data?.[0] as { embedding: number[] } | undefined)?.embedding ?? null;
+            const duration = Date.now() - callStartedAt;
+            this.logger.log(`Voyage AI call complete: provider=voyage model=voyage-3-large inputCount=1 duration=${duration}ms success=${embedding !== null}`);
+            return embedding;
         } catch (error) {
-            this.logger.error('Voyage AI embedding failed', error);
+            const duration = Date.now() - callStartedAt;
+            const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
+            this.logger.error(`Voyage AI call failed: provider=voyage model=voyage-3-large inputCount=1 duration=${duration}ms errorClass=${errorClass}`);
             return null;
         }
     }

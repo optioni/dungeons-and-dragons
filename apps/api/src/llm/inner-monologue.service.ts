@@ -140,6 +140,7 @@ export class InnerMonologueService {
             let toolCalls = 0;
 
             while (true) {
+                const callStartedAt = Date.now();
                 /* eslint-disable @typescript-eslint/naming-convention */
                 const response = await this.anthropic.messages.create({
                     model: this.backgroundModel,
@@ -149,6 +150,8 @@ export class InnerMonologueService {
                     messages,
                 });
                 /* eslint-enable @typescript-eslint/naming-convention */
+                const callDuration = Date.now() - callStartedAt;
+                this.logger.log(`Anthropic call complete: provider=anthropic model=${this.backgroundModel} context=inner_monologue sessionId=${sessionId} duration=${callDuration}ms success=true`);
 
                 const toolUses = response.content.filter((block) => block.type === 'tool_use');
                 if (response.stop_reason === 'tool_use' && toolUses.length > 0) {
@@ -199,7 +202,8 @@ export class InnerMonologueService {
                 return;
             }
         } catch (error) {
-            this.logger.error(`Inner monologue failed for session ${sessionId}`, error);
+            const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
+            this.logger.error(`Anthropic call failed: provider=anthropic model=${this.backgroundModel} context=inner_monologue sessionId=${sessionId} errorClass=${errorClass}`);
         }
     }
 

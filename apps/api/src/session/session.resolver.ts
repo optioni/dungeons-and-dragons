@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/postgresql';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import {
     Args, ID, Mutation, Query, ResolveField, Resolver, Root, Subscription,
 } from '@nestjs/graphql';
@@ -20,6 +20,8 @@ import { StreamPublisher } from './stream-publisher.service.js';
  */
 @Resolver(() => GameSession)
 export class SessionResolver {
+    private readonly logger = new Logger(SessionResolver.name);
+
     constructor(
         private readonly sessionService: SessionService,
         private readonly streamPublisher: StreamPublisher,
@@ -81,17 +83,20 @@ export class SessionResolver {
         @CurrentUser() user: User,
     ): Promise<boolean> {
         if (!text.trim()) {
+            this.logger.error(`Input rejected: sessionId=${sessionId} reason=blank_input`);
             throw new BadRequestException('Input must not be blank');
         }
 
         const session = await this.sessionService.findOwnedSession(Number(sessionId), user.id);
 
         if (session.endedAt) {
+            this.logger.error(`Input rejected: sessionId=${sessionId} reason=session_ended`);
             throw new BadRequestException('Session is no longer active');
         }
 
         // Runs async — stream chunks are published via StreamPublisher
         void this.dmOrchestrator.runTurn(Number(sessionId), text);
+        this.logger.log(`DM turn scheduled: sessionId=${sessionId} campaignId=${session.campaignId}`);
         return true;
     }
 

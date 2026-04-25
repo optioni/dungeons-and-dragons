@@ -96,16 +96,20 @@ export class WorldTickWorker extends WorkerHost {
      */
     async process(job: Job<WorldTickJobPayload>): Promise<{ status: string }> {
         const { campaignId } = job.data;
+        this.logger.log(`World tick received: jobId=${job.id} campaignId=${campaignId}`);
+
         const lockKey = `campaignLocked:${campaignId}`;
 
         const acquired = await this.redis.set(lockKey, '1', 'EX', LOCK_TTL_SECONDS, 'NX');
         if (acquired === null) {
-            this.logger.log(`World tick skipped for campaign ${campaignId} — lock already held`);
+            this.logger.warn(`World tick skipped: campaignId=${campaignId} reason=lock_held`);
             return { status: 'skipped' };
         }
 
+        this.logger.log(`World tick lock acquired: campaignId=${campaignId}`);
+
         try {
-            return await this.runTick(campaignId);
+            return await this.runTick(campaignId, job.id);
         } finally {
             await this.redis.del(lockKey);
         }
@@ -114,10 +118,12 @@ export class WorldTickWorker extends WorkerHost {
     /**
      * Executes the full world tick pipeline: agendas → conversations → outcomes → catastrophe → diary.
      */
-    private async runTick(campaignId: number): Promise<{ status: string }> {
+    private async runTick(campaignId: number, jobId: string | undefined): Promise<{ status: string }> {
+        const tickStartedAt = Date.now();
+
         const campaign = await this.em.findOne(Campaign, { id: campaignId });
         if (!campaign) {
-            this.logger.error(`Campaign ${campaignId} not found during world tick`);
+            this.logger.error(`World tick campaign not found: jobId=${jobId} campaignId=${campaignId}`);
             return { status: 'campaign_not_found' };
         }
 
@@ -133,6 +139,10 @@ export class WorldTickWorker extends WorkerHost {
 
         // Step 1: NPC agenda evaluation
         const dueNpcs = await this.worldService.getDueNpcs(campaignId, inGameDay, maxNpcs);
+        const conversationPairs = await this.worldService.getConversationPairs(campaignId);
+        this.logger.log(`World tick pipeline start: campaignId=${campaignId} dueNpcs=${dueNpcs.length} conversationPairs=${conversationPairs.length}`);
+
+        this.logger.log(`World tick phase: campaignId=${campaignId} phase=agenda_evaluation`);
         if (dueNpcs.length > 0) {
             const agendaOutcomes = await this.evaluateAgendas(dueNpcs, inGameDay, campaignId);
             batch.agendaOutcomes = agendaOutcomes;
@@ -149,12 +159,15 @@ export class WorldTickWorker extends WorkerHost {
                     }
                 }
             }
+
+            this.logger.log(`World tick agenda outcomes: campaignId=${campaignId} evaluated=${dueNpcs.length} succeeded=${agendaOutcomes.length} failed=${dueNpcs.length - agendaOutcomes.length}`);
         }
 
         // Step 2: NPC conversations
-        const conversationPairs = await this.worldService.getConversationPairs(campaignId);
+        this.logger.log(`World tick phase: campaignId=${campaignId} phase=conversations`);
         if (conversationPairs.length > 0) {
             batch.conversationOutcomes = await this.runConversations(conversationPairs);
+            this.logger.log(`World tick conversation outcomes: campaignId=${campaignId} pairs=${conversationPairs.length} processed=${batch.conversationOutcomes.length}`);
         }
 
         // Step 3: Apply all outcomes atomically
@@ -164,14 +177,18 @@ export class WorldTickWorker extends WorkerHost {
         await this.rollCatastrophe(campaignId, inGameDate);
 
         // Step 5: Diary entry (fire-and-forget, errors are non-fatal)
+        this.logger.log(`World tick phase: campaignId=${campaignId} phase=diary_write`);
         void (async () => {
             try {
                 await this.memoryService.writeDiaryEntry(campaignId, inGameDate, []);
+                this.logger.log(`World tick diary write success: campaignId=${campaignId}`);
             } catch (error: unknown) {
-                this.logger.error(`Diary write failed for campaign ${campaignId}`, error);
+                this.logger.error(`World tick diary write failed: campaignId=${campaignId}`, error);
             }
         })();
 
+        const duration = Date.now() - tickStartedAt;
+        this.logger.log(`World tick complete: campaignId=${campaignId} duration=${duration}ms`);
         return { status: 'ok' };
     }
 
@@ -236,6 +253,7 @@ export class WorldTickWorker extends WorkerHost {
                 ? `\n\n## Recent Memories\n${relevantMemories.map((memory) => `- ${memory.content}`).join('\n')}`
                 : '';
 
+            const agendaCallStartedAt = Date.now();
             /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
@@ -267,6 +285,9 @@ Respond with JSON:
             });
             /* eslint-enable @typescript-eslint/naming-convention */
 
+            const agendaCallDuration = Date.now() - agendaCallStartedAt;
+            this.logger.log(`Anthropic call complete: provider=anthropic model=${this.backgroundModel} context=npc_agenda npcId=${npc.id} duration=${agendaCallDuration}ms success=true`);
+
             const text = response.content.find((b) => b.type === 'text');
             if (!text || text.type !== 'text') {
                 return null;
@@ -287,7 +308,8 @@ Respond with JSON:
                 departureDescription: parsed.departureDescription ?? null,
             };
         } catch (error) {
-            this.logger.error(`Agenda evaluation failed for NPC ${npc.id}`, error);
+            const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
+            this.logger.error(`Anthropic call failed: provider=anthropic model=${this.backgroundModel} context=npc_agenda npcId=${npc.id} errorClass=${errorClass}`);
             return null;
         }
     }
@@ -339,6 +361,7 @@ Respond with JSON:
                 ? `\nRecent memories for ${targetNpc.name}:\n${targetMemories.map((memory) => `- ${memory.content}`).join('\n')}`
                 : '';
 
+            const convCallStartedAt = Date.now();
             /* eslint-disable @typescript-eslint/naming-convention */
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
@@ -368,6 +391,9 @@ Respond with JSON:
             });
             /* eslint-enable @typescript-eslint/naming-convention */
 
+            const convCallDuration = Date.now() - convCallStartedAt;
+            this.logger.log(`Anthropic call complete: provider=anthropic model=${this.backgroundModel} context=npc_conversation npcIds=${rel.sourceNpcId}/${rel.targetNpcId} duration=${convCallDuration}ms success=true`);
+
             const text = response.content.find((b) => b.type === 'text');
             if (!text || text.type !== 'text') {
                 return null;
@@ -391,7 +417,8 @@ Respond with JSON:
                 sharedMemories: parsed.sharedMemories ?? [],
             };
         } catch (error) {
-            this.logger.error(`Conversation failed for NPCs ${rel.sourceNpcId}/${rel.targetNpcId}`, error);
+            const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
+            this.logger.error(`Anthropic call failed: provider=anthropic model=${this.backgroundModel} context=npc_conversation npcIds=${rel.sourceNpcId}/${rel.targetNpcId} errorClass=${errorClass}`);
             return null;
         }
     }

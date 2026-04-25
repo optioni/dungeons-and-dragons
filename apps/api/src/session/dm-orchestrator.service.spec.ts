@@ -454,4 +454,71 @@ describe('DmOrchestrator', () => {
 
         expect(contextLoader.loadWorldBlock).toHaveBeenCalledWith(10, undefined, undefined);
     });
+
+    describe('logging', () => {
+        it('logs turn-start with session ID', async () => {
+            const logger = (orchestrator as unknown as Record<string, { log: ReturnType<typeof vi.fn> }>)['logger'];
+            const logSpy = vi.spyOn(logger, 'log');
+
+            await orchestrator.runTurn(sessionId, playerInput);
+
+            expect(logSpy).toHaveBeenCalledWith(expect.stringContaining(`sessionId=${sessionId}`));
+        });
+
+        it('logs tool dispatch with tool name and success flag', async () => {
+            /* eslint-disable @typescript-eslint/naming-convention */
+            const toolUseBlock = {
+                type: 'tool_use',
+                id: 'toolu_test',
+                name: 'roll_dice',
+                input: { expression: '1d20' },
+            };
+            const mockStream = {
+                async* [Symbol.asyncIterator]() {},
+                finalMessage: vi.fn().mockResolvedValueOnce({
+                    content: [toolUseBlock],
+                    stop_reason: 'tool_use',
+                }).mockResolvedValueOnce({
+                    content: [],
+                    stop_reason: 'end_turn',
+                }),
+            };
+            /* eslint-enable @typescript-eslint/naming-convention */
+            mockAnthropicMessages.stream.mockReturnValue(mockStream);
+            toolRegistry.dispatch.mockResolvedValue({ success: true });
+
+            const logger = (orchestrator as unknown as Record<string, { log: ReturnType<typeof vi.fn> }>)['logger'];
+            const logSpy = vi.spyOn(logger, 'log');
+
+            await orchestrator.runTurn(sessionId, playerInput);
+
+            expect(logSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Tool dispatch:'),
+            );
+            expect(logSpy).toHaveBeenCalledWith(
+                expect.stringContaining('tool=roll_dice'),
+            );
+            expect(logSpy).toHaveBeenCalledWith(
+                expect.stringContaining('success=true'),
+            );
+        });
+
+        it('logs error with session ID and error class when stream throws', async () => {
+            mockAnthropicMessages.stream.mockImplementation(() => {
+                throw new TypeError('Network error');
+            });
+
+            const logger = (orchestrator as unknown as Record<string, { error: ReturnType<typeof vi.fn> }>)['logger'];
+            const errorSpy = vi.spyOn(logger, 'error');
+
+            await orchestrator.runTurn(sessionId, playerInput);
+
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.stringContaining(`sessionId=${sessionId}`),
+            );
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('errorClass=TypeError'),
+            );
+        });
+    });
 });

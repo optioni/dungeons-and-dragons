@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { type DmStreamChunk } from './dto/dm-stream-chunk.dto.js';
 
@@ -15,6 +15,8 @@ interface Subscriber {
  */
 @Injectable()
 export class StreamPublisher {
+    private readonly logger = new Logger(StreamPublisher.name);
+
     private readonly subscribers = new Map<number, Set<Subscriber>>();
 
     private readonly sequences = new Map<number, number>();
@@ -28,6 +30,8 @@ export class StreamPublisher {
         }
 
         this.subscribers.get(sessionId)!.add(sub);
+        const subscriberCount = this.subscribers.get(sessionId)!.size;
+        this.logger.log(`Stream subscribed: sessionId=${sessionId} subscribers=${subscriberCount}`);
 
         const iterator: AsyncIterator<DmStreamChunk> = {
             next: () => {
@@ -47,6 +51,8 @@ export class StreamPublisher {
                 this.subscribers.get(sessionId)?.delete(sub);
                 sub.done = true;
                 sub.resolve?.({ value: undefined as unknown as DmStreamChunk, done: true });
+                const remaining = this.subscribers.get(sessionId)?.size ?? 0;
+                this.logger.log(`Stream unsubscribed: sessionId=${sessionId} remainingSubscribers=${remaining}`);
                 return Promise.resolve({ value: undefined as unknown as DmStreamChunk, done: true });
             },
         };
@@ -61,6 +67,10 @@ export class StreamPublisher {
 
         const chunk: DmStreamChunk = { ...partial, sequence: seq, sessionId } as DmStreamChunk;
         const subs = this.subscribers.get(sessionId);
+
+        if (!subs || subs.size === 0) {
+            this.logger.warn(`Chunk published with no subscribers: sessionId=${sessionId} chunkType=${partial.type}`);
+        }
 
         if (subs) {
             for (const sub of subs) {
@@ -88,6 +98,7 @@ export class StreamPublisher {
             return;
         }
 
+        const subscriberCount = subs.size;
         for (const sub of subs) {
             sub.done = true;
             sub.resolve?.({ value: undefined as unknown as DmStreamChunk, done: true });
@@ -95,5 +106,6 @@ export class StreamPublisher {
 
         this.subscribers.delete(sessionId);
         this.sequences.delete(sessionId);
+        this.logger.log(`Stream complete: sessionId=${sessionId} subscribers=${subscriberCount}`);
     }
 }

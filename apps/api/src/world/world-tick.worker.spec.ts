@@ -926,3 +926,54 @@ describe('WorldTickWorker NPC memory prompt enrichment', () => {
         ]);
     });
 });
+
+describe('WorldTickWorker logging', () => {
+    it('warns when Redis lock is already held', async () => {
+        const { worker, redis } = makeWorker();
+        redis.set.mockResolvedValue(null);
+
+        const logger = (worker as unknown as Record<string, { warn: ReturnType<typeof vi.fn> }>)['logger'];
+        const warnSpy = vi.spyOn(logger, 'warn');
+
+        await worker.process({ id: 'job-1', data: { campaignId: 42 } } as never);
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('campaignId=42'));
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('lock_held'));
+    });
+
+    it('logs pipeline phase transitions during a tick', async () => {
+        const { worker } = makeWorker();
+
+        const logger = (worker as unknown as Record<string, { log: ReturnType<typeof vi.fn> }>)['logger'];
+        const logSpy = vi.spyOn(logger, 'log');
+
+        await worker.process({ id: 'job-2', data: { campaignId: 1 } } as never);
+
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('phase=agenda_evaluation'));
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('phase=conversations'));
+        expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('phase=diary_write'));
+    });
+
+    it('logs error when campaign lookup fails', async () => {
+        const em = makeEm();
+        em.findOne = vi.fn().mockResolvedValue(null);
+
+        const worker = new WorldTickWorker(
+            em as never,
+            makeWorldService() as never,
+            makeMemoryService() as never,
+            makeNpcMemoryService() as never,
+            makeRedis() as never,
+            makeAnthropicClient() as never,
+            'claude-haiku-test',
+            makeConfig() as never,
+        );
+
+        const logger = (worker as unknown as Record<string, { error: ReturnType<typeof vi.fn> }>)['logger'];
+        const errorSpy = vi.spyOn(logger, 'error');
+
+        await worker.process({ id: 'job-3', data: { campaignId: 99 } } as never);
+
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('campaignId=99'));
+    });
+});
