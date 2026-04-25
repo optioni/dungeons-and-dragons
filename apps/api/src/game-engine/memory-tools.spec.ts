@@ -15,6 +15,7 @@ vi.mock('@mikro-orm/decorators/legacy', () => ({
     OneToMany: () => () => {},
     OneToOne: () => () => {},
     Index: () => () => {},
+    Unique: () => () => {},
 }));
 vi.mock('@mikro-orm/core', () => ({ type: {}, OptionalProps: Symbol(), Collection: class {}, Type: class {} }));
 vi.mock('@mikro-orm/postgresql', () => ({ BaseEntity: class {}, EntityManager: class {}, EntityRepository: class {} }));
@@ -58,6 +59,9 @@ function makeNpcMemoryService() {
 
 function makeToolHandlerMocks() {
     return [
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
+        { execute: vi.fn() } as never,
         { execute: vi.fn() } as never,
         { execute: vi.fn() } as never,
         { execute: vi.fn() } as never,

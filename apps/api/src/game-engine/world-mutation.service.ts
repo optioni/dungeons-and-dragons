@@ -27,6 +27,39 @@ export class WorldMutationService {
         private readonly events: EventEmitter2,
     ) {}
 
+    /** Persists a new Npc row and emits NPC_CREATED. */
+    async createNpc(campaignId: number, dto: {
+        name: string
+        description?: string | null
+        profession?: string | null
+        disposition?: string | null
+        personalityTraits?: string[]
+        speechStyle?: string | null
+        coreMotivation?: string | null
+        agenda?: string | null
+        currentLocationId?: number | null
+    }): Promise<WorldOutcome> {
+        const npc = this.em.create(Npc, {
+            campaignId,
+            name: dto.name,
+            description: dto.description ?? null,
+            profession: dto.profession ?? null,
+            disposition: dto.disposition ?? null,
+            personalityTraits: dto.personalityTraits ?? [],
+            speechStyle: dto.speechStyle ?? null,
+            coreMotivation: dto.coreMotivation ?? null,
+            agenda: dto.agenda ?? null,
+            currentLocationId: dto.currentLocationId ?? null,
+        });
+        this.em.persist(npc);
+        await this.em.flush();
+
+        const npcId = (npc as unknown as { id: number }).id;
+        this.events?.emit(STATE_CHANGED_EVENT, new StateChangedEvent('NPC_CREATED', String(npcId), campaignId));
+
+        return { success: true, data: { npcId } };
+    }
+
     /** Partially updates an NPC. Emits NPC_UPDATE or NPC_KILLED event. */
     async updateNpc(npcId: number, updates: Partial<{
         alive: boolean

@@ -21,6 +21,9 @@ function makeToolHandlerMocks() {
         { execute: makeMock() } as never,
         { execute: makeMock() } as never,
         { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
+        { execute: makeMock() } as never,
     ] as const;
 }
 
@@ -46,6 +49,7 @@ describe('GameEngineToolRegistrar — trigger_catastrophe exclusion', () => {
             prepareSpells: makeMock(),
         };
         const world = {
+            createNpc: makeMock(),
             updateNpc: makeMock(),
             addToParty: makeMock(),
             removeFromParty: makeMock(),
@@ -175,6 +179,7 @@ describe('GameEngineToolRegistrar — auto-checker integration', () => {
             restockMerchant: makeMock(),
         };
         const world = {
+            createNpc: makeMock(),
             updateNpc: vi.fn().mockResolvedValue({ success: true, data: {} }),
             addToParty: makeMock(),
             removeFromParty: makeMock(),

@@ -193,6 +193,7 @@ export class TravelService {
             description: string
             currentState: string | null
             connectedLocationIds: number[]
+            parentLocationId?: number | null
         },
     ): Promise<TravelOutcome> {
         const location = this.em.create(Location, {

@@ -18,6 +18,7 @@ import { GameSession } from '../session/entities/game-session.entity.js';
 import { SessionModule } from '../session/session.module.js';
 import { Faction } from '../world/entities/faction.entity.js';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity.js';
+import { LocationItem } from '../world/entities/location-item.entity.js';
 import { Location } from '../world/entities/location.entity.js';
 import { MapLocation } from '../world/entities/map-location.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
@@ -34,11 +35,14 @@ import { ItemService } from './item.service.js';
 import { LevelingService } from './leveling.service.js';
 import { RestService } from './rest.service.js';
 import { AddRoomItemHandler } from './tools/add-room-item.handler.js';
+import { CreateNpcHandler } from './tools/create-npc.handler.js';
 import { EnterDungeonHandler } from './tools/enter-dungeon.handler.js';
 import { ExitDungeonHandler } from './tools/exit-dungeon.handler.js';
 import { LootRoomHandler } from './tools/loot-room.handler.js';
 import { MoveToRoomHandler } from './tools/move-to-room.handler.js';
+import { PlaceItemHandler } from './tools/place-item.handler.js';
 import { SpawnEncounterHandler } from './tools/spawn-encounter.handler.js';
+import { TakeItemHandler } from './tools/take-item.handler.js';
 import { TriggerSpellPrepHandler } from './tools/trigger-spell-prep.handler.js';
 import { UpdateRoomStateHandler } from './tools/update-room-state.handler.js';
 import { TravelService } from './travel.service.js';
@@ -61,6 +65,7 @@ import { WorldMutationService } from './world-mutation.service.js';
             Item,
             Location,
             LocationDiscovery,
+            LocationItem,
             MapLocation,
             Npc,
             NpcItem,
@@ -86,6 +91,9 @@ import { WorldMutationService } from './world-mutation.service.js';
         ItemService,
         LevelingService,
         WorldMutationService,
+        CreateNpcHandler,
+        PlaceItemHandler,
+        TakeItemHandler,
         EnterDungeonHandler,
         MoveToRoomHandler,
         ExitDungeonHandler,

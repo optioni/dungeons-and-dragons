@@ -29,11 +29,14 @@ import { ItemService } from './item.service.js';
 import { LevelingService } from './leveling.service.js';
 import { RestService } from './rest.service.js';
 import { AddRoomItemHandler } from './tools/add-room-item.handler.js';
+import { CreateNpcHandler } from './tools/create-npc.handler.js';
 import { EnterDungeonHandler } from './tools/enter-dungeon.handler.js';
 import { ExitDungeonHandler } from './tools/exit-dungeon.handler.js';
 import { LootRoomHandler } from './tools/loot-room.handler.js';
 import { MoveToRoomHandler } from './tools/move-to-room.handler.js';
+import { PlaceItemHandler } from './tools/place-item.handler.js';
 import { SpawnEncounterHandler } from './tools/spawn-encounter.handler.js';
+import { TakeItemHandler } from './tools/take-item.handler.js';
 import { TriggerSpellPrepHandler } from './tools/trigger-spell-prep.handler.js';
 import { UpdateRoomStateHandler } from './tools/update-room-state.handler.js';
 import { TravelService } from './travel.service.js';
@@ -74,6 +77,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         private readonly addRoomItemHandler: AddRoomItemHandler,
         private readonly lootRoomHandler: LootRoomHandler,
         private readonly triggerSpellPrepHandler: TriggerSpellPrepHandler,
+        private readonly createNpcHandler: CreateNpcHandler,
+        private readonly placeItemHandler: PlaceItemHandler,
+        private readonly takeItemHandler: TakeItemHandler,
     ) {}
 
     onModuleInit(): void {
@@ -352,6 +358,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                     connectedLocationIds: Array.isArray(input.connected_location_ids)
                         ? (input.connected_location_ids as number[])
                         : [],
+                    parentLocationId: input.parent_location_id === undefined
+                        ? null
+                        : this.num(input.parent_location_id),
                 });
             },
         });
@@ -635,6 +644,48 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
                 return world.recordLore(context.campaignId, this.str(input.fact));
             },
+        });
+
+        toolRegistry.register({
+            toolName: 'create_npc',
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const context = await this.loadCtx(sessionId);
+                if (!context) {
+                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                }
+
+                const result = await this.createNpcHandler.execute(context.campaignId, input as never);
+                // NPC_ALIVE objectives can become satisfiable once a matching NPC exists.
+                if (result.success) {
+                    await this.questService.runAutoChecker(context.campaignId);
+                }
+                return result;
+            },
+        });
+
+        toolRegistry.register({
+            toolName: 'place_item',
+            execute: async (sessionId, input): Promise<ToolResult> => {
+                const context = await this.loadCtx(sessionId);
+                if (!context) {
+                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                }
+                return this.placeItemHandler.execute(context.campaignId, {
+                    locationId: this.num(input.location_id),
+                    itemId: this.num(input.item_id),
+                    quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
+                    note: input.note == null ? input.note as null | undefined : this.str(input.note),
+                });
+            },
+        });
+
+        toolRegistry.register({
+            toolName: 'take_item',
+            execute: async (sessionId, input): Promise<ToolResult> => this.takeItemHandler.execute(sessionId, {
+                locationId: this.num(input.location_id),
+                itemId: this.num(input.item_id),
+                quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
+            }),
         });
     }
 
