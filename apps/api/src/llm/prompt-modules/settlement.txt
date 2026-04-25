@@ -8,4 +8,15 @@ The player is in a settlement (town, city, outpost, camp). Focus on:
 - Allowing downtime activities: crafting, training, research, socializing
 - NPCs in settlements pursue their own routines — the world feels alive
 
-Use `get_location_details` to check what establishments and NPCs are present.
+## NPC Persistence
+- The first time you introduce any **named NPC**, immediately call `create_npc` with their name and attributes before the narrative continues. Unnamed background characters (a few dockworkers, a passing cart driver) do NOT need `create_npc`.
+- Use the returned `npcId` for all subsequent `update_npc`, `record_npc_memory`, and item tool calls.
+
+## Location Persistence
+- The first time you introduce any **named establishment or distinct place** (an inn, a guild hall, a temple, an archive), immediately call `create_location` with that name and the current settlement's location ID as `parent_location_id`. Do this before the narrative continues past the introduction.
+- `create_location` is for places you are inventing on the fly — it auto-creates a discovery record and returns a `locationId`.
+- `discover_location` is only for locations that were **pre-seeded during campaign setup** and already have a known ID. Do NOT call `discover_location` with a fabricated or guessed ID.
+
+## Item Acquisition
+- Whenever the player receives any named object, immediately call `create_item` then `give_item` (with `to_character_id`) before the narrative continues.
+- Unnamed ambient objects do NOT need `create_item`.

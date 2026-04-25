@@ -384,9 +384,12 @@ describe('ContextLoader', () => {
 
     describe('loadWorldBlock — merchant inventory at current location', () => {
         it('includes inventory block when an NPC with items is at currentLocationId', async () => {
-            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
-            em.find.mockResolvedValueOnce([{ id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42 }]);
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
+            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.find.mockResolvedValueOnce([]); // subLocations
+            em.find.mockResolvedValueOnce([{ id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42, alive: true, disposition: null }]);
             em.find.mockResolvedValueOnce([{ npcId: 10, name: 'Iron Dagger', quantity: 2, merchantPrice: 5 }]);
+            em.find.mockResolvedValueOnce([]); // locationItems
 
             const result = await service.loadWorldBlock(1);
 
@@ -396,10 +399,13 @@ describe('ContextLoader', () => {
         });
 
         it('omits inventory block for an NPC at currentLocationId with zero items', async () => {
-            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
-            em.find.mockResolvedValueOnce([{ id: 10, name: 'Guard Bob', profession: null, currentLocationId: 42 }]);
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
+            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.find.mockResolvedValueOnce([]); // subLocations
+            em.find.mockResolvedValueOnce([{ id: 10, name: 'Guard Bob', profession: null, currentLocationId: 42, alive: true, disposition: null }]);
             // no NpcItems
             em.find.mockResolvedValueOnce([]);
+            em.find.mockResolvedValueOnce([]); // locationItems
 
             const result = await service.loadWorldBlock(1);
 
@@ -407,9 +413,12 @@ describe('ContextLoader', () => {
         });
 
         it('produces no merchant inventory section when no NPCs at currentLocationId have items', async () => {
-            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
+            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.find.mockResolvedValueOnce([]); // subLocations
             // no NPCs at location
             em.find.mockResolvedValueOnce([]);
+            em.find.mockResolvedValueOnce([]); // locationItems
 
             const result = await service.loadWorldBlock(1);
 
@@ -417,15 +426,18 @@ describe('ContextLoader', () => {
         });
 
         it('includes a separate inventory block for each merchant when multiple NPCs have items', async () => {
-            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 });
+            em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
+            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.find.mockResolvedValueOnce([]); // subLocations
             em.find.mockResolvedValueOnce([
-                { id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42 },
-                { id: 11, name: 'Mira', profession: 'alchemist', currentLocationId: 42 },
+                { id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42, alive: true, disposition: null },
+                { id: 11, name: 'Mira', profession: 'alchemist', currentLocationId: 42, alive: true, disposition: null },
             ]);
             em.find.mockResolvedValueOnce([
                 { npcId: 10, name: 'Iron Dagger', quantity: 2, merchantPrice: 5 },
                 { npcId: 11, name: 'Healing Potion', quantity: 3, merchantPrice: 50 },
             ]);
+            em.find.mockResolvedValueOnce([]); // locationItems
 
             const result = await service.loadWorldBlock(1);
 

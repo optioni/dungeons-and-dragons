@@ -11,8 +11,10 @@ import { MemoryService } from '../memory/memory.service.js';
 import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { EventType, SceneType } from '../session/session.enums.js';
+import { LocationItem } from '../world/entities/location-item.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
+import { Location } from '../world/entities/location.entity.js';
 import { PromptModuleRegistry } from './prompt-module-registry.service.js';
 
 export type AnthropicMessage = Anthropic.MessageParam;
@@ -157,13 +159,64 @@ export class ContextLoader {
         const campaign = await this.campaignRepository.getEntityManager().findOne(Campaign, campaignId);
         if (campaign?.currentLocationId) {
             const em = this.npcItemRepository.getEntityManager();
+
+            // Current Location section (with optional parent name for sub-locations)
+            // eslint-disable-next-line unicorn/no-array-method-this-argument
+            const currentLocation = await em.findOne(Location, { id: campaign.currentLocationId });
+            if (currentLocation) {
+                let locationName = currentLocation.name;
+                if (currentLocation.parentLocationId) {
+                    // eslint-disable-next-line unicorn/no-array-method-this-argument
+                    const parentLocation = await em.findOne(Location, { id: currentLocation.parentLocationId });
+                    if (parentLocation) {
+                        locationName = `${currentLocation.name} (inside ${parentLocation.name})`;
+                    }
+                }
+
+                const locationLines = [
+                    `Name: ${locationName}`,
+                    `Description: ${currentLocation.description}`,
+                    ...(currentLocation.currentState ? [`State: ${currentLocation.currentState}`] : []),
+                ];
+                parts.push(`## Current Location\n${locationLines.join('\n')}`);
+
+                // Known Establishments — only shown when at a top-level location
+                if (!currentLocation.parentLocationId) {
+                    // eslint-disable-next-line unicorn/no-array-method-this-argument
+                    const subLocations = await em.find(Location, { parentLocationId: campaign.currentLocationId });
+                    if (subLocations.length > 0) {
+                        const estLines = subLocations.map(
+                            (loc) => `- ${loc.name} (id: ${loc.id}): ${loc.description}`,
+                        );
+                        parts.push(`## Known Establishments\n${estLines.join('\n')}`);
+                    }
+                }
+            }
+
+            // NPCs Present
             // eslint-disable-next-line unicorn/no-array-method-this-argument
             const npcsAtLocation = await em.find(Npc, {
                 campaignId,
                 currentLocationId: campaign.currentLocationId,
+                alive: true,
             });
 
             if (npcsAtLocation.length > 0) {
+                const npcLines = npcsAtLocation.map((npc) => {
+                    const parts2: string[] = [`${npc.name} (id: ${npc.id})`];
+                    if (npc.profession) {
+                        parts2.push(npc.profession);
+                    }
+
+                    if (npc.disposition) {
+                        parts2.push(npc.disposition);
+                    }
+
+                    return `- ${parts2.join(' — ')}`;
+                });
+                parts.push(`## NPCs Present\n${npcLines.join('\n')}`);
+
+                // Merchant Inventory (NPCs with stock)
                 const npcIds = npcsAtLocation.map((npc) => npc.id);
                 // eslint-disable-next-line unicorn/no-array-method-this-argument
                 const npcItems = await em.find(NpcItem, { npcId: npcIds });
@@ -192,6 +245,17 @@ export class ContextLoader {
                 if (merchantSections.length > 0) {
                     parts.push(`## Merchant Inventory\n${merchantSections.join('\n\n')}`);
                 }
+            }
+
+            // Items Here
+            // eslint-disable-next-line unicorn/no-array-method-this-argument
+            const locationItems = await em.find(LocationItem, { locationId: campaign.currentLocationId });
+            if (locationItems.length > 0) {
+                const itemLines = locationItems.map((li) => {
+                    const note = li.note ? ` — ${li.note}` : '';
+                    return `- ${li.itemName} x${li.quantity}${note} (item_id: ${li.itemId})`;
+                });
+                parts.push(`## Items Here\n${itemLines.join('\n')}`);
             }
         }
 
