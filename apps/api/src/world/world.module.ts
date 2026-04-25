@@ -12,6 +12,7 @@ import { Quest } from '../quest/entities/quest.entity.js';
 import { QueueModule } from '../queue/queue.module.js';
 import { Faction } from './entities/faction.entity.js';
 import { LocationDiscovery } from './entities/location-discovery.entity.js';
+import { LocationItem } from './entities/location-item.entity.js';
 import { Location } from './entities/location.entity.js';
 import { MapLocation } from './entities/map-location.entity.js';
 import { Map } from './entities/map.entity.js';
@@ -35,6 +36,7 @@ import { WorldService } from './world.service.js';
         MikroOrmModule.forFeature([
             Campaign,
             Location,
+            LocationItem,
             Map,
             MapLocation,
             LocationDiscovery,

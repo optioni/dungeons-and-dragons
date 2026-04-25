@@ -200,6 +200,7 @@ type Location {
   recentEvents: [String!]
   floor: Int
   roomState: RoomState
+  parentLocationId: ID
 }
 
 enum RoomState {

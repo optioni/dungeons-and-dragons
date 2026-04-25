@@ -67,4 +67,9 @@ export class Location extends BaseEntity {
     @Field(() => RoomState, { nullable: true })
     @Property({ type: 'text', nullable: true })
     roomState: RoomState | null = null;
+
+    /** FK to parent Location (e.g., settlement) for sub-location hierarchy. Null for top-level locations. */
+    @Field(() => ID, { nullable: true })
+    @Property({ type: 'integer', nullable: true })
+    parentLocationId: number | null = null;
 }
