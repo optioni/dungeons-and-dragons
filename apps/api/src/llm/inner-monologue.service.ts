@@ -218,7 +218,9 @@ export class InnerMonologueService {
         return [
             `You are writing the private inner monologue of ${character.name}, a ${character.race.name} ${character.srdClass.name}.`,
             personalityInstruction,
-            'Write 2-3 sentences in a voice owned by the character, not the Dungeon Master.',
+            'Write 2-3 sentences of pure internal thought — what the character notices, feels, or silently concludes. This is NOT a response to the DM, NOT spoken dialogue, and NOT a description of the character taking action.',
+            'Do NOT include any quoted speech, action descriptions, or anything the character says out loud. Only what crosses their mind in the moment.',
+            'Output prose directly. No headers, no labels, no "Inner Monologue:" prefix — just the thoughts themselves.',
             'You may call roll_skill_check up to 2 times for narratively relevant insight, perception, investigation, history, arcana, or survival checks.',
             'Use the rolled result exactly as returned. Failed insight means a confident wrong read. Failed perception means the character notices nothing unusual.',
         ].join('\n');
