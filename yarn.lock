@@ -972,6 +972,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/cinzel@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/cinzel@npm:5.2.8"
+  checksum: 10c0/93476025266d97baceeeaf0c52d718f043b80a3b4b172d32f8471c952d82a8225cf4e1cd50c5a25db7ffec5e7f1733b04d399d6caaf7d75a8f7ab281c6e2316d
+  languageName: node
+  linkType: hard
+
+"@fontsource/im-fell-english@npm:^5.2.6":
+  version: 5.2.6
+  resolution: "@fontsource/im-fell-english@npm:5.2.6"
+  checksum: 10c0/18bf6a39b31b44dca40670276f6757ff4b4d6b969995d96acd54b28259f9cdeaff8ae45a06ae07d860313f54f452d40f9a5bbf6641dce8cac666b62055f7fed7
+  languageName: node
+  linkType: hard
+
 "@gar/promise-retry@npm:^1.0.0":
   version: 1.0.3
   resolution: "@gar/promise-retry@npm:1.0.3"
@@ -18398,6 +18412,8 @@ __metadata:
   resolution: "web@workspace:apps/web"
   dependencies:
     "@0no-co/graphqlsp": "npm:^1.15.4"
+    "@fontsource/cinzel": "npm:^5.2.8"
+    "@fontsource/im-fell-english": "npm:^5.2.6"
     "@gql.tada/vue-support": "npm:^1.0.2"
     "@juuso.piikkila/eslint-config-typescript": "npm:^4.5.0"
     "@nuxt/ui": "npm:^4.6.1"
