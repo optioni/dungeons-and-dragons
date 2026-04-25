@@ -119,7 +119,7 @@ export class Campaign extends BaseEntity {
     loreDocument: string | null = null;
 
     @Field(() => Date)
-    @Property({ type: 'date', onCreate: () => new Date() })
+    @Property({ type: 'timestamptz', onCreate: () => new Date() })
     createdAt: Opt<Date> = new Date();
 
     @OneToMany(() => DiaryEntry, (diaryEntry) => diaryEntry.campaign)
