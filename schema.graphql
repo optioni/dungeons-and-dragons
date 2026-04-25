@@ -51,6 +51,7 @@ type Campaign {
   travelEncounterEnabled: Boolean!
   loreDocument: String
   createdAt: DateTime!
+  currentLocationName: String
   hasCharacter: Boolean!
 }
 

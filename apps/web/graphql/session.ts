@@ -145,6 +145,8 @@ export const CAMPAIGN_QUERY_FOR_PLAY = graphql(`
       status
       endedAt
       endReason
+      inGameDate
+      currentLocationName
     }
   }
 `);

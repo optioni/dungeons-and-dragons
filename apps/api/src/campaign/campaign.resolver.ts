@@ -1,12 +1,13 @@
-import {
-    Args, ID, Mutation, Query, ResolveField, Resolver, Root,
-} from '@nestjs/graphql';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository } from '@mikro-orm/postgresql';
+import { Args, ID, Mutation, Query, ResolveField, Resolver, Root } from '@nestjs/graphql';
 import { type Connection } from 'graphql-relay';
 
 import { type User } from '../auth/entities/user.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
 import { GraphqlService } from '../graphql/graphql.service.js';
 import { createRelayConnection } from '../graphql/relay';
+import { Location } from '../world/entities/location.entity.js';
 import { CampaignsConnectionArgs } from './args/campaigns-connection.args.js';
 import { CampaignService } from './campaign.service.js';
 import { CampaignSetupService } from './campaign.setup.service.js';
@@ -30,6 +31,8 @@ export class CampaignResolver {
         private readonly campaignService: CampaignService,
         private readonly campaignSetupService: CampaignSetupService,
         private readonly graphqlService: GraphqlService,
+        @InjectRepository(Location)
+        private readonly locationRepository: EntityRepository<Location>,
     ) {}
 
     /** Creates a new draft campaign for the authenticated user. */
@@ -59,14 +62,23 @@ export class CampaignResolver {
         return this.campaignService.findById(Number(id), user.id);
     }
 
+    /** Resolves the name of the campaign's current location, if one is set. */
+    @ResolveField(() => String, { nullable: true })
+    async currentLocationName(@Root() campaign: Campaign): Promise<string | null> {
+        if (!campaign.currentLocationId) {
+            return null;
+        }
+
+        const location = await this.locationRepository.findOne(campaign.currentLocationId);
+        return location?.name ?? null;
+    }
+
     /**
      * Resolves whether the campaign has an associated character.
      * Used by the setup wizard to determine whether to show character creation first.
      */
     @ResolveField(() => Boolean)
-    async hasCharacter(
-        @Root() campaign: Campaign,
-    ): Promise<boolean> {
+    async hasCharacter(@Root() campaign: Campaign): Promise<boolean> {
         const em = this.campaignService['campaignRepository'].getEntityManager();
         const count = await em.count('Character' as never, { campaign: { id: campaign.id } });
         return count > 0;
