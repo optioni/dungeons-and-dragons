@@ -528,7 +528,7 @@ const { executeQuery: refetchEvents } = useQuery({
 watch(sessionId, async (id) => {
     if (!id) return;
     const { data } = await refetchEvents({ requestPolicy: 'network-only' });
-    persistedEvents.value = (data?.gameEvents ?? []) as PersistedGameEvent[];
+    persistedEvents.value = (data.value?.gameEvents ?? []) as PersistedGameEvent[];
 });
 
 // ── DM Stream Subscription ───────────────────────────────────────────────────
@@ -582,12 +582,12 @@ watch(streamData, async (data) => {
 
             isStreaming.value = false;
             const { data: eventsData } = await refetchEvents({ requestPolicy: 'network-only' });
-            persistedEvents.value = (eventsData?.gameEvents ?? []) as PersistedGameEvent[];
+            persistedEvents.value = (eventsData.value?.gameEvents ?? []) as PersistedGameEvent[];
             inProgressNarrative.value = '';
             // Refetch session to pick up levelUpPending and combatSession changes
             const { data: sessionData } = await refetchActiveSession({ requestPolicy: 'network-only' });
-            if (sessionData?.activeSession) {
-                applySessionData(sessionData.activeSession);
+            if (sessionData.value?.activeSession) {
+                applySessionData(sessionData.value.activeSession);
             }
             await refetchCharacter({ requestPolicy: 'network-only' });
             break;
