@@ -1,9 +1,5 @@
-# LLM Orchestration Spec
+## MODIFIED Requirements
 
-## Purpose
-
-Defines how the DM turn is orchestrated — context assembly, prompt caching strategy, scene module loading, tool execution contract, streaming over SSE, and stream resumability.
-## Requirements
 ### Requirement: DM turn orchestration assembles deterministic runtime context
 The system SHALL orchestrate one Claude DM call per accepted player turn. Before invoking the model, the system SHALL assemble context for the active session in a deterministic order consisting of:
 1. base system prompt and tool definitions (the full registered game-engine tool set)
@@ -74,79 +70,7 @@ The runtime SHALL structure prompt assembly so these boundaries can be cached an
 - **WHEN** `create_npc` persists a new NPC with `currentLocationId` matching the campaign's current location
 - **THEN** the next DM turn rebuilds breakpoint 3 so the new NPC appears in the `## NPCs Present` section
 
-### Requirement: Scene prompt modules are loaded by session scene type
-The system SHALL store prompt modules for `EXPLORATION`, `COMBAT`, `SOCIAL`, `SETTLEMENT`, and `REST` as application-managed text assets. The DM runtime SHALL load the module set corresponding to the active `GameSession.sceneType` for each turn.
-
-#### Scenario: Exploration session loads exploration module
-- **WHEN** the active session has `sceneType = EXPLORATION`
-- **THEN** the DM runtime includes the exploration prompt module in the assembled prompt
-
-#### Scenario: Scene transition swaps the loaded module
-- **WHEN** a tool call updates the session scene from `EXPLORATION` to `COMBAT`
-- **THEN** the next DM turn includes combat prompt guidance instead of the exploration module
-
-### Requirement: Tool execution uses a structured registry contract
-The system SHALL execute LLM-requested tools through a registry that maps tool names to handlers. Every tool handler SHALL return a structured result envelope instead of throwing transport-layer errors. That envelope SHALL include whether the call succeeded and the data or error information required for the narrative to recover gracefully.
-
-#### Scenario: Successful tool call returns structured result
-- **WHEN** the DM runtime executes a valid supported tool call
-- **THEN** the tool registry returns a structured success payload that is recorded in the session transcript and fed back into the turn
-
-#### Scenario: Invalid tool arguments return structured failure
-- **WHEN** the DM runtime executes a supported tool call with invalid arguments
-- **THEN** the tool registry returns a structured error payload and the stream continues without crashing the subscription transport
-
-### Requirement: `set_scene_type` updates durable session state
-The runtime SHALL support the `set_scene_type(sessionId, sceneType)` tool call. Executing this tool SHALL validate the target session, persist the new `sceneType` on the active `GameSession`, and make that scene transition visible to the active stream consumer.
-
-#### Scenario: Valid scene change updates the session
-- **WHEN** the DM runtime executes `set_scene_type` with a supported scene value for the active session
-- **THEN** the system updates `GameSession.sceneType` and subsequent turn assembly uses the new scene module set
-
-#### Scenario: Invalid scene change returns structured error
-- **WHEN** the DM runtime executes `set_scene_type` with an unsupported scene value or wrong session
-- **THEN** the tool result is returned as a structured failure and the existing `sceneType` remains unchanged
-
-### Requirement: DM stream subscription publishes normalized typed chunks over SSE
-The system SHALL expose a GraphQL subscription `dmStream(sessionId: ID!)` over SSE for the owner of the session. The subscription SHALL emit normalized stream payloads with typed chunk semantics rather than raw Anthropic SDK events. The emitted chunk types SHALL support at least `NARRATIVE_CHUNK`, `TOOL_RESULT`, `SUGGESTED_ACTION`, `STATUS`, and a final completion signal. `SUGGESTED_ACTION` chunks SHALL carry suggested player actions emitted by `suggest_actions`, and `STATUS` chunks SHALL support workflow signals including `LEVEL_UP_PENDING` and `SPELL_PREP_PENDING`.
-
-#### Scenario: Narrative tokens are delivered as normalized chunks
-- **WHEN** the DM runtime produces narrative text during a turn
-- **THEN** the subscription emits one or more `NARRATIVE_CHUNK` payloads that the client can append to the in-progress message
-
-#### Scenario: Suggested actions are delivered as typed chunks
-- **WHEN** the runtime handles a `suggest_actions` tool call
-- **THEN** the subscription emits one or more `SUGGESTED_ACTION` chunks for the active DM response
-
-#### Scenario: Pause workflow signals are delivered as status chunks
-- **WHEN** the runtime needs the player to complete level-up or spell preparation before continuing freeform play
-- **THEN** the subscription emits a `STATUS` chunk with `status = "LEVEL_UP_PENDING"` or `status = "SPELL_PREP_PENDING"`
-
-#### Scenario: Stream completion is explicit
-- **WHEN** the DM runtime finishes a turn successfully
-- **THEN** the subscription emits a final completion payload so the client can finalize the in-progress message state
-
-#### Scenario: Non-owner cannot subscribe to another user's session
-- **WHEN** a user subscribes to `dmStream(sessionId)` for a session they do not own
-- **THEN** the system rejects the subscription or returns no events for that session
-
-### Requirement: Streaming remains resumable and de-duplicable
-The stream publisher SHALL include enough per-session sequencing information for the client to de-duplicate repeated deliveries after SSE reconnects. The runtime SHALL persist finalized `GameEvent`s even if a stream disconnect occurs mid-turn.
-
-#### Scenario: Reconnected client can ignore duplicate chunks
-- **WHEN** the SSE client reconnects after already receiving some chunks for the current turn
-- **THEN** the stream payloads include session-scoped ordering data that allows the client to discard duplicates
-
-#### Scenario: Finalized narrative survives disconnect
-- **WHEN** the SSE connection drops after the player input has been accepted but before the UI receives the final chunk
-- **THEN** the completed `DM_NARRATIVE` event remains queryable in the persisted session transcript once the turn finishes
-
-### Requirement: suggest_actions is treated as a terminal UI tool within a DM turn
-The orchestration runtime SHALL treat `suggest_actions` as a terminal tool for the current turn step. After emitting the corresponding `SUGGESTED_ACTION` chunks, the runtime SHALL NOT feed an additional tool result back into the LLM that would cause more same-turn narration to continue from that tool call.
-
-#### Scenario: suggest_actions ends its tool branch after chunk emission
-- **WHEN** the LLM invokes `suggest_actions` at the end of a narrative turn
-- **THEN** the runtime emits the suggested action chunks and concludes that tool branch without replaying an extra tool-result payload into the model
+## ADDED Requirements
 
 ### Requirement: DM model has access to the full registered game-engine tool set
 The system SHALL expose all tool handlers registered in `GameEngineToolRegistrarService` to the DM model via `DM_TOOLS`. Each tool SHALL have a JSON schema definition with accurate parameter descriptions. The registered tool set covers: dice and skill checks, combat lifecycle, rests, travel and location management (including `create_location` and `create_npc`), item management, leveling, world mutations, dungeon navigation, quest lifecycle, campaign management, and memory tools.
@@ -162,4 +86,3 @@ The system SHALL expose all tool handlers registered in `GameEngineToolRegistrar
 #### Scenario: DM invokes create_location to persist a named establishment
 - **WHEN** the DM introduces a named location and calls `create_location` with optional `parent_location_id`
 - **THEN** the tool result includes the new location's ID and it becomes referenceable by `travel_to` and other location tools
-
