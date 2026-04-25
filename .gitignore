@@ -27,6 +27,7 @@ node_modules
 dist
 .output
 .engram
+.playwright-cli
 
 # Nuxt
 .nuxt
