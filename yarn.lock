@@ -4429,6 +4429,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tailwindcss/typography@npm:^0.5.19":
+  version: 0.5.19
+  resolution: "@tailwindcss/typography@npm:0.5.19"
+  dependencies:
+    postcss-selector-parser: "npm:6.0.10"
+  peerDependencies:
+    tailwindcss: "*"
+  checksum: 10c0/b9eb38e9c7adca59b55d7321275f59ea62c7d65a0c3d324c18c1c5864c69ec6e15b838e7df61e531cda62cfea08627b4343bc419bb0996182321891e5171e4d6
+  languageName: node
+  linkType: hard
+
 "@tailwindcss/vite@npm:^4.2.2":
   version: 4.2.2
   resolution: "@tailwindcss/vite@npm:4.2.2"
@@ -5023,6 +5034,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/dompurify@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "@types/dompurify@npm:3.2.0"
+  dependencies:
+    dompurify: "npm:*"
+  checksum: 10c0/e83fec586ffbb1b43f7c8479f2a99c223814d240db912d53fb126aaeea52a4091deceeb75632b5d76004d88ef0fbf444984887b121dece6fa69f4172ed4b2b07
+  languageName: node
+  linkType: hard
+
 "@types/eslint-scope@npm:^3.7.7":
   version: 3.7.7
   resolution: "@types/eslint-scope@npm:3.7.7"
@@ -5256,6 +5276,13 @@ __metadata:
     "@types/node": "npm:*"
     "@types/ssh2-streams": "npm:*"
   checksum: 10c0/95c52fd3438dedae6a59ca87b6558cb36568db6b9144c6c8a28c168739e04c51e27c02908aae14950b7b5020e1c40fea039b1203ae2734c356a40a050fd51c84
+  languageName: node
+  linkType: hard
+
+"@types/trusted-types@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@types/trusted-types@npm:2.0.7"
+  checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
   languageName: node
   linkType: hard
 
@@ -8524,6 +8551,18 @@ __metadata:
   dependencies:
     domelementtype: "npm:^2.3.0"
   checksum: 10c0/bba1e5932b3e196ad6862286d76adc89a0dbf0c773e5ced1eb01f9af930c50093a084eff14b8de5ea60b895c56a04d5de8bbc4930c5543d029091916770b2d2a
+  languageName: node
+  linkType: hard
+
+"dompurify@npm:*, dompurify@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "dompurify@npm:3.4.1"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.7"
+  dependenciesMeta:
+    "@types/trusted-types":
+      optional: true
+  checksum: 10c0/440a4246020cb54b82ef2cb66381e4d310a0c470f9994655e61b6122811f0eaa00a2f9665d2bed30ca3f58932ba7bb0d5e26fdfce61c8daf35d21a3f5a799e48
   languageName: node
   linkType: hard
 
@@ -12699,6 +12738,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"marked@npm:^18.0.2":
+  version: 18.0.2
+  resolution: "marked@npm:18.0.2"
+  bin:
+    marked: bin/marked.js
+  checksum: 10c0/d04f58c0dee158a8069dad88de549b0039f2af7e1f0fd078aa783f360655e39296662f6c722dc6dd94c1c9ce9ba7ca9355ee1d8d77dd7b9a2f8162ebac6d9bbd
+  languageName: node
+  linkType: hard
+
 "math-intrinsics@npm:^1.1.0":
   version: 1.1.0
   resolution: "math-intrinsics@npm:1.1.0"
@@ -14692,6 +14740,16 @@ __metadata:
   peerDependencies:
     postcss: ^8.4.32
   checksum: 10c0/b379ea1d87ea27f331b472c8a21b4c6bb3c114ea573b66743f6fb4a52cab758c1930cd194df873d347901e347c47035e1353be6cf4250e469ec512f599385957
+  languageName: node
+  linkType: hard
+
+"postcss-selector-parser@npm:6.0.10":
+  version: 6.0.10
+  resolution: "postcss-selector-parser@npm:6.0.10"
+  dependencies:
+    cssesc: "npm:^3.0.0"
+    util-deprecate: "npm:^1.0.2"
+  checksum: 10c0/a0b27c5e3f7604c8dc7cd83f145fdd7b21448e0d86072da99e0d78e536ba27aa9db2d42024c50aa530408ee517c4bdc0260529e1afb56608f9a82e839c207e82
   languageName: node
   linkType: hard
 
@@ -18343,14 +18401,18 @@ __metadata:
     "@gql.tada/vue-support": "npm:^1.0.2"
     "@juuso.piikkila/eslint-config-typescript": "npm:^4.5.0"
     "@nuxt/ui": "npm:^4.6.1"
+    "@tailwindcss/typography": "npm:^0.5.19"
+    "@types/dompurify": "npm:^3.2.0"
     "@urql/vue": "npm:^2.1.0"
     "@vitejs/plugin-vue": "npm:^6.0.6"
     "@vue/test-utils": "npm:^2.4.6"
+    dompurify: "npm:^3.4.1"
     eslint: "npm:~9.39.0"
     gql.tada: "npm:^1.9.2"
     graphql: "npm:^16.13.2"
     graphql-sse: "npm:^2.6.0"
     happy-dom: "npm:^20.9.0"
+    marked: "npm:^18.0.2"
     nuxt: "npm:^4.4.0"
     tailwindcss: "npm:^4.2.2"
     typescript: "npm:^5.8.3"

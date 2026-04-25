@@ -12,9 +12,12 @@
   },
   "dependencies": {
     "@nuxt/ui": "^4.6.1",
+    "@tailwindcss/typography": "^0.5.19",
     "@urql/vue": "^2.1.0",
+    "dompurify": "^3.4.1",
     "graphql": "^16.13.2",
     "graphql-sse": "^2.6.0",
+    "marked": "^18.0.2",
     "nuxt": "^4.4.0",
     "tailwindcss": "^4.2.2",
     "vue": "^3.5.13"
@@ -23,6 +26,7 @@
     "@0no-co/graphqlsp": "^1.15.4",
     "@gql.tada/vue-support": "^1.0.2",
     "@juuso.piikkila/eslint-config-typescript": "^4.5.0",
+    "@types/dompurify": "^3.2.0",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/test-utils": "^2.4.6",
     "eslint": "~9.39.0",

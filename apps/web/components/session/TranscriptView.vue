@@ -13,9 +13,8 @@
             <!-- DM narrative message -->
             <div v-else-if="event.eventType === 'DM_NARRATIVE'"
                 class="flex justify-start">
-                <div class="max-w-[85%] bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
-                    {{ (event.content as { narrative?: string }).narrative ?? '' }}
-                </div>
+                <div class="max-w-[85%] bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 text-sm prose"
+                    v-html="parseMarkdown((event.content as { narrative?: string }).narrative ?? '')" />
             </div>
         </template>
 
@@ -41,6 +40,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { type ResultOf } from 'gql.tada';
 
+import { parseMarkdown } from '~/composables/useMarkdown';
 import { type GAME_EVENTS_QUERY } from '~/graphql/session';
 
 type GameEvent = Omit<ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents'][number], 'content'> & {
