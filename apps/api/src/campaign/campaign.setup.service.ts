@@ -139,7 +139,8 @@ export class CampaignSetupService {
             });
         }
 
-        const model = this.configService.getOrThrow<string>('LLM_BACKGROUND_MODEL');
+        // Concept generation is one-time and quality-sensitive — use Sonnet
+        const model = this.configService.getOrThrow<string>('LLM_DM_MODEL');
 
         let concepts: Campaign['generatedConcepts'];
         try {
@@ -273,23 +274,40 @@ export class CampaignSetupService {
             });
         }
 
-        const model = this.configService.getOrThrow<string>('LLM_BACKGROUND_MODEL');
+        // World seed is quality-critical and one-time — use Sonnet, not Haiku
+        const model = this.configService.getOrThrow<string>('LLM_DM_MODEL');
 
-        let seed: WorldSeedPayload;
-        try {
-            seed = await this.callLlmForWorldSeed(model, campaign);
-        } catch (error) {
-            this.logger.error('World seed LLM generation failed', error);
-            // Campaign status is NOT advanced — setup remains resumable
-            throw new BadRequestException({
-                step: 'generate_world_seed',
-                code: 'LLM_ERROR',
-                message: 'World seed generation failed. Please try again.',
-            });
+        const maxAttempts = 3;
+        let seed: WorldSeedPayload | undefined;
+        let lastError: unknown;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                const candidate = await this.callLlmForWorldSeed(model, campaign);
+                this.validateWorldSeedPayload(candidate);
+                seed = candidate;
+                break;
+            } catch (error) {
+                lastError = error;
+                if (error instanceof BadRequestException) {
+                    this.logger.warn(`World seed validation failed on attempt ${attempt}/${maxAttempts}: ${(error as BadRequestException).message}`);
+                } else {
+                    this.logger.error(`World seed LLM call failed on attempt ${attempt}/${maxAttempts}`, error);
+                }
+            }
         }
 
-        // Validate before touching the database
-        this.validateWorldSeedPayload(seed);
+        if (!seed) {
+            // Campaign status is NOT advanced — setup remains resumable
+            const isValidationError = lastError instanceof BadRequestException;
+            throw new BadRequestException({
+                step: 'generate_world_seed',
+                code: isValidationError ? 'VALIDATION_FAILED' : 'LLM_ERROR',
+                message: isValidationError
+                    ? `World seed generation produced invalid data after ${maxAttempts} attempts. Please try again.`
+                    : 'World seed generation failed. Please try again.',
+            });
+        }
 
         // Persist atomically
         await this.persistWorldSeed(campaign, seed);
@@ -305,7 +323,7 @@ export class CampaignSetupService {
         /* eslint-disable @typescript-eslint/naming-convention */
         const response = await this.anthropic.messages.create({
             model,
-            max_tokens: 4096,
+            max_tokens: 16384,
             tools: [{
                 name: 'set_world_seed',
                 description: 'Set the complete world seed for the campaign',
