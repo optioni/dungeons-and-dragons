@@ -7,29 +7,15 @@
  */
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
-import { MikroORM } from '@mikro-orm/core';
-import { Migrator } from '@mikro-orm/migrations';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { type Constructor, MikroORM } from '@mikro-orm/core';
+import { type Migration, Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { RedisContainer, type StartedRedisContainer } from '@testcontainers/redis';
+import { require as tsxRequire } from 'tsx/cjs/api';
 
-import { Migration20260413000000 } from './migrations/Migration20260413000000.js';
-import { Migration20260413000001 } from './migrations/Migration20260413000001.js';
-import { Migration20260413000002 } from './migrations/Migration20260413000002.js';
-import { Migration20260414000000 } from './migrations/Migration20260414000000.js';
-import { Migration20260415000000 } from './migrations/Migration20260415000000.js';
-import { Migration20260416000000 } from './migrations/Migration20260416000000.js';
-import { Migration20260417000000 } from './migrations/Migration20260417000000.js';
-import { Migration20260418000000 } from './migrations/Migration20260418000000.js';
-import { Migration20260419000000 } from './migrations/Migration20260419000000.js';
-import { Migration20260419092811 } from './migrations/Migration20260419092811.js';
-import { Migration20260419110000 } from './migrations/Migration20260419110000.js';
-import { Migration20260420000000 } from './migrations/Migration20260420000000.js';
-import { Migration20260420103919PermadeathCampaignEnd } from './migrations/Migration20260420103919PermadeathCampaignEnd.js';
-import { Migration20260421000000 } from './migrations/Migration20260421000000.js';
-import { Migration20260421120000 } from './migrations/Migration20260421120000.js';
-import { Migration20260423000000 } from './migrations/Migration20260423000000.js';
-import { Migration20260424000000 } from './migrations/Migration20260424000000.js';
 import { SrdClass } from './srd/entities/srd-class.entity.js';
 import { SrdCondition } from './srd/entities/srd-condition.entity.js';
 import { SrdEquipment } from './srd/entities/srd-equipment.entity.js';
@@ -44,25 +30,7 @@ import {
 
 const PGVECTOR_POSTGRES_IMAGE = 'pgvector/pgvector:pg17';
 const REDIS_IMAGE = 'redis:7-alpine';
-const MIGRATIONS = [
-    Migration20260413000000,
-    Migration20260413000001,
-    Migration20260413000002,
-    Migration20260414000000,
-    Migration20260415000000,
-    Migration20260416000000,
-    Migration20260417000000,
-    Migration20260418000000,
-    Migration20260419000000,
-    Migration20260419092811,
-    Migration20260419110000,
-    Migration20260420000000,
-    Migration20260420103919PermadeathCampaignEnd,
-    Migration20260421000000,
-    Migration20260421120000,
-    Migration20260423000000,
-    Migration20260424000000,
-];
+const API_ROOT = process.cwd();
 
 type Teardown = () => Promise<void>;
 
@@ -116,14 +84,41 @@ export default async function setup(): Promise<Teardown> {
 async function createMigratingOrm(databaseUrl: string): Promise<MikroORM> {
     return MikroORM.init(
         defineConfig({
+            baseDir: API_ROOT,
             clientUrl: databaseUrl,
             entities: [SrdClass, SrdRace, SrdSpell, SrdMonster, SrdEquipment, SrdCondition],
             migrations: {
-                migrationsList: MIGRATIONS,
+                migrationsList: loadMigrations(),
             },
             extensions: [Migrator],
         }),
     );
+}
+
+function loadMigrations(): Array<Constructor<Migration>> {
+    const migrationsPath = join(API_ROOT, 'src/migrations');
+
+    return readdirSync(migrationsPath)
+        .filter(fileName => /^Migration.*\.ts$/.test(fileName))
+        .sort()
+        .map(fileName => {
+            const modulePath = join(migrationsPath, fileName);
+            const migrationModule = tsxRequire(modulePath, join(API_ROOT, 'src/test-global-setup.ts')) as Record<
+                string,
+                unknown
+            >;
+            const MigrationClass = Object.values(migrationModule).find(isMigrationConstructor);
+
+            if (!MigrationClass) {
+                throw new Error(`No MikroORM migration class exported by ${modulePath}`);
+            }
+
+            return MigrationClass;
+        });
+}
+
+function isMigrationConstructor(value: unknown): value is Constructor<Migration> {
+    return typeof value === 'function';
 }
 
 async function stopContainers(
