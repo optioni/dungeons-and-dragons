@@ -4,10 +4,10 @@ import { BaseEntity } from '@mikro-orm/postgresql';
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { GraphQLJSON } from 'graphql-scalars';
 
+import { Campaign } from '../../campaign/entities/campaign.entity.js';
 import { SrdClass } from '../../srd/entities/srd-class.entity.js';
 import { SrdRace } from '../../srd/entities/srd-race.entity.js';
 import { type AbilityScores, type SkillProficiencies, type SpellSlot } from '../character.enums.js';
-import { Campaign } from './campaign.entity.js';
 
 /**
  * Represents a player character with all game state: stats, inventory, spells, and currency.

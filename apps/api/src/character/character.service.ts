@@ -3,19 +3,27 @@ import { type Populate } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
-    BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException,
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { type User } from '../auth/entities/user.entity.js';
+import { Campaign } from '../campaign/entities/campaign.entity.js';
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { SrdClass } from '../srd/entities/srd-class.entity.js';
 import { SrdRace } from '../srd/entities/srd-race.entity.js';
 import {
-    type AbilityScores, EquipSlot, SKILL_NAMES, type SkillProficiencies, type SpellSlot,
+    type AbilityScores,
+    EquipSlot,
+    SKILL_NAMES,
+    type SkillProficiencies,
+    type SpellSlot,
 } from './character.enums.js';
 import { AbilityScoresInput, type CreateCharacterInput } from './dto/create-character.input.js';
-import { Campaign } from './entities/campaign.entity.js';
 import { CharacterItem } from './entities/character-item.entity.js';
 import { Character } from './entities/character.entity.js';
 import { Item } from './entities/item.entity.js';
@@ -32,7 +40,9 @@ const LEVEL_1_SPELL_SLOTS: Partial<Record<string, SpellSlot[]>> = {
 
 interface AnthropicClientLike {
     messages: {
-        create: (parameters: Anthropic.Messages.MessageCreateParamsNonStreaming) => Promise<Anthropic.Message>
+        create: (
+            parameters: Anthropic.Messages.MessageCreateParamsNonStreaming,
+        ) => Promise<Anthropic.Message>
     }
 }
 
@@ -99,7 +109,9 @@ export class CharacterService {
 
         const isValid = standard.every((value, index) => value === sorted[index]);
         if (!isValid) {
-            throw new BadRequestException('Ability scores must be a permutation of the standard array [15, 14, 13, 12, 10, 8]');
+            throw new BadRequestException(
+                'Ability scores must be a permutation of the standard array [15, 14, 13, 12, 10, 8]',
+            );
         }
     }
 
@@ -159,8 +171,15 @@ export class CharacterService {
             ? (LEVEL_1_SPELL_SLOTS[srdClass.index] ?? [])
             : [];
 
-        const skillProficiencies = Object.fromEntries(SKILL_NAMES.map((skill) => [skill, 'none'])) as SkillProficiencies;
-        const personality = await this.generateCharacterPersonality(input.name, race, srdClass, input.abilityScores);
+        const skillProficiencies = Object.fromEntries(
+            SKILL_NAMES.map((skill) => [skill, 'none']),
+        ) as SkillProficiencies;
+        const personality = await this.generateCharacterPersonality(
+            input.name,
+            race,
+            srdClass,
+            input.abilityScores,
+        );
 
         const character = em.create(Character, {
             name: input.name,
@@ -196,39 +215,64 @@ export class CharacterService {
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 300,
-                tools: [{
-                    name: 'set_character_personality',
-                    description: 'Produce grounded D&D-style personality fields for a newly created player character.',
-                    input_schema: {
-                        type: 'object',
-                        properties: {
-                            personalityTraits: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
-                            ideals: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
-                            bonds: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
-                            flaws: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 2 },
+                tools: [
+                    {
+                        name: 'set_character_personality',
+                        description:
+                            'Produce grounded D&D-style personality fields for a newly created player character.',
+                        input_schema: {
+                            type: 'object',
+                            properties: {
+                                personalityTraits: {
+                                    type: 'array',
+                                    items: { type: 'string' },
+                                    minItems: 1,
+                                    maxItems: 2,
+                                },
+                                ideals: {
+                                    type: 'array',
+                                    items: { type: 'string' },
+                                    minItems: 1,
+                                    maxItems: 2,
+                                },
+                                bonds: {
+                                    type: 'array',
+                                    items: { type: 'string' },
+                                    minItems: 1,
+                                    maxItems: 2,
+                                },
+                                flaws: {
+                                    type: 'array',
+                                    items: { type: 'string' },
+                                    minItems: 1,
+                                    maxItems: 2,
+                                },
+                            },
+                            required: ['personalityTraits', 'ideals', 'bonds', 'flaws'],
                         },
-                        required: ['personalityTraits', 'ideals', 'bonds', 'flaws'],
                     },
-                }],
+                ],
                 tool_choice: { type: 'tool', name: 'set_character_personality' },
-                messages: [{
-                    role: 'user',
-                    content: [
-                        {
-                            type: 'text',
-                            text: [
-                                'Generate concise D&D 5e style personality fields for a new player character.',
-                                `Name: ${name}`,
-                                `Race: ${race.name}`,
-                                `Class: ${srdClass.name}`,
-                                `Race traits: ${race.traits.join(', ') || 'none'}`,
-                                `Class proficiencies: ${srdClass.proficiencies.join(', ') || 'none'}`,
-                                `Ability scores: STR ${abilityScores.STR}, DEX ${abilityScores.DEX}, CON ${abilityScores.CON}, INT ${abilityScores.INT}, WIS ${abilityScores.WIS}, CHA ${abilityScores.CHA}`,
-                                'Return 1-2 short entries for each field. Make them playable and specific, not melodramatic.',
-                            ].join('\n'),
-                        },
-                    ],
-                }],
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: [
+                                    'Generate concise D&D 5e style personality fields for a new player character.',
+                                    `Name: ${name}`,
+                                    `Race: ${race.name}`,
+                                    `Class: ${srdClass.name}`,
+                                    `Race traits: ${race.traits.join(', ') || 'none'}`,
+                                    `Class proficiencies: ${srdClass.proficiencies.join(', ') || 'none'}`,
+                                    `Ability scores: STR ${abilityScores.STR}, DEX ${abilityScores.DEX}, CON ${abilityScores.CON}, INT ${abilityScores.INT}, WIS ${abilityScores.WIS}, CHA ${abilityScores.CHA}`,
+                                    'Return 1-2 short entries for each field. Make them playable and specific, not melodramatic.',
+                                ].join('\n'),
+                            },
+                        ],
+                    },
+                ],
             });
             /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -248,7 +292,9 @@ export class CharacterService {
     private normalizePersonality(input: Partial<CharacterPersonality>): CharacterPersonality {
         const normalize = (items: unknown): string[] => (Array.isArray(items)
             ? items
-                .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+                .filter(
+                    (item): item is string => typeof item === 'string' && item.trim().length > 0,
+                )
                 .map((item) => item.trim())
                 .slice(0, 2)
             : []);
@@ -279,7 +325,12 @@ export class CharacterService {
         const character = await em.findOne(
             Character,
             { campaign: { id: campaignId } },
-            { populate: ['race', 'srdClass', 'campaign'] as Populate<Character, 'race' | 'srdClass' | 'campaign'> },
+            {
+                populate: ['race', 'srdClass', 'campaign'] as Populate<
+                    Character,
+                    'race' | 'srdClass' | 'campaign'
+                >,
+            },
         );
 
         if (!character || character.campaign.userId !== userId) {
@@ -298,7 +349,12 @@ export class CharacterService {
         const character = await em.findOne(
             Character,
             { id },
-            { populate: ['race', 'srdClass', 'campaign'] as Populate<Character, 'race' | 'srdClass' | 'campaign'> },
+            {
+                populate: ['race', 'srdClass', 'campaign'] as Populate<
+                    Character,
+                    'race' | 'srdClass' | 'campaign'
+                >,
+            },
         );
 
         if (!character || character.campaign.userId !== userId) {
@@ -311,7 +367,10 @@ export class CharacterService {
     /**
      * Applies a partial state update to a character. Used exclusively by game engine tool call handlers.
      */
-    async updateCharacterState(id: number, payload: UpdateCharacterStatePayload): Promise<Character> {
+    async updateCharacterState(
+        id: number,
+        payload: UpdateCharacterStatePayload,
+    ): Promise<Character> {
         const em = this.characterRepository.getEntityManager();
         const character = await em.findOneOrFail(Character, { id });
 
@@ -326,13 +385,22 @@ export class CharacterService {
      * @throws NotFoundException if the item is not found or the user does not own the character.
      * @throws ConflictException if the target slot is already occupied by another item.
      */
-    async equipItem(characterItemId: number, slot: EquipSlot, userId: number): Promise<CharacterItem> {
+    async equipItem(
+        characterItemId: number,
+        slot: EquipSlot,
+        userId: number,
+    ): Promise<CharacterItem> {
         const em = this.characterItemRepository.getEntityManager();
 
         const characterItem = await em.findOne(
             CharacterItem,
             { id: characterItemId },
-            { populate: ['character', 'character.campaign', 'item'] as Populate<CharacterItem, 'character' | 'character.campaign' | 'item'> },
+            {
+                populate: ['character', 'character.campaign', 'item'] as Populate<
+                    CharacterItem,
+                    'character' | 'character.campaign' | 'item'
+                >,
+            },
         );
 
         if (!characterItem || characterItem.character.campaign.userId !== userId) {
@@ -390,7 +458,12 @@ export class CharacterService {
         const characterItem = await em.findOne(
             CharacterItem,
             { id: characterItemId },
-            { populate: ['character', 'character.campaign', 'item'] as Populate<CharacterItem, 'character' | 'character.campaign' | 'item'> },
+            {
+                populate: ['character', 'character.campaign', 'item'] as Populate<
+                    CharacterItem,
+                    'character' | 'character.campaign' | 'item'
+                >,
+            },
         );
 
         if (!characterItem || characterItem.character.campaign.userId !== userId) {
@@ -423,7 +496,12 @@ export class CharacterService {
         return em.find(
             CharacterItem,
             { character: { id: characterId } },
-            { populate: ['item', 'item.srdEquipment'] as Populate<CharacterItem, 'item' | 'item.srdEquipment'> },
+            {
+                populate: ['item', 'item.srdEquipment'] as Populate<
+                    CharacterItem,
+                    'item' | 'item.srdEquipment'
+                >,
+            },
         );
     }
 }
