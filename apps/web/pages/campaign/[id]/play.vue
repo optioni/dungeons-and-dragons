@@ -416,7 +416,7 @@ import {
     SPELL_OPTIONS_QUERY,
 } from '~/graphql/session';
 
-definePageMeta({ middleware: 'require-auth' });
+definePageMeta({});
 
 const route = useRoute();
 const router = useRouter();

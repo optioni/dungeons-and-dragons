@@ -116,6 +116,7 @@ import { useMutation } from '@urql/vue';
 definePageMeta({ layout: false });
 
 const router = useRouter();
+const isAuthenticated = useCookie('is_authenticated');
 
 // GraphQL mutations
 const REGISTER_MUTATION = `
@@ -163,6 +164,7 @@ async function submitRegister() {
             return;
         }
 
+        isAuthenticated.value = '1';
         router.push('/');
     } finally {
         registerLoading.value = false;
@@ -189,6 +191,7 @@ async function submitLogin() {
             return;
         }
 
+        isAuthenticated.value = '1';
         router.push('/');
     } finally {
         loginLoading.value = false;

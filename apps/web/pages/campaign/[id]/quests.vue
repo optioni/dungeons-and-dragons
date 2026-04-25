@@ -193,7 +193,7 @@ import { useQuery } from '@urql/vue';
 
 import { QUESTS_QUERY } from '~/graphql/quests';
 
-definePageMeta({ middleware: 'require-auth' });
+definePageMeta({});
 
 const route = useRoute();
 const campaignId = computed(() => route.params.id as string);
