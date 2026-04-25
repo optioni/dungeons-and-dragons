@@ -95,7 +95,8 @@ The full tool list lives in the design spec: `docs/superpowers/specs/2026-04-13-
 ## Database
 
 - Run migrations: `cd api && yarn mikro-orm migration:up`
-- Create migration: `cd api && yarn mikro-orm migration:create`
+- Create migration: `cd api && yarn mikro-orm migration:create` — **never write migrations by hand**; always let MikroORM generate them from entity changes
+- If entities are missing from a generated migration, clear the MikroORM metadata cache (`rm -rf apps/api/temp`) and regenerate
 - Seed SRD data: handled automatically on first migration via MikroORM seeders
 - pgvector must be enabled on the PostgreSQL instance: `CREATE EXTENSION IF NOT EXISTS vector;`
 
