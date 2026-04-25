@@ -61,6 +61,33 @@ describe('WorldMapGraph', () => {
         expect(wrapper.text()).toContain('Riverford');
     });
 
+    it('truncates long visible labels while preserving the full name in the SVG title', () => {
+        const wrapper = mount(WorldMapGraph, {
+            props: {
+                discoveredNodes: [makeNode({ id: '1', name: 'The Impossibly Long Citadel Name' })],
+                frontierNodes: [],
+                edges: [],
+                currentLocationId: null,
+            },
+        });
+
+        expect(wrapper.text()).toContain('The Impossibly Lo…');
+        expect(wrapper.find('title').text()).toBe('The Impossibly Long Citadel Name');
+    });
+
+    it('renders a halo text layer behind discovered node labels', () => {
+        const wrapper = mount(WorldMapGraph, {
+            props: {
+                discoveredNodes: [makeNode({ id: '1', name: 'Riverford' })],
+                frontierNodes: [],
+                edges: [],
+                currentLocationId: null,
+            },
+        });
+
+        expect(wrapper.html()).toContain('paint-order="stroke"');
+    });
+
     // 8.1 — Frontier nodes render as ???
     it('renders frontier nodes as ??? without revealing names', () => {
         const wrapper = mount(WorldMapGraph, {
@@ -130,7 +157,7 @@ describe('WorldMapGraph', () => {
 
         // The activity marker renders a "!" text
         expect(wrapper.html()).toContain('!');
-        expect(wrapper.html()).toContain('fill-yellow-400');
+        expect(wrapper.html()).toContain('fill-grimoire-accent');
     });
 
     // 8.2 — Click interaction on discovered node emits node-select

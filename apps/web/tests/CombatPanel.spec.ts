@@ -77,7 +77,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const hpBarFill = wrapper.find('.bg-gray-700 > div');
+            const hpBarFill = wrapper.find('.bg-grimoire-raised > div');
             expect(hpBarFill.attributes('style')).toBe('width: 50%;');
         });
 
@@ -90,8 +90,8 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const hpBarFill = wrapper.find('.bg-gray-700 > div');
-            expect(hpBarFill.classes()).toContain('bg-green-500');
+            const hpBarFill = wrapper.find('.bg-grimoire-raised > div');
+            expect(hpBarFill.classes()).toContain('bg-grimoire-accent');
         });
 
         it('shows yellow bar between 26-50% HP', () => {
@@ -103,8 +103,8 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const hpBarFill = wrapper.find('.bg-gray-700 > div');
-            expect(hpBarFill.classes()).toContain('bg-yellow-500');
+            const hpBarFill = wrapper.find('.bg-grimoire-raised > div');
+            expect(hpBarFill.classes()).toContain('bg-orange-600');
         });
 
         it('shows red bar at 25% HP or below', () => {
@@ -116,8 +116,8 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const hpBarFill = wrapper.find('.bg-gray-700 > div');
-            expect(hpBarFill.classes()).toContain('bg-red-500');
+            const hpBarFill = wrapper.find('.bg-grimoire-raised > div');
+            expect(hpBarFill.classes()).toContain('bg-red-700');
         });
 
         it('shows 0% width when HP is 0', () => {
@@ -129,7 +129,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const hpBarFill = wrapper.find('.bg-gray-700 > div');
+            const hpBarFill = wrapper.find('.bg-grimoire-raised > div');
             expect(hpBarFill.attributes('style')).toBe('width: 0%;');
         });
     });
@@ -144,7 +144,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const badges = wrapper.findAll('.stub-badge');
+            const badges = wrapper.findAll('[data-testid="condition-tag"]');
             expect(badges).toHaveLength(2);
             expect(badges[0]!.text()).toBe('Poisoned');
             expect(badges[1]!.text()).toBe('Blinded');
@@ -159,7 +159,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            expect(wrapper.findAll('.stub-badge')).toHaveLength(0);
+            expect(wrapper.findAll('[data-testid="condition-tag"]')).toHaveLength(0);
         });
     });
 
@@ -206,7 +206,7 @@ describe('CombatPanel', () => {
             });
 
             // The action row should have the spent class when usedAction is true
-            const actionRows = wrapper.findAll('.bg-gray-800');
+            const actionRows = wrapper.findAll('.bg-grimoire-raised');
             expect(actionRows.length).toBeGreaterThan(0);
         });
 
@@ -221,8 +221,8 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            // Should have bright bg-gray-700 for unused action
-            const actionRows = wrapper.findAll('.bg-gray-700');
+            // Available action rows use bg-grimoire-surface
+            const actionRows = wrapper.findAll('.bg-grimoire-surface');
             expect(actionRows.length).toBeGreaterThan(0);
         });
 
@@ -249,7 +249,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const buttons = wrapper.findAll('.stub-button');
+            const buttons = wrapper.findAll('button');
             expect(buttons.length).toBeGreaterThan(0);
             for (const button of buttons) {
                 expect(button.attributes('disabled')).toBeDefined();
@@ -263,7 +263,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            const buttons = wrapper.findAll('.stub-button');
+            const buttons = wrapper.findAll('button');
             expect(buttons.length).toBeGreaterThan(0);
             for (const button of buttons) {
                 expect(button.attributes('disabled')).toBeUndefined();
@@ -277,7 +277,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            await wrapper.findAll('.stub-button')[0]!.trigger('click');
+            await wrapper.findAll('button')[0]!.trigger('click');
             expect(wrapper.emitted('action')).toBeTruthy();
             expect(wrapper.emitted('action')![0]).toEqual(['I attack with my weapon.']);
         });
@@ -296,7 +296,7 @@ describe('CombatPanel', () => {
                 'I take the Dodge action.',
                 'I take an action: ',
             ];
-            const buttons = wrapper.findAll('.stub-button');
+            const buttons = wrapper.findAll('button');
             expect(buttons).toHaveLength(expectedTexts.length);
 
             for (const [index, expectedText] of expectedTexts.entries()) {
@@ -312,7 +312,7 @@ describe('CombatPanel', () => {
                 global: { stubs: globalStubs },
             });
 
-            await wrapper.findAll('.stub-button')[0]!.trigger('click');
+            await wrapper.findAll('button')[0]!.trigger('click');
 
             // Only 'action' is emitted — no 'submit' or similar event
             expect(wrapper.emitted('action')).toBeTruthy();
@@ -417,7 +417,7 @@ describe('CombatPanel', () => {
 
             // Pips are w-3 h-3 spans — filter to filled vs empty
             const pips = wrapper.findAll('.w-3.h-3.rounded-full');
-            const filledPips = pips.filter((p) => p.classes().includes('bg-primary-400'));
+            const filledPips = pips.filter((p) => p.classes().includes('bg-grimoire-accent'));
             const emptyPips = pips.filter((p) => p.classes().includes('bg-transparent'));
             // 1 slot remaining (3 total - 2 used), 2 spent
             expect(filledPips).toHaveLength(1);

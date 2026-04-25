@@ -64,7 +64,7 @@ describe('SetupPage', () => {
         const wrapper = mount(SetupPage, { global: { stubs: globalStubs } });
         await flushPromises();
 
-        const startButton = wrapper.findAll('button').find((button) => button.text().includes('Start Playing'));
+        const startButton = wrapper.findAll('button').find((button) => button.text().includes('Begin your story'));
         await startButton?.trigger('click');
 
         expect(push).toHaveBeenCalledWith('/campaign/camp-ready/play');

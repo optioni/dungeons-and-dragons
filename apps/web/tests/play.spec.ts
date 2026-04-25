@@ -143,6 +143,10 @@ const globalStubs = {
         props: ['combatSession', 'characterId', 'spellSlots', 'isStreaming'],
         emits: ['action'],
     },
+    SessionPlayHeader: {
+        template: '<div data-testid="play-header">{{ sceneType }} <a>Character</a> <a>Quests</a></div>',
+        props: ['locationName', 'sceneType', 'inGameDate', 'hp', 'maxHp', 'campaignId'],
+    },
     SessionCharacterSidebar: { template: '<div />', props: ['character', 'fetching'] },
     SessionCampaignEndScreen: { template: '<div />' },
     SessionTranscriptView: {
@@ -278,7 +282,7 @@ describe('play page — deterministic core loop smoke', () => {
 
         const textarea = wrapper.find('textarea');
         await textarea.setValue('Check the sealed door');
-        const sendButton = wrapper.find('[data-icon="i-lucide-send"]');
+        const sendButton = wrapper.find('[data-testid="send-button"]');
         await sendButton?.trigger('click');
         await flushPromises();
 

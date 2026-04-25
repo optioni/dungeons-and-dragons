@@ -1,36 +1,57 @@
 <template>
-    <div class="space-y-4">
-        <template v-for="event in props.events"
-            :key="event.id">
-            <!-- Player input bubble -->
-            <div v-if="event.eventType === 'PLAYER_INPUT'"
-                class="flex justify-end">
-                <div class="max-w-[75%] bg-primary-700 text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed">
-                    {{ (event.content as { text?: string }).text ?? '' }}
-                </div>
+    <div class="space-y-0">
+        <template v-for="(event, eventIndex) in props.events" :key="event.id">
+            <!-- Ornamental divider: before a DM narrative that follows a player input -->
+            <session-ornamental-divider
+                v-if="event.eventType === 'DM_NARRATIVE' && eventIndex > 0
+                    && props.events[eventIndex - 1]?.eventType === 'PLAYER_INPUT'"
+            />
+
+            <!-- DM narrative block -->
+            <div
+                v-if="event.eventType === 'DM_NARRATIVE'"
+                class="border-l-2 border-grimoire-accent-dim pl-5 py-0.5 my-5"
+                :class="{
+                    'first-dm-narrative': firstDmEventId === event.id,
+                    'grimoire-entry': mounted,
+                }"
+            >
+                <div
+                    class="prose prose-grimoire font-['IM_Fell_English',serif] text-[1.125rem] leading-relaxed text-grimoire-text"
+                    v-html="parseMarkdown((event.content as { narrative?: string }).narrative ?? '')"
+                />
             </div>
 
-            <!-- DM narrative message -->
-            <div v-else-if="event.eventType === 'DM_NARRATIVE'"
-                class="flex justify-start">
-                <div class="max-w-[85%] bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 text-sm prose"
-                    v-html="parseMarkdown((event.content as { narrative?: string }).narrative ?? '')" />
-            </div>
+            <!-- Player input annotation -->
+            <p
+                v-else-if="event.eventType === 'PLAYER_INPUT'"
+                class="text-sm italic text-grimoire-muted ml-6 mb-5"
+                :class="{ 'grimoire-entry': mounted }"
+            >
+                <span class="not-italic font-['Cinzel',serif] tracking-widest text-xs text-grimoire-accent-dim mr-2 uppercase">
+                    {{ props.characterName ?? 'You' }}
+                </span>
+                {{ (event.content as { text?: string }).text ?? '' }}
+            </p>
         </template>
 
-        <!-- In-progress DM message (optimistic, while streaming) -->
-        <div v-if="props.inProgressText"
-            class="flex justify-start">
-            <div class="max-w-[85%] bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap relative">
-                {{ props.inProgressText }}
-                <span class="inline-block w-1.5 h-4 bg-primary-400 animate-pulse ml-0.5 align-middle" />
-            </div>
+        <!-- Inner monologue annotation -->
+        <div v-if="props.innerVoiceText"
+            class="ml-6 my-3 pl-3 border-l border-grimoire-surface">
+            <p class="text-xs italic text-grimoire-muted/70 leading-relaxed">
+                <span class="not-italic text-grimoire-accent-dim/50 mr-1">⟨</span>
+                {{ props.innerVoiceText }}
+                <span class="not-italic text-grimoire-accent-dim/50 ml-1">⟩</span>
+            </p>
         </div>
 
-        <div v-if="props.innerVoiceText"
-            class="flex justify-start">
-            <div class="max-w-[85%] px-4 py-2 text-sm italic leading-relaxed whitespace-pre-wrap text-gray-400">
-                {{ props.innerVoiceText }}
+        <!-- In-progress DM message (streaming) -->
+        <div v-if="props.inProgressText"
+            class="border-l-2 border-grimoire-accent-dim pl-5 py-0.5 my-5">
+            <div
+                class="prose prose-grimoire font-['IM_Fell_English',serif] text-[1.125rem] leading-relaxed text-grimoire-text whitespace-pre-wrap"
+            >
+                {{ props.inProgressText }}
             </div>
         </div>
     </div>
@@ -51,10 +72,20 @@ type Props = {
     events: GameEvent[]
     inProgressText?: string
     innerVoiceText?: string
+    characterName?: string | null
 };
 
 const props = withDefaults(defineProps<Props>(), {
     inProgressText: undefined,
     innerVoiceText: undefined,
+    characterName: null,
+});
+
+const mounted = ref(false);
+onMounted(() => { mounted.value = true; });
+
+const firstDmEventId = computed(() => {
+    const first = props.events.find((e) => e.eventType === 'DM_NARRATIVE');
+    return first?.id ?? null;
 });
 </script>

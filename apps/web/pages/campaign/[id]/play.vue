@@ -1,12 +1,14 @@
 <template>
-    <div class="h-screen bg-gray-950 flex overflow-hidden">
+    <div
+        class="h-screen flex flex-col overflow-hidden grimoire-bg play-page"
+        :class="{ 'is-combat': isCombat }"
+    >
         <!-- Loading state -->
         <div v-if="campaignFetching || (!sessionId && !campaign)"
             class="flex-1 flex items-center justify-center">
-            <div class="flex items-center gap-3 text-gray-400">
-                <u-icon name="i-lucide-loader-circle"
-                    class="animate-spin text-2xl" />
-                Loading session...
+            <div class="flex flex-col items-center gap-4 text-grimoire-muted relative z-10">
+                <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+                <p class="font-['IM_Fell_English',serif] italic text-lg">The grimoire stirs...</p>
             </div>
         </div>
 
@@ -16,383 +18,387 @@
             :epitaph="campaignEndPayload.epitaph"
             :days-played="campaignEndPayload.daysPlayed"
             :quests-completed="campaignEndPayload.questsCompleted"
+            :character-name="character?.name ?? null"
         />
 
         <!-- Main play layout -->
         <template v-else-if="!campaignEnded">
-            <!-- Combat panel: slides in from left when sceneType = COMBAT -->
-            <transition
-                enter-active-class="transition-all duration-300 ease-out"
-                enter-from-class="-translate-x-full opacity-0"
-                enter-to-class="translate-x-0 opacity-100"
-                leave-active-class="transition-all duration-300 ease-in"
-                leave-from-class="translate-x-0 opacity-100"
-                leave-to-class="-translate-x-full opacity-0"
-            >
-                <session-combat-panel
-                    v-if="isCombat && combatSession"
-                    :combat-session="combatSession"
-                    :character-id="characterId ?? undefined"
-                    :spell-slots="character?.spellSlots"
-                    :is-streaming="isStreaming"
-                    @action="handleQuickAction"
-                />
-            </transition>
+            <!-- Book header spanning full width -->
+            <session-play-header
+                :location-name="campaign?.currentLocationName"
+                :scene-type="sceneType"
+                :in-game-date="campaign?.inGameDate"
+                :hp="character?.hp"
+                :max-hp="character?.maxHp"
+                :campaign-id="campaignId"
+            />
 
-            <!-- Sidebar -->
-            <div class="w-56 flex-shrink-0 border-r border-gray-800 p-3 overflow-y-auto">
-                <session-character-sidebar
-                    :character="character"
-                    :fetching="characterFetching" />
-
-                <!-- Scene indicator -->
-                <div class="mt-4 pt-4 border-t border-gray-800">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Scene</p>
-
-                    <u-badge color="primary"
-                        variant="soft"
-                        size="sm">
-                        {{ sceneType }}
-                    </u-badge>
-                </div>
-
-                <!-- Navigation -->
-                <div class="mt-4 pt-4 border-t border-gray-800 space-y-1">
-                    <nuxt-link
-                        :to="`/campaign/${campaignId}/character`"
-                        class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
-                        active-class="text-white bg-gray-800"
-                    >
-                        <u-icon name="i-lucide-user" />
-                        Character
-                    </nuxt-link>
-
-                    <nuxt-link
-                        :to="`/campaign/${campaignId}/quests`"
-                        class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors px-2 py-1 rounded"
-                        active-class="text-white bg-gray-800"
-                    >
-                        <u-icon name="i-lucide-scroll-text" />
-                        Quests
-                    </nuxt-link>
-                </div>
-            </div>
-
-            <!-- Narrative column -->
-            <div class="flex-1 flex flex-col overflow-hidden relative">
-                <!-- Campaign name header -->
-                <div class="border-b border-gray-800 px-6 py-3 flex items-center justify-between">
-                    <h1 class="text-sm font-semibold text-gray-200">{{ campaign?.name }}</h1>
-
-                    <div v-if="isStreaming"
-                        class="flex items-center gap-1.5 text-xs text-primary-400">
-                        <u-icon name="i-lucide-loader-circle"
-                            class="animate-spin" />
-                        DM is responding...
-                    </div>
-                </div>
-
-                <!-- Transcript scroll area -->
-                <div ref="transcriptRef"
-                    class="flex-1 overflow-y-auto px-6 py-4">
-                    <session-transcript-view
-                        :events="persistedEvents"
-                        :in-progress-text="inProgressNarrative || undefined"
-                        :inner-voice-text="innerVoiceText || undefined" />
-                </div>
-
-                <!-- Death-save status -->
-                <div v-if="isDying"
-                    class="px-6 py-2 border-t border-red-900 bg-red-950/50"
-                    data-testid="death-save-ui">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <u-icon name="i-lucide-skull"
-                                class="text-red-400 text-sm" />
-
-                            <span class="text-xs text-red-300 font-semibold uppercase tracking-wider">Death Saves</span>
-                        </div>
-
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-1">
-                                <span class="text-xs text-gray-400 mr-1">Success</span>
-
-                                <span
-                                    v-for="i in 3"
-                                    :key="`ds${i}`"
-                                    class="w-3 h-3 rounded-full border transition-colors"
-                                    :class="i <= (character?.deathSaveSuccesses ?? 0)
-                                        ? 'bg-green-500 border-green-500'
-                                        : 'bg-transparent border-gray-600'"
-                                />
-                            </div>
-
-                            <div class="flex items-center gap-1">
-                                <span class="text-xs text-gray-400 mr-1">Failure</span>
-
-                                <span
-                                    v-for="i in 3"
-                                    :key="`df${i}`"
-                                    class="w-3 h-3 rounded-full border transition-colors"
-                                    :class="i <= (character?.deathSaveFailures ?? 0)
-                                        ? 'bg-red-500 border-red-500'
-                                        : 'bg-transparent border-gray-600'"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Suggested action chips -->
-                <div v-if="suggestedActions.length"
-                    class="px-6 pb-2 flex flex-wrap gap-2">
-                    <u-button v-for="action in suggestedActions"
-                        :key="action"
-                        size="xs"
-                        variant="soft"
-                        color="primary"
-                        @click="handleSuggestedAction(action)">
-                        {{ action }}
-                    </u-button>
-                </div>
-
-                <!-- Input area -->
-                <div class="border-t border-gray-800 px-6 py-3">
-                    <div class="flex gap-3 items-end">
-                        <u-textarea
-                            v-model="playerInput"
-                            class="flex-1"
-                            placeholder="What do you do?"
-                            :disabled="inputDisabled"
-                            :rows="2"
-                            autoresize
-                            @keydown.enter.exact.prevent="handleSend" />
-
-                        <u-button
-                            icon="i-lucide-send"
-                            :disabled="inputDisabled || !playerInput.trim()"
-                            :loading="isStreaming"
-                            @click="handleSend" />
-                    </div>
-
-                    <p class="text-xs text-gray-600 mt-1">Press Enter to send · Shift+Enter for new line</p>
-                </div>
-
-                <!-- Level-up panel overlay -->
+            <!-- Content row: combat panel + narrative column -->
+            <div class="flex flex-1 overflow-hidden relative z-10">
+                <!-- Combat panel: slides in from left when sceneType = COMBAT -->
                 <transition
-                    enter-active-class="transition-opacity duration-200"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-200"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
+                    enter-active-class="transition-all duration-300 ease-out"
+                    enter-from-class="-translate-x-full opacity-0"
+                    enter-to-class="translate-x-0 opacity-100"
+                    leave-active-class="transition-all duration-300 ease-in"
+                    leave-from-class="translate-x-0 opacity-100"
+                    leave-to-class="-translate-x-full opacity-0"
                 >
-                    <div
-                        v-if="levelUpPending"
-                        class="absolute inset-0 bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-6"
-                    >
-                        <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md space-y-5">
-                            <div class="text-center">
-                                <u-icon name="i-lucide-star"
-                                    class="text-yellow-400 text-3xl mb-2" />
+                    <session-combat-panel
+                        v-if="isCombat && combatSession"
+                        :combat-session="combatSession"
+                        :character-id="characterId ?? undefined"
+                        :spell-slots="character?.spellSlots"
+                        :is-streaming="isStreaming"
+                        @action="handleQuickAction"
+                    />
+                </transition>
 
-                                <h2 class="text-lg font-bold text-white">Level Up!</h2>
-
-                                <p class="text-sm text-gray-400">
-                                    You are now level {{ (character?.level ?? 0) + 1 }}
-                                </p>
+                <!-- Narrative column -->
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <!-- Death-save status -->
+                    <div v-if="isDying"
+                        class="px-6 py-2 border-b border-red-900 bg-red-950/30 relative z-10"
+                        data-testid="death-save-ui">
+                        <div class="flex items-center justify-between max-w-2xl mx-auto">
+                            <div class="flex items-center gap-2">
+                                <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-red-300">Death Saves</span>
                             </div>
 
-                            <!-- HP increase -->
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-400 uppercase tracking-wider">
-                                    Hit Points Gained
-                                </label>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1">
+                                    <span class="font-['Cinzel',serif] text-xs text-grimoire-muted mr-1">Success</span>
 
-                                <p class="text-xs text-gray-500">
-                                    Roll your class hit die and add your CON modifier.
-                                </p>
-
-                                <u-input
-                                    v-model.number="levelUpHpRolled"
-                                    type="number"
-                                    :min="1"
-                                    class="w-24"
-                                />
-                            </div>
-
-                            <!-- ASI or Feat toggle -->
-                            <div v-if="(character?.level ?? 0) % 4 === 3"
-                                class="space-y-3">
-                                <label class="text-xs text-gray-400 uppercase tracking-wider">
-                                    Ability Score Improvement
-                                </label>
-
-                                <div class="flex gap-3">
-                                    <u-button
-                                        size="xs"
-                                        :variant="!levelUpUseFeat ? 'solid' : 'soft'"
-                                        @click="levelUpUseFeat = false"
-                                    >
-                                        Ability Scores
-                                    </u-button>
-
-                                    <u-button
-                                        size="xs"
-                                        :variant="levelUpUseFeat ? 'solid' : 'soft'"
-                                        @click="levelUpUseFeat = true"
-                                    >
-                                        Feat
-                                    </u-button>
+                                    <span
+                                        v-for="i in 3"
+                                        :key="`ds${i}`"
+                                        class="w-3 h-3 rounded-full border transition-colors"
+                                        :class="i <= (character?.deathSaveSuccesses ?? 0)
+                                            ? 'bg-emerald-700 border-emerald-700'
+                                            : 'bg-transparent border-grimoire-muted/30'"
+                                    />
                                 </div>
 
-                                <!-- ASI selector -->
-                                <div v-if="!levelUpUseFeat"
-                                    class="space-y-2">
-                                    <p class="text-xs text-gray-500">
-                                        Distribute {{ 2 - asiTotal }} remaining point(s) across abilities.
-                                    </p>
+                                <div class="flex items-center gap-1">
+                                    <span class="font-['Cinzel',serif] text-xs text-grimoire-muted mr-1">Failure</span>
 
-                                    <div class="grid grid-cols-3 gap-2">
-                                        <div
-                                            v-for="ability in ABILITIES"
-                                            :key="ability"
-                                            class="flex flex-col items-center gap-1"
-                                        >
-                                            <span class="text-xs text-gray-500">{{ ability }}</span>
-
-                                            <div class="flex items-center gap-1">
-                                                <button
-                                                    type="button"
-                                                    class="w-5 h-5 rounded text-xs text-gray-400 bg-gray-800 hover:bg-gray-700 disabled:opacity-40"
-                                                    :disabled="(levelUpAsi[ability] ?? 0) === 0"
-                                                    @click="setAsi(ability, (levelUpAsi[ability] ?? 0) - 1)"
-                                                >
-                                                    -
-                                                </button>
-
-                                                <span class="w-4 text-center text-sm text-white">{{ levelUpAsi[ability] ?? 0 }}</span>
-
-                                                <button
-                                                    type="button"
-                                                    class="w-5 h-5 rounded text-xs text-gray-400 bg-gray-800 hover:bg-gray-700 disabled:opacity-40"
-                                                    :disabled="asiTotal >= 2"
-                                                    @click="setAsi(ability, (levelUpAsi[ability] ?? 0) + 1)"
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Feat input -->
-                                <div v-else>
-                                    <u-input
-                                        v-model="levelUpFeat"
-                                        placeholder="Enter feat name..."
+                                    <span
+                                        v-for="i in 3"
+                                        :key="`df${i}`"
+                                        class="w-3 h-3 rounded-full border transition-colors"
+                                        :class="i <= (character?.deathSaveFailures ?? 0)
+                                            ? 'bg-red-800 border-red-800'
+                                            : 'bg-transparent border-grimoire-muted/30'"
                                     />
                                 </div>
                             </div>
-
-                            <!-- Error -->
-                            <p v-if="levelUpError"
-                                class="text-xs text-red-400">
-                                {{ levelUpError }}
-                            </p>
-
-                            <!-- Submit -->
-                            <u-button
-                                block
-                                color="primary"
-                                :disabled="levelUpHpRolled < 1"
-                                @click="handleLevelUpSubmit"
-                            >
-                                Confirm Level Up
-                            </u-button>
                         </div>
                     </div>
-                </transition>
 
-                <!-- Spell-preparation overlay -->
-                <transition
-                    enter-active-class="transition-opacity duration-200"
-                    enter-from-class="opacity-0"
-                    enter-to-class="opacity-100"
-                    leave-active-class="transition-opacity duration-200"
-                    leave-from-class="opacity-100"
-                    leave-to-class="opacity-0"
-                >
-                    <div
-                        v-if="spellPrepPending"
-                        class="absolute inset-0 bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-6"
-                    >
-                        <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-2xl space-y-5">
-                            <div class="text-center">
-                                <u-icon name="i-lucide-book-open-check"
-                                    class="text-sky-400 text-3xl mb-2" />
-
-                                <h2 class="text-lg font-bold text-white">Prepare Spells</h2>
-
-                                <p class="text-sm text-gray-400">
-                                    Choose up to {{ maxPreparedSpells }} spells for {{ character?.name }}.
-                                </p>
-                            </div>
-
-                            <div class="flex items-center justify-between text-xs text-gray-400">
-                                <span>{{ selectedPreparedSpells.length }}/{{ maxPreparedSpells }} selected</span>
-
-                                <span v-if="spellOptionsFetching">Loading spell list…</span>
-                            </div>
-
-                            <div class="max-h-96 overflow-y-auto border border-gray-800 rounded-xl divide-y divide-gray-800">
-                                <button
-                                    v-for="spell in availablePreparedSpells"
-                                    :key="spell.index"
-                                    type="button"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-800/70 transition-colors disabled:opacity-50"
-                                    :disabled="!selectedPreparedSpells.includes(spell.index)
-                                        && maxPreparedSpells > 0
-                                        && selectedPreparedSpells.length >= maxPreparedSpells"
-                                    @click="togglePreparedSpell(spell.index)"
-                                >
-                                    <div class="flex items-center justify-between gap-4">
-                                        <div>
-                                            <p class="text-sm font-medium text-white">{{ spell.name }}</p>
-
-                                            <p class="text-xs text-gray-500">Level {{ spell.level }}</p>
-                                        </div>
-
-                                        <u-badge
-                                            :color="selectedPreparedSpells.includes(spell.index) ? 'primary' : 'neutral'"
-                                            variant="soft"
-                                            size="sm"
-                                        >
-                                            {{ selectedPreparedSpells.includes(spell.index) ? 'Prepared' : 'Available' }}
-                                        </u-badge>
-                                    </div>
-                                </button>
-                            </div>
-
-                            <u-alert
-                                v-if="spellPrepError"
-                                color="error"
-                                variant="soft"
-                                :description="spellPrepError"
+                    <!-- Transcript scroll area -->
+                    <div ref="transcriptRef"
+                        class="flex-1 overflow-y-auto">
+                        <div class="max-w-2xl mx-auto px-8 py-8">
+                            <session-transcript-view
+                                :events="persistedEvents"
+                                :in-progress-text="inProgressNarrative || undefined"
+                                :inner-voice-text="innerVoiceText || undefined"
+                                :character-name="character?.name ?? null"
                             />
 
-                            <div class="flex justify-end">
-                                <u-button
-                                    color="primary"
-                                    :disabled="spellOptionsFetching"
-                                    @click="handlePrepareSpellsSubmit"
+                        </div>
+                    </div>
+
+                    <!-- Suggested actions -->
+                    <div v-if="suggestedActions.length"
+                        class="px-8 pb-2 relative z-10">
+                        <div class="max-w-2xl mx-auto">
+                            <p class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted/60 leading-relaxed">
+                                <template v-for="(action, i) in suggestedActions" :key="action">
+                                    <button
+                                        class="hover:text-grimoire-text transition-colors duration-150"
+                                        type="button"
+                                        @click="handleSuggestedAction(action)"
+                                    >{{ action }}</button><span
+                                        v-if="i < suggestedActions.length - 1"
+                                        class="mx-2 text-grimoire-accent-dim/40 not-italic select-none"
+                                    >·</span>
+                                </template>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Streaming indicator — anchored above the input area -->
+                    <div v-if="isStreaming"
+                        class="px-8 py-1.5 relative z-10">
+                        <div class="max-w-2xl mx-auto">
+                            <span class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-accent/50">
+                                ▎<span class="grimoire-cursor-blink">_</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Input area -->
+                    <div class="border-t border-grimoire-accent-dim/20 px-8 py-5 bg-grimoire-surface relative z-10">
+                        <div class="max-w-2xl mx-auto">
+                            <textarea
+                                v-model="playerInput"
+                                class="w-full bg-transparent text-grimoire-text text-[1.125rem]
+                                       font-['IM_Fell_English',serif] resize-none outline-none
+                                       border-l-2 border-transparent pl-5
+                                       placeholder:italic placeholder:text-grimoire-muted/50
+                                       focus:border-grimoire-accent transition-colors duration-200
+                                       disabled:opacity-40"
+                                placeholder="What do you do, adventurer?"
+                                :disabled="inputDisabled"
+                                rows="2"
+                                @keydown.enter.exact.prevent="handleSend"
+                            />
+
+                            <div class="flex justify-end mt-2">
+                                <button
+                                    class="font-['Cinzel',serif] text-xs tracking-widest uppercase
+                                           text-grimoire-accent/60 hover:text-grimoire-accent
+                                           transition-colors duration-150 disabled:opacity-30"
+                                    type="button"
+                                    data-testid="send-button"
+                                    :disabled="inputDisabled || !playerInput.trim()"
+                                    @click="handleSend"
                                 >
-                                    Confirm Prepared Spells
-                                </u-button>
+                                    Act ↵
+                                </button>
                             </div>
                         </div>
                     </div>
-                </transition>
+
+                    <!-- Level-up panel overlay -->
+                    <transition
+                        enter-active-class="transition-opacity duration-200"
+                        enter-from-class="opacity-0"
+                        enter-to-class="opacity-100"
+                        leave-active-class="transition-opacity duration-200"
+                        leave-from-class="opacity-100"
+                        leave-to-class="opacity-0"
+                    >
+                        <div
+                            v-if="levelUpPending"
+                            class="absolute inset-0 bg-grimoire-bg/90 backdrop-blur-sm flex items-center justify-center p-6 z-20"
+                        >
+                            <div class="bg-grimoire-surface border border-grimoire-accent-dim/30 rounded-sm p-6 w-full max-w-md space-y-5">
+                                <div class="text-center">
+                                    <u-icon name="i-lucide-star"
+                                        class="text-grimoire-accent text-3xl mb-2" />
+
+                                    <h2 class="font-['IM_Fell_English',serif] text-2xl text-grimoire-text">Level Up!</h2>
+
+                                    <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mt-1">
+                                        You are now level {{ (character?.level ?? 0) + 1 }}
+                                    </p>
+                                </div>
+
+                                <!-- HP increase -->
+                                <div class="space-y-2">
+                                    <label class="font-['Cinzel',serif] text-xs text-grimoire-muted uppercase tracking-wider">
+                                        Hit Points Gained
+                                    </label>
+
+                                    <p class="font-['IM_Fell_English',serif] text-sm text-grimoire-muted/70 italic">
+                                        Roll your class hit die and add your CON modifier.
+                                    </p>
+
+                                    <u-input
+                                        v-model.number="levelUpHpRolled"
+                                        type="number"
+                                        :min="1"
+                                        class="w-24"
+                                    />
+                                </div>
+
+                                <!-- ASI or Feat toggle -->
+                                <div v-if="(character?.level ?? 0) % 4 === 3"
+                                    class="space-y-3">
+                                    <label class="font-['Cinzel',serif] text-xs text-grimoire-muted uppercase tracking-wider">
+                                        Ability Score Improvement
+                                    </label>
+
+                                    <div class="flex gap-3">
+                                        <button
+                                            type="button"
+                                            class="font-['Cinzel',serif] text-xs tracking-widest uppercase px-3 py-1.5 rounded-sm border transition-colors duration-150"
+                                            :class="!levelUpUseFeat
+                                                ? 'bg-grimoire-accent text-grimoire-bg border-grimoire-accent'
+                                                : 'text-grimoire-muted border-grimoire-accent-dim/30 hover:border-grimoire-accent-dim/60'"
+                                            @click="levelUpUseFeat = false"
+                                        >
+                                            Ability Scores
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="font-['Cinzel',serif] text-xs tracking-widest uppercase px-3 py-1.5 rounded-sm border transition-colors duration-150"
+                                            :class="levelUpUseFeat
+                                                ? 'bg-grimoire-accent text-grimoire-bg border-grimoire-accent'
+                                                : 'text-grimoire-muted border-grimoire-accent-dim/30 hover:border-grimoire-accent-dim/60'"
+                                            @click="levelUpUseFeat = true"
+                                        >
+                                            Feat
+                                        </button>
+                                    </div>
+
+                                    <!-- ASI selector -->
+                                    <div v-if="!levelUpUseFeat"
+                                        class="space-y-2">
+                                        <p class="font-['IM_Fell_English',serif] text-xs italic text-grimoire-muted/70">
+                                            Distribute {{ 2 - asiTotal }} remaining point(s) across abilities.
+                                        </p>
+
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div
+                                                v-for="ability in ABILITIES"
+                                                :key="ability"
+                                                class="flex flex-col items-center gap-1"
+                                            >
+                                                <span class="font-['Cinzel',serif] text-xs text-grimoire-muted uppercase">{{ ability }}</span>
+
+                                                <div class="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        class="w-5 h-5 rounded-sm text-xs text-grimoire-muted bg-grimoire-raised hover:bg-grimoire-surface disabled:opacity-40"
+                                                        :disabled="(levelUpAsi[ability] ?? 0) === 0"
+                                                        @click="setAsi(ability, (levelUpAsi[ability] ?? 0) - 1)"
+                                                    >
+                                                        -
+                                                    </button>
+
+                                                    <span class="w-4 text-center text-sm font-mono text-grimoire-text">{{ levelUpAsi[ability] ?? 0 }}</span>
+
+                                                    <button
+                                                        type="button"
+                                                        class="w-5 h-5 rounded-sm text-xs text-grimoire-muted bg-grimoire-raised hover:bg-grimoire-surface disabled:opacity-40"
+                                                        :disabled="asiTotal >= 2"
+                                                        @click="setAsi(ability, (levelUpAsi[ability] ?? 0) + 1)"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Feat input -->
+                                    <div v-else>
+                                        <u-input
+                                            v-model="levelUpFeat"
+                                            placeholder="Enter feat name..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Error -->
+                                <p v-if="levelUpError"
+                                    class="font-['IM_Fell_English',serif] text-sm italic text-red-400">
+                                    {{ levelUpError }}
+                                </p>
+
+                                <!-- Submit -->
+                                <button
+                                    type="button"
+                                    class="w-full py-3 bg-grimoire-accent text-grimoire-bg font-['Cinzel',serif]
+                                           text-sm tracking-widest uppercase hover:bg-grimoire-accent/90
+                                           transition-colors duration-200 disabled:opacity-40 rounded-sm"
+                                    :disabled="levelUpHpRolled < 1"
+                                    @click="handleLevelUpSubmit"
+                                >
+                                    Confirm Level Up
+                                </button>
+                            </div>
+                        </div>
+                    </transition>
+
+                    <!-- Spell-preparation overlay -->
+                    <transition
+                        enter-active-class="transition-opacity duration-200"
+                        enter-from-class="opacity-0"
+                        enter-to-class="opacity-100"
+                        leave-active-class="transition-opacity duration-200"
+                        leave-from-class="opacity-100"
+                        leave-to-class="opacity-0"
+                    >
+                        <div
+                            v-if="spellPrepPending"
+                            class="absolute inset-0 bg-grimoire-bg/90 backdrop-blur-sm flex items-center justify-center p-6 z-20"
+                        >
+                            <div class="bg-grimoire-surface border border-grimoire-accent-dim/30 rounded-sm p-6 w-full max-w-2xl space-y-5">
+                                <div class="text-center">
+                                    <u-icon name="i-lucide-book-open-check"
+                                        class="text-grimoire-accent text-3xl mb-2" />
+
+                                    <h2 class="font-['IM_Fell_English',serif] text-2xl text-grimoire-text">Prepare Spells</h2>
+
+                                    <p class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted mt-1">
+                                        Choose up to {{ maxPreparedSpells }} spells for {{ character?.name }}.
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center justify-between font-['Cinzel',serif] text-xs text-grimoire-muted uppercase tracking-widest">
+                                    <span>{{ selectedPreparedSpells.length }}/{{ maxPreparedSpells }} selected</span>
+
+                                    <span v-if="spellOptionsFetching">Loading spell list…</span>
+                                </div>
+
+                                <div class="max-h-96 overflow-y-auto border border-grimoire-accent-dim/20 rounded-sm divide-y divide-grimoire-surface">
+                                    <button
+                                        v-for="spell in availablePreparedSpells"
+                                        :key="spell.index"
+                                        type="button"
+                                        class="w-full px-4 py-3 text-left hover:bg-grimoire-raised/70 transition-colors disabled:opacity-50"
+                                        :disabled="!selectedPreparedSpells.includes(spell.index)
+                                            && maxPreparedSpells > 0
+                                            && selectedPreparedSpells.length >= maxPreparedSpells"
+                                        @click="togglePreparedSpell(spell.index)"
+                                    >
+                                        <div class="flex items-center justify-between gap-4">
+                                            <div>
+                                                <p class="font-['IM_Fell_English',serif] text-base text-grimoire-text">{{ spell.name }}</p>
+
+                                                <p class="font-['Cinzel',serif] text-xs text-grimoire-muted uppercase tracking-wider">Level {{ spell.level }}</p>
+                                            </div>
+
+                                            <span
+                                                class="font-['Cinzel',serif] text-xs tracking-widest uppercase px-2 py-0.5 rounded-sm border"
+                                                :class="selectedPreparedSpells.includes(spell.index)
+                                                    ? 'text-grimoire-accent border-grimoire-accent-dim/50'
+                                                    : 'text-grimoire-muted border-grimoire-muted/20'"
+                                            >
+                                                {{ selectedPreparedSpells.includes(spell.index) ? 'Prepared' : 'Available' }}
+                                            </span>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <u-alert
+                                    v-if="spellPrepError"
+                                    color="error"
+                                    variant="soft"
+                                    :description="spellPrepError"
+                                />
+
+                                <div class="flex justify-end">
+                                    <button
+                                        type="button"
+                                        class="py-2.5 px-6 bg-grimoire-accent text-grimoire-bg font-['Cinzel',serif]
+                                               text-xs tracking-widest uppercase hover:bg-grimoire-accent/90
+                                               transition-colors duration-200 disabled:opacity-40 rounded-sm"
+                                        :disabled="spellOptionsFetching"
+                                        @click="handlePrepareSpellsSubmit"
+                                    >
+                                        Confirm Prepared Spells
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
             </div>
         </template>
     </div>
@@ -584,7 +590,6 @@ watch(streamData, async (data) => {
             const { data: eventsData } = await refetchEvents({ requestPolicy: 'network-only' });
             persistedEvents.value = (eventsData.value?.gameEvents ?? []) as PersistedGameEvent[];
             inProgressNarrative.value = '';
-            // Refetch session to pick up levelUpPending and combatSession changes
             const { data: sessionData } = await refetchActiveSession({ requestPolicy: 'network-only' });
             if (sessionData.value?.activeSession) {
                 applySessionData(sessionData.value.activeSession);
@@ -674,7 +679,7 @@ function setAsi(ability: string, val: number) {
     }
 }
 
-// ── Character Sidebar ─────────────────────────────────────────────────────────
+// ── Character ─────────────────────────────────────────────────────────────────
 const { data: characterData, fetching: characterFetching, executeQuery: refetchCharacter } = useQuery({
     query: CHARACTER_QUERY_FOR_PLAY,
     variables: computed(() => ({ id: characterId.value })),

@@ -128,6 +128,6 @@ describe('CharacterPage', () => {
         expect(text).toContain('Magic Missile');
         expect(text).toContain('Shield');
         expect(text).toContain('Moonlit Rapier');
-        expect(text).toContain('Damage: 1d8 Piercing');
+        expect(text).toContain('1d8 Piercing');
     });
 });

@@ -1,56 +1,56 @@
 <template>
-    <div class="w-72 flex-shrink-0 flex flex-col bg-gray-900 border-r border-gray-800 overflow-y-auto">
+    <div class="w-72 flex-shrink-0 flex flex-col bg-grimoire-combat border-r border-grimoire-accent-dim/20 overflow-y-auto grimoire-combat-panel">
         <!-- Header -->
-        <div class="px-4 py-3 border-b border-gray-800">
+        <div class="px-4 py-3 border-b border-grimoire-accent-dim/20 relative z-10">
             <div class="flex items-center justify-between">
-                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Combat</h2>
+                <h2 class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted">Combat</h2>
 
-                <span class="text-xs text-gray-500">Round {{ combatSession.roundNumber }}</span>
+                <span class="font-mono text-xs text-grimoire-muted">Round {{ combatSession.roundNumber }}</span>
             </div>
         </div>
 
         <!-- Initiative order -->
-        <div class="px-3 py-2 space-y-1 flex-1">
+        <div class="px-3 py-2 space-y-1 flex-1 relative z-10">
             <div
                 v-for="(combatant, index) in combatSession.combatants"
                 :key="combatant.id"
-                class="rounded-lg p-2 transition-colors duration-300"
+                class="rounded-sm p-2 transition-colors duration-300"
                 :class="index === combatSession.currentTurnIndex
-                    ? 'bg-primary-900/40 ring-1 ring-primary-500'
-                    : 'bg-gray-800/50'"
+                    ? 'bg-grimoire-accent/10 ring-1 ring-grimoire-accent/40'
+                    : 'bg-grimoire-surface/50'"
             >
                 <!-- Name & initiative -->
                 <div class="flex items-center justify-between mb-1">
                     <div class="flex items-center gap-1.5">
                         <span
                             v-if="index === combatSession.currentTurnIndex"
-                            class="w-1.5 h-1.5 rounded-full bg-primary-400"
+                            class="w-1.5 h-1.5 rounded-full bg-grimoire-accent"
                         />
 
                         <span
                             v-else
-                            class="w-1.5 h-1.5 rounded-full bg-gray-600"
+                            class="w-1.5 h-1.5 rounded-full bg-grimoire-muted/30"
                         />
 
-                        <span class="text-xs font-medium text-gray-200 truncate max-w-32">
+                        <span class="font-['IM_Fell_English',serif] text-sm text-grimoire-text truncate max-w-32">
                             {{ combatant.name || combatant.id }}
                         </span>
                     </div>
 
-                    <span class="text-xs text-gray-500 font-mono">{{ combatant.initiativeRoll }}</span>
+                    <span class="font-mono text-xs text-grimoire-muted">{{ combatant.initiativeRoll }}</span>
                 </div>
 
                 <!-- HP bar -->
                 <div class="space-y-0.5">
                     <div class="flex justify-between text-xs">
-                        <span class="text-gray-500">HP</span>
+                        <span class="font-['Cinzel',serif] text-xs uppercase tracking-widest text-grimoire-muted">HP</span>
 
-                        <span class="text-gray-300 font-mono">
-                            {{ combatant.currentHp }}<span class="text-gray-600">/{{ combatant.maxHp }}</span>
+                        <span class="font-mono text-grimoire-text/80">
+                            {{ combatant.currentHp }}<span class="text-grimoire-muted">/{{ combatant.maxHp }}</span>
                         </span>
                     </div>
 
-                    <div class="w-full bg-gray-700 rounded-full h-1.5">
+                    <div class="w-full bg-grimoire-raised rounded-full h-1.5">
                         <div
                             class="h-1.5 rounded-full transition-all duration-500"
                             :class="hpBarColor(hpPercent(combatant))"
@@ -62,16 +62,14 @@
                 <!-- Conditions -->
                 <div v-if="combatant.conditions.length"
                     class="flex flex-wrap gap-0.5 mt-1">
-                    <u-badge
+                    <span
                         v-for="cond in combatant.conditions"
                         :key="cond"
-                        color="warning"
-                        variant="soft"
-                        size="xs"
-                        class="text-xs"
+                        data-testid="condition-tag"
+                        class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent border border-grimoire-accent-dim/50 px-1.5 py-0.5 rounded-sm"
                     >
                         {{ cond }}
-                    </u-badge>
+                    </span>
                 </div>
             </div>
         </div>
@@ -79,46 +77,46 @@
         <!-- Player action economy (only on player's turn) -->
         <div
             v-if="playerCombatant && activeCombatant?.id === playerCombatant.id"
-            class="px-3 py-2 border-t border-gray-800"
+            class="px-3 py-2 border-t border-grimoire-accent-dim/20 relative z-10"
         >
-            <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Actions</p>
+            <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mb-2">Actions</p>
 
             <div class="grid grid-cols-2 gap-1.5">
                 <div
-                    class="flex items-center gap-1.5 text-xs rounded px-2 py-1"
-                    :class="playerCombatant.usedAction ? 'bg-gray-800 text-gray-600' : 'bg-gray-700 text-gray-200'"
+                    class="flex items-center gap-1.5 text-xs rounded-sm px-2 py-1"
+                    :class="playerCombatant.usedAction ? 'bg-grimoire-raised text-grimoire-muted/40' : 'bg-grimoire-surface text-grimoire-text'"
                 >
                     <span
                         class="w-2 h-2 rounded-full"
-                        :class="playerCombatant.usedAction ? 'bg-gray-600' : 'bg-primary-400'"
+                        :class="playerCombatant.usedAction ? 'bg-grimoire-muted/30' : 'bg-grimoire-accent'"
                     />
                     Action
                 </div>
 
                 <div
-                    class="flex items-center gap-1.5 text-xs rounded px-2 py-1"
-                    :class="playerCombatant.usedBonusAction ? 'bg-gray-800 text-gray-600' : 'bg-gray-700 text-gray-200'"
+                    class="flex items-center gap-1.5 text-xs rounded-sm px-2 py-1"
+                    :class="playerCombatant.usedBonusAction ? 'bg-grimoire-raised text-grimoire-muted/40' : 'bg-grimoire-surface text-grimoire-text'"
                 >
                     <span
                         class="w-2 h-2 rounded-full"
-                        :class="playerCombatant.usedBonusAction ? 'bg-gray-600' : 'bg-yellow-400'"
+                        :class="playerCombatant.usedBonusAction ? 'bg-grimoire-muted/30' : 'bg-amber-500'"
                     />
                     Bonus
                 </div>
 
                 <div
-                    class="flex items-center gap-1.5 text-xs rounded px-2 py-1"
-                    :class="playerCombatant.usedReaction ? 'bg-gray-800 text-gray-600' : 'bg-gray-700 text-gray-200'"
+                    class="flex items-center gap-1.5 text-xs rounded-sm px-2 py-1"
+                    :class="playerCombatant.usedReaction ? 'bg-grimoire-raised text-grimoire-muted/40' : 'bg-grimoire-surface text-grimoire-text'"
                 >
                     <span
                         class="w-2 h-2 rounded-full"
-                        :class="playerCombatant.usedReaction ? 'bg-gray-600' : 'bg-blue-400'"
+                        :class="playerCombatant.usedReaction ? 'bg-grimoire-muted/30' : 'bg-slate-400'"
                     />
                     Reaction
                 </div>
 
-                <div class="flex items-center gap-1.5 text-xs rounded px-2 py-1 bg-gray-700 text-gray-200">
-                    <span class="w-2 h-2 rounded-full bg-gray-400" />
+                <div class="flex items-center gap-1.5 text-xs rounded-sm px-2 py-1 bg-grimoire-surface text-grimoire-text">
+                    <span class="w-2 h-2 rounded-full bg-grimoire-muted/50" />
                     {{ 30 - playerCombatant.movementUsed }}ft
                 </div>
             </div>
@@ -126,8 +124,8 @@
 
         <!-- Spell slot pips -->
         <div v-if="hasSpellSlots"
-            class="px-3 py-2 border-t border-gray-800">
-            <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Spell Slots</p>
+            class="px-3 py-2 border-t border-grimoire-accent-dim/20 relative z-10">
+            <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mb-2">Spell Slots</p>
 
             <div class="space-y-1.5">
                 <div
@@ -135,7 +133,7 @@
                     :key="slot.level"
                     class="flex items-center justify-between"
                 >
-                    <span class="text-xs text-gray-500">Lv {{ slot.level }}</span>
+                    <span class="font-['Cinzel',serif] text-xs text-grimoire-muted uppercase tracking-widest">Lv {{ slot.level }}</span>
 
                     <div class="flex gap-0.5">
                         <span
@@ -143,8 +141,8 @@
                             :key="i"
                             class="w-3 h-3 rounded-full border transition-colors duration-300"
                             :class="i <= (slot.total - slot.used)
-                                ? 'bg-primary-400 border-primary-400'
-                                : 'bg-transparent border-gray-600'"
+                                ? 'bg-grimoire-accent border-grimoire-accent'
+                                : 'bg-transparent border-grimoire-muted/30'"
                         />
                     </div>
                 </div>
@@ -152,19 +150,21 @@
         </div>
 
         <!-- Quick action buttons -->
-        <div class="px-3 py-2 border-t border-gray-800">
+        <div class="px-3 py-2 border-t border-grimoire-accent-dim/20 relative z-10">
             <div class="flex flex-wrap gap-1.5">
-                <u-button
+                <button
                     v-for="action in quickActions"
                     :key="action.label"
-                    size="xs"
-                    variant="soft"
-                    color="neutral"
+                    type="button"
+                    class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted
+                           hover:text-grimoire-text transition-colors duration-150 disabled:opacity-30
+                           border border-grimoire-accent-dim/20 hover:border-grimoire-accent-dim/50
+                           px-2 py-1 rounded-sm"
                     :disabled="isStreaming"
                     @click="handleQuickAction(action.text)"
                 >
                     {{ action.label }}
-                </u-button>
+                </button>
             </div>
         </div>
     </div>
@@ -233,9 +233,13 @@ function hpPercent(combatant: Combatant): number {
 }
 
 function hpBarColor(percent: number): string {
-    if (percent > 50) return 'bg-green-500';
-    if (percent > 25) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (percent > 50) {
+        return 'bg-grimoire-accent';
+    }
+    if (percent > 25) {
+        return 'bg-orange-600';
+    }
+    return 'bg-red-700 grimoire-breathe';
 }
 
 const activeCombatant = computed(() =>

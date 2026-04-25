@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource/cinzel": "^5.2.8",
+    "@fontsource/im-fell-english": "^5.2.6",
     "@nuxt/ui": "^4.6.1",
     "@tailwindcss/typography": "^0.5.19",
     "@urql/vue": "^2.1.0",

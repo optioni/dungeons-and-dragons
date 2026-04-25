@@ -1,184 +1,177 @@
 <template>
-    <div class="min-h-screen bg-gray-950 p-6">
-        <!-- Header with navigation -->
-        <div class="max-w-3xl mx-auto">
-            <div class="flex items-center gap-4 mb-6">
+    <div class="min-h-screen grimoire-bg p-6">
+        <!-- Navigation -->
+        <div class="max-w-3xl mx-auto mb-8 relative z-10 grimoire-page-enter">
+            <div class="flex items-center gap-4">
                 <nuxt-link
                     :to="`/campaign/${campaignId}/play`"
-                    class="text-gray-400 hover:text-white transition-colors text-sm"
+                    class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted hover:text-grimoire-text transition-colors"
                 >
-                    <u-icon name="i-lucide-arrow-left"
-                        class="mr-1" />
-                    Back to Play
+                    ← Play
                 </nuxt-link>
 
-                <div class="flex gap-3 ml-auto">
+                <div class="flex gap-5 ml-auto">
                     <nuxt-link
                         :to="`/campaign/${campaignId}/quests`"
-                        class="text-primary-400 font-medium text-sm"
+                        class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent"
                     >
                         Quests
                     </nuxt-link>
 
                     <nuxt-link
                         :to="`/campaign/${campaignId}/character`"
-                        class="text-gray-400 hover:text-white transition-colors text-sm"
+                        class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted hover:text-grimoire-text transition-colors"
                     >
                         Character
                     </nuxt-link>
 
                     <nuxt-link
                         :to="`/campaign/${campaignId}/world`"
-                        class="text-gray-400 hover:text-white transition-colors text-sm"
+                        class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted hover:text-grimoire-text transition-colors"
                     >
                         World
                     </nuxt-link>
                 </div>
             </div>
+        </div>
 
-            <h1 class="text-2xl font-bold text-white mb-6">
-                Quests
-            </h1>
-
+        <div class="max-w-3xl mx-auto relative z-10">
             <!-- Loading -->
             <div v-if="activeFetching"
-                class="flex justify-center py-12">
-                <u-icon name="i-lucide-loader-circle"
-                    class="animate-spin text-3xl text-gray-400" />
+                class="flex flex-col items-center gap-4 py-12 text-grimoire-muted">
+                <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+                <p class="font-['IM_Fell_English',serif] italic text-lg">Consulting the scroll...</p>
             </div>
 
             <template v-else>
                 <!-- Active Quests -->
-                <section class="mb-8">
-                    <h2 class="text-lg font-semibold text-gray-200 mb-3">
+                <section class="mb-10">
+                    <h2 class="font-['Cinzel',serif] text-xs tracking-[0.4em] uppercase text-grimoire-muted mb-6">
                         Active Quests
                     </h2>
 
                     <div v-if="activeQuests.length === 0"
-                        class="text-center py-10 text-gray-500 border border-dashed border-gray-700 rounded-lg">
-                        No active quests. The DM will assign quests as your adventure unfolds.
+                        class="font-['IM_Fell_English',serif] italic text-grimoire-muted py-10">
+                        No quests yet. The road ahead is unwritten.
                     </div>
 
                     <div v-else
                         class="space-y-4">
-                        <u-card v-for="quest in activeQuests"
+                        <div v-for="quest in activeQuests"
                             :key="quest.id"
-                            class="bg-gray-900 border-gray-700">
-                            <div class="space-y-3">
-                                <div class="flex items-start justify-between gap-3">
-                                    <h3 class="text-white font-semibold text-base">
-                                        {{ quest.title }}
-                                    </h3>
+                            class="bg-grimoire-surface border border-grimoire-accent-dim/20 rounded-sm p-5 space-y-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="font-['IM_Fell_English',serif] text-base text-grimoire-text">
+                                    {{ quest.title }}
+                                </h3>
 
-                                    <u-badge color="primary"
-                                        variant="soft"
-                                        size="sm">
-                                        Active
-                                    </u-badge>
-                                </div>
+                                <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent border border-grimoire-accent-dim/50 px-2 py-0.5 rounded-sm flex-shrink-0">
+                                    Active
+                                </span>
+                            </div>
 
-                                <p class="text-gray-400 text-sm leading-relaxed">
-                                    {{ quest.description }}
-                                </p>
+                            <p class="font-['IM_Fell_English',serif] text-sm leading-relaxed text-grimoire-text/80">
+                                {{ quest.description }}
+                            </p>
 
-                                <!-- Objectives -->
-                                <div v-if="quest.objectives.length"
-                                    class="space-y-1.5 pt-1">
-                                    <div
-                                        v-for="objective in [...quest.objectives].sort((a, b) => a.order - b.order)"
-                                        :key="objective.id"
-                                        class="flex items-start gap-2 text-sm"
-                                    >
-                                        <u-icon
-                                            :name="objective.status === 'COMPLETE' ? 'i-lucide-check-circle-2' : 'i-lucide-circle'"
-                                            :class="objective.status === 'COMPLETE' ? 'text-green-400 mt-0.5' : 'text-gray-600 mt-0.5'"
-                                        />
+                            <!-- Objectives -->
+                            <div v-if="quest.objectives.length"
+                                class="space-y-1.5 pt-1">
+                                <div
+                                    v-for="objective in [...quest.objectives].sort((a, b) => a.order - b.order)"
+                                    :key="objective.id"
+                                    class="flex items-start gap-2 text-sm"
+                                >
+                                    <span
+                                        class="flex-shrink-0 mt-0.5"
+                                        :class="objective.status === 'COMPLETE' ? 'text-grimoire-accent' : 'text-grimoire-muted'"
+                                    >{{ objective.status === 'COMPLETE' ? '✦' : '◦' }}</span>
 
-                                        <span :class="objective.status === 'COMPLETE' ? 'text-gray-400 line-through' : 'text-gray-300'">
-                                            {{ objective.description }}
-                                        </span>
-                                    </div>
+                                    <span :class="objective.status === 'COMPLETE' ? 'text-grimoire-muted/60 font-[\'IM_Fell_English\',serif] text-sm' : 'text-grimoire-text/80 font-[\'IM_Fell_English\',serif] text-sm'">
+                                        {{ objective.description }}
+                                    </span>
                                 </div>
                             </div>
-                        </u-card>
+                        </div>
                     </div>
                 </section>
 
                 <!-- Completed / Failed Quests -->
                 <section v-if="!completedFetching && finishedQuests.length">
                     <button
-                        class="flex items-center gap-2 text-gray-400 hover:text-gray-200 transition-colors mb-3 text-sm font-medium"
+                        class="flex items-center gap-3 text-grimoire-muted hover:text-grimoire-text transition-colors mb-5"
                         type="button"
                         @click="showCompleted = !showCompleted"
                     >
-                        <u-icon :name="showCompleted ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" />
-                        Completed ({{ finishedQuests.length }})
+                        <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase">
+                            Completed ({{ finishedQuests.length }})
+                        </span>
+                        <u-icon :name="showCompleted ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="text-xs" />
                     </button>
 
                     <div v-if="showCompleted"
                         class="space-y-4">
-                        <u-card v-for="quest in finishedQuests"
+                        <div v-for="quest in finishedQuests"
                             :key="quest.id"
-                            class="bg-gray-900 border-gray-700 opacity-75">
-                            <div class="space-y-3">
-                                <div class="flex items-start justify-between gap-3">
-                                    <h3 class="text-gray-300 font-semibold text-base">
-                                        {{ quest.title }}
-                                    </h3>
+                            class="bg-grimoire-surface border border-grimoire-accent-dim/10 rounded-sm p-5 space-y-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <h3 class="font-['IM_Fell_English',serif] text-base text-grimoire-muted">
+                                    {{ quest.title }}
+                                </h3>
 
-                                    <u-badge
-                                        :color="quest.status === 'COMPLETED' ? 'success' : 'error'"
-                                        variant="soft"
-                                        size="sm">
-                                        {{ quest.status === 'COMPLETED' ? 'Completed' : 'Failed' }}
-                                    </u-badge>
-                                </div>
-
-                                <p class="text-gray-500 text-sm leading-relaxed">
-                                    {{ quest.description }}
-                                </p>
-
-                                <!-- Objectives -->
-                                <div v-if="quest.objectives.length"
-                                    class="space-y-1.5 pt-1">
-                                    <div
-                                        v-for="objective in [...quest.objectives].sort((a, b) => a.order - b.order)"
-                                        :key="objective.id"
-                                        class="flex items-start gap-2 text-sm"
-                                    >
-                                        <u-icon
-                                            :name="objective.status === 'COMPLETE' ? 'i-lucide-check-circle-2' : 'i-lucide-circle'"
-                                            :class="objective.status === 'COMPLETE' ? 'text-green-600 mt-0.5' : 'text-gray-700 mt-0.5'"
-                                        />
-
-                                        <span class="text-gray-500">
-                                            {{ objective.description }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Rewards (only on completed quests) -->
-                                <div
-                                    v-if="quest.status === 'COMPLETED' && (quest.rewardNarrative || quest.rewardXp || quest.rewardGold)"
-                                    class="pt-2 border-t border-gray-700 space-y-1"
+                                <span
+                                    class="font-['Cinzel',serif] text-xs tracking-widest uppercase px-2 py-0.5 rounded-sm flex-shrink-0 border"
+                                    :class="quest.status === 'COMPLETED'
+                                        ? 'text-green-600 border-green-800/50'
+                                        : 'text-red-600 border-red-800/50'"
                                 >
-                                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">
-                                        Rewards
-                                    </p>
+                                    {{ quest.status === 'COMPLETED' ? 'Completed' : 'Failed' }}
+                                </span>
+                            </div>
 
-                                    <p v-if="quest.rewardNarrative"
-                                        class="text-sm text-amber-300/80">
-                                        {{ quest.rewardNarrative }}
-                                    </p>
+                            <p class="font-['IM_Fell_English',serif] text-sm leading-relaxed text-grimoire-muted">
+                                {{ quest.description }}
+                            </p>
 
-                                    <div class="flex gap-4 text-sm text-gray-400">
-                                        <span v-if="quest.rewardXp">{{ quest.rewardXp }} XP</span>
+                            <!-- Objectives -->
+                            <div v-if="quest.objectives.length"
+                                class="space-y-1.5 pt-1">
+                                <div
+                                    v-for="objective in [...quest.objectives].sort((a, b) => a.order - b.order)"
+                                    :key="objective.id"
+                                    class="flex items-start gap-2 text-sm"
+                                >
+                                    <span class="flex-shrink-0 text-grimoire-muted/50 mt-0.5">
+                                        {{ objective.status === 'COMPLETE' ? '✦' : '◦' }}
+                                    </span>
 
-                                        <span v-if="quest.rewardGold">{{ quest.rewardGold }} gp</span>
-                                    </div>
+                                    <span class="font-['IM_Fell_English',serif] text-sm text-grimoire-muted/70">
+                                        {{ objective.description }}
+                                    </span>
                                 </div>
                             </div>
-                        </u-card>
+
+                            <!-- Rewards -->
+                            <div
+                                v-if="quest.status === 'COMPLETED' && (quest.rewardNarrative || quest.rewardXp || quest.rewardGold)"
+                                class="pt-2 border-t border-grimoire-accent-dim/20 space-y-1"
+                            >
+                                <p class="font-['Cinzel',serif] text-xs uppercase tracking-widest text-grimoire-muted">
+                                    Rewards
+                                </p>
+
+                                <p v-if="quest.rewardNarrative"
+                                    class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-accent/70">
+                                    {{ quest.rewardNarrative }}
+                                </p>
+
+                                <div class="flex gap-4 font-mono text-sm text-grimoire-muted">
+                                    <span v-if="quest.rewardXp">{{ quest.rewardXp }} XP</span>
+
+                                    <span v-if="quest.rewardGold">{{ quest.rewardGold }} gp</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </template>

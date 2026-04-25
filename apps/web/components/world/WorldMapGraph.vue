@@ -16,7 +16,7 @@
                 :y1="nodePos(edge.fromId).y"
                 :x2="nodePos(edge.toId).x"
                 :y2="nodePos(edge.toId).y"
-                class="stroke-gray-600 stroke-1"
+                class="stroke-grimoire-accent/55 stroke-1"
                 :class="[
                     newEdgeKeys.has(`${edge.fromId}-${edge.toId}`) && !prefersReducedMotion
                         ? 'animate-map-edge-enter'
@@ -38,14 +38,14 @@
         >
             <circle
                 r="14"
-                class="fill-gray-800 stroke-gray-600 stroke-1"
+                class="fill-grimoire-raised stroke-grimoire-text/60 stroke-1"
             />
 
             <text
                 text-anchor="middle"
                 dominant-baseline="middle"
-                class="fill-gray-500 text-xs select-none pointer-events-none"
-                font-size="9"
+                class="fill-grimoire-text select-none pointer-events-none"
+                font-size="10"
             >
                 ???
             </text>
@@ -72,7 +72,7 @@
             <circle
                 v-if="node.id === currentLocationId"
                 r="20"
-                class="fill-none stroke-primary-400 stroke-2 animate-pulse"
+                class="fill-none stroke-grimoire-accent stroke-[3] animate-pulse"
             />
 
             <!-- State-coloured node circle -->
@@ -87,7 +87,7 @@
                     cx="10"
                     cy="-10"
                     r="5"
-                    class="fill-yellow-400 stroke-gray-900 stroke-1"
+                    class="fill-grimoire-accent stroke-grimoire-bg stroke-1"
                 />
 
                 <text
@@ -95,7 +95,7 @@
                     y="-10"
                     text-anchor="middle"
                     dominant-baseline="middle"
-                    class="fill-gray-900 select-none pointer-events-none"
+                    class="fill-grimoire-bg select-none pointer-events-none"
                     font-size="7"
                     font-weight="bold"
                 >
@@ -104,17 +104,30 @@
             </g>
 
             <!-- Node name label -->
+            <title>{{ node.name }}</title>
+
             <text
                 y="24"
                 text-anchor="middle"
                 dominant-baseline="hanging"
-                class="select-none pointer-events-none text-xs"
-                :class="[
-                    node.id === currentLocationId ? 'fill-primary-300 font-semibold' : 'fill-gray-300',
-                ]"
-                font-size="10"
+                class="select-none pointer-events-none fill-grimoire-bg stroke-grimoire-bg stroke-[4]"
+                font-size="11"
+                paint-order="stroke"
             >
-                {{ node.name }}
+                {{ nodeLabel(node) }}
+            </text>
+
+            <text
+                y="24"
+                text-anchor="middle"
+                dominant-baseline="hanging"
+                class="select-none pointer-events-none"
+                :class="[
+                    node.id === currentLocationId ? 'fill-grimoire-accent font-semibold' : 'fill-grimoire-text',
+                ]"
+                font-size="11"
+            >
+                {{ nodeLabel(node) }}
             </text>
         </g>
     </svg>
@@ -167,7 +180,8 @@ const emit = defineEmits<{
 
 const VIEWPORT_W = 600;
 const VIEWPORT_H = 400;
-const PADDING = 40;
+const PADDING = 52;
+const MAX_LABEL_LENGTH = 18;
 
 const svgRef = ref<SVGSVGElement | null>(null);
 const selectedNodeId = ref<string | null>(null);
@@ -286,18 +300,23 @@ function nodePos(id: string): { x: number; y: number } {
     return fallbackPositions.value.get(id) ?? { x: VIEWPORT_W / 2, y: VIEWPORT_H / 2 };
 }
 
-/** Map location currentState to Tailwind fill class. */
+/** Map location currentState to grimoire-toned Tailwind fill class. */
 function nodeCircleClass(node: WorldMapNode): string {
     const base = 'stroke-1';
     const isCurrent = node.id === currentLocationId.value;
-    const ring = isCurrent ? 'stroke-primary-400' : 'stroke-gray-500';
+    const ring = isCurrent ? 'stroke-grimoire-accent' : 'stroke-grimoire-text/70';
     const state = (node.currentState ?? '').toUpperCase();
 
     if (state.includes('HOSTILE')) return `${base} ${ring} fill-red-900`;
-    if (state.includes('TENSE')) return `${base} ${ring} fill-yellow-900`;
+    if (state.includes('TENSE')) return `${base} ${ring} fill-yellow-800`;
     if (state.includes('RUINED')) return `${base} ${ring} fill-stone-800`;
     if (state.includes('SAFE')) return `${base} ${ring} fill-emerald-900`;
-    return `${base} ${ring} fill-gray-700`;
+    return `${base} ${ring} fill-grimoire-raised`;
+}
+
+function nodeLabel(node: WorldMapNode): string {
+    if (node.name.length <= MAX_LABEL_LENGTH) return node.name;
+    return `${node.name.slice(0, MAX_LABEL_LENGTH - 1)}…`;
 }
 
 function nodeAriaLabel(node: WorldMapNode): string {
