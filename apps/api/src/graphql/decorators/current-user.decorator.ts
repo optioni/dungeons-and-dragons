@@ -13,7 +13,8 @@ import { type User } from '../../auth/entities/user.entity';
  * @throws Error if the user is not found in the context.
  */
 export const CurrentUser = createParamDecorator((data: unknown, context: ExecutionContext): User => {
-    const { dbUser } = GqlExecutionContext.create(context).getContext();
+    const { req } = GqlExecutionContext.create(context).getContext<{ req: { dbUser?: User } }>();
+    const { dbUser } = req;
 
     if (!dbUser) {
         throw new Error('Database user not found in context');
