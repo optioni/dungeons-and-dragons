@@ -99,7 +99,7 @@ export class SessionResolver {
      * Subscribes to the DM stream for an active session over SSE.
      * Non-owners receive no events.
      */
-    @Subscription(() => DmStreamChunk)
+    @Subscription(() => DmStreamChunk, { resolve: (value: DmStreamChunk) => value })
     async dmStream(
         @Args('sessionId', { type: () => ID }) sessionId: string,
         @CurrentUser() user: User,
