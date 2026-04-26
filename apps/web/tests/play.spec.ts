@@ -30,6 +30,7 @@ interface SessionOverrides {
     sceneType?: string
     levelUpPending?: boolean
     combatSession?: object | null
+    lastInnerVoice?: string | null
 }
 
 interface CharacterOverrides {
@@ -47,6 +48,19 @@ interface QueryMockOptions {
     sendInputMutation?: ReturnType<typeof vi.fn>
 }
 
+function toGameEventsConnection(events: Record<string, unknown>[] = []) {
+    return {
+        edges: events.map((event, index) => ({
+            cursor: `cursor-${index + 1}`,
+            node: event,
+        })),
+        pageInfo: {
+            hasPreviousPage: false,
+            startCursor: events.length > 0 ? 'cursor-1' : null,
+        },
+    };
+}
+
 /** Configure useQuery/useMutation/useSubscription mocks for one component mount. */
 function setupQueryMocks(
     sessionOverrides: SessionOverrides = {},
@@ -56,7 +70,7 @@ function setupQueryMocks(
 ) {
     const streamRef = ref<any>(null);
     const refetchEvents = vi.fn().mockResolvedValue({
-        data: { gameEvents: options.completedEvents ?? [] },
+        data: { gameEvents: toGameEventsConnection(options.completedEvents) },
     });
     const sendInputMutation = options.sendInputMutation ?? vi.fn().mockResolvedValue({ data: { sendPlayerInput: true }, error: null });
     const session = {
@@ -65,6 +79,7 @@ function setupQueryMocks(
         sceneType: 'EXPLORATION',
         levelUpPending: false,
         combatSession: null,
+        lastInnerVoice: null,
         ...sessionOverrides,
     };
 
@@ -79,11 +94,11 @@ function setupQueryMocks(
             // 2. ACTIVE_SESSION_QUERY
             data: ref({ activeSession: session }),
             fetching: ref(false),
-            executeQuery: vi.fn().mockResolvedValue({}),
+            executeQuery: vi.fn().mockResolvedValue({ data: ref({ activeSession: session }) }),
         } as any)
         .mockReturnValueOnce({
             // 3. GAME_EVENTS_QUERY
-            data: ref(options.initialEvents ? { gameEvents: options.initialEvents } : null),
+            data: ref(options.initialEvents ? { gameEvents: toGameEventsConnection(options.initialEvents) } : null),
             fetching: ref(false),
             executeQuery: refetchEvents,
         } as any)
@@ -140,7 +155,7 @@ function setupQueryMocks(
 const globalStubs = {
     SessionCombatPanel: {
         template: '<div data-testid="combat-panel" />',
-        props: ['combatSession', 'characterId', 'spellSlots', 'isStreaming'],
+        props: ['combatSession', 'characterId', 'spellSlots', 'isStreaming', 'combatEvents'],
         emits: ['action'],
     },
     SessionPlayHeader: {
@@ -233,6 +248,14 @@ describe('play page — inner voice stream handling', () => {
 
         expect(wrapper.find('[data-testid="inner-voice"]').text()).toContain('A warning prickles at the edge of thought.');
         expect(wrapper.find('[data-testid="in-progress"]').exists()).toBe(false);
+    });
+
+    it('restores innerVoiceText from lastInnerVoice when the session is loaded with a persisted monologue', async () => {
+        setupQueryMocks({ lastInnerVoice: 'She mistrusts his stillness.' });
+        const wrapper = mount(PlayPage, { global: { stubs: globalStubs } });
+        await flushPromises();
+
+        expect(wrapper.find('[data-testid="inner-voice"]').text()).toContain('She mistrusts his stillness.');
     });
 
     it('ignores a second DONE chunk when the session is already idle', async () => {

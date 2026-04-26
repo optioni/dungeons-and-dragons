@@ -22,6 +22,18 @@
                 />
             </div>
 
+            <!-- Dice roll card -->
+            <session-dice-roll-card
+                v-else-if="event.eventType === 'DICE_ROLL'"
+                :content="event.content as { tool: 'check_skill' | 'check_ability' | 'roll_dice'; skill?: string; ability?: string; roll?: number; modifier?: number; total?: number; dc?: number; passed?: boolean; expression?: string; rolls?: number[] }"
+            />
+
+            <!-- Curated mechanical milestone annotation -->
+            <session-mechanical-event-annotation
+                v-else-if="event.eventType === 'PLAYER_VISIBLE_EVENT' && isTranscriptVisibleMechanicalEvent(event.content)"
+                :content="event.content"
+            />
+
             <!-- Player input annotation -->
             <p
                 v-else-if="event.eventType === 'PLAYER_INPUT'"
@@ -37,12 +49,11 @@
 
         <!-- Inner monologue annotation -->
         <div v-if="props.innerVoiceText"
-            class="ml-6 my-3 pl-3 border-l border-grimoire-surface">
-            <p class="text-xs italic text-grimoire-muted/70 leading-relaxed">
-                <span class="not-italic text-grimoire-accent-dim/50 mr-1">⟨</span>
-                {{ props.innerVoiceText }}
-                <span class="not-italic text-grimoire-accent-dim/50 ml-1">⟩</span>
-            </p>
+            class="inner-monologue my-4 pl-4 py-2 border-l-2 border-grimoire-accent-dim/40 bg-grimoire-surface/40 rounded-r">
+            <div
+                class="prose prose-grimoire text-lg italic text-grimoire-muted leading-relaxed font-['IM_Fell_English',serif]"
+                v-html="parseMarkdown(props.innerVoiceText ?? '')"
+            />
         </div>
 
         <!-- In-progress DM message (streaming) -->
@@ -60,11 +71,14 @@
 <script setup lang="ts">
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { type ResultOf } from 'gql.tada';
+import { computed, onMounted, ref } from 'vue';
 
 import { parseMarkdown } from '~/composables/useMarkdown';
 import { type GAME_EVENTS_QUERY } from '~/graphql/session';
+import { isTranscriptVisibleMechanicalEvent } from '~/types/player-visible-event';
 
-type GameEvent = Omit<ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents'][number], 'content'> & {
+type GameEventNode = ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents']['edges'][number]['node'];
+type GameEvent = Omit<GameEventNode, 'content'> & {
     content: Record<string, unknown>
 };
 

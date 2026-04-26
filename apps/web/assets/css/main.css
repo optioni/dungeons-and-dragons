@@ -153,6 +153,106 @@
     --tw-prose-td-borders: var(--color-grimoire-surface);
 }
 
+/* ── Prose grimoire hr ───────────────────────────────────────────────────────── */
+
+.prose-grimoire hr {
+    border: none;
+    position: relative;
+    height: 1.5rem;
+    margin: 2rem 0;
+    overflow: visible;
+}
+
+.prose-grimoire hr::before {
+    content: '✦';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-grimoire-accent);
+    font-size: 0.6rem;
+    opacity: 0.7;
+}
+
+.prose-grimoire hr::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        var(--color-grimoire-accent-dim) 20%,
+        var(--color-grimoire-accent-dim) 45%,
+        transparent 48%,
+        transparent 52%,
+        var(--color-grimoire-accent-dim) 55%,
+        var(--color-grimoire-accent-dim) 80%,
+        transparent 100%
+    );
+    opacity: 0.45;
+}
+
+/* ── Prose grimoire lists ────────────────────────────────────────────────────── */
+
+.prose-grimoire ul {
+    list-style: none;
+    padding-left: 1.25rem;
+}
+
+.prose-grimoire ul > li {
+    position: relative;
+}
+
+.prose-grimoire ul > li::before {
+    content: '◆';
+    position: absolute;
+    left: -1.25rem;
+    top: 0.3em;
+    font-size: 0.7em;
+    color: var(--color-grimoire-accent);
+    opacity: 0.7;
+}
+
+.prose-grimoire ol {
+    list-style: none;
+    padding-left: 1.75rem;
+    counter-reset: grimoire-ol;
+}
+
+.prose-grimoire ol > li {
+    position: relative;
+    counter-increment: grimoire-ol;
+}
+
+.prose-grimoire ol > li::before {
+    content: counter(grimoire-ol);
+    position: absolute;
+    left: -1.75rem;
+    top: 0;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7em;
+    color: var(--color-grimoire-accent-dim);
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+}
+
+/* ── Inner monologue brackets ────────────────────────────────────────────────── */
+
+.inner-monologue .prose > p:first-child::before {
+    content: '⟨ ';
+    color: var(--color-grimoire-accent-dim);
+    font-style: normal;
+}
+
+.inner-monologue .prose > p:last-child::after {
+    content: ' ⟩';
+    color: var(--color-grimoire-accent-dim);
+    font-style: normal;
+}
+
 /* Keep default prose override for non-grimoire contexts */
 .prose {
     --tw-prose-body: theme(--color-gray-200);

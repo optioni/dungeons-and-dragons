@@ -3,11 +3,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     modules: ['@nuxt/ui'],
-    ui: {
-        colors: {
-            neutral: 'stone',
-        },
-    },
     css: [
         '@fontsource/im-fell-english/400.css',
         '@fontsource/im-fell-english/400-italic.css',

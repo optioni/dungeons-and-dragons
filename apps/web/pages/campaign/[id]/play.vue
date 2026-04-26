@@ -50,6 +50,7 @@
                         :character-id="characterId ?? undefined"
                         :spell-slots="character?.spellSlots"
                         :is-streaming="isStreaming"
+                        :combat-events="recentCombatEvents"
                         @action="handleQuickAction"
                     />
                 </transition>
@@ -99,6 +100,10 @@
                     <div ref="transcriptRef"
                         class="flex-1 overflow-y-auto">
                         <div class="max-w-2xl mx-auto px-8 py-8">
+                            <div ref="topSentinelRef"
+                                class="h-px"
+                                aria-hidden="true" />
+
                             <session-transcript-view
                                 :events="persistedEvents"
                                 :in-progress-text="inProgressNarrative || undefined"
@@ -113,6 +118,11 @@
                     <div v-if="suggestedActions.length"
                         class="px-8 pb-2 relative z-10">
                         <div class="max-w-2xl mx-auto">
+                            <p v-if="pendingCheck"
+                                class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted/60 text-center mb-2">
+                                a {{ pendingCheck.skill ?? pendingCheck.ability }} check awaits · DC {{ pendingCheck.dc }}
+                            </p>
+
                             <p class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted/60 leading-relaxed">
                                 <template v-for="(action, i) in suggestedActions" :key="action">
                                     <button
@@ -139,8 +149,8 @@
                     </div>
 
                     <!-- Input area -->
-                    <div class="border-t border-grimoire-accent-dim/20 px-8 py-5 bg-grimoire-surface relative z-10">
-                        <div class="max-w-2xl mx-auto">
+                    <div class="border-t border-grimoire-accent-dim/20 py-5 bg-grimoire-surface relative z-10">
+                        <div class="max-w-2xl mx-auto px-8">
                             <textarea
                                 v-model="playerInput"
                                 class="w-full bg-transparent text-grimoire-text text-[1.125rem]
@@ -407,6 +417,7 @@
 <script setup lang="ts">
 import { useQuery, useMutation, useSubscription } from '@urql/vue';
 import { type ResultOf } from 'gql.tada';
+import { nextTick, onMounted, onUnmounted } from 'vue';
 
 import { type CombatSession } from '~/components/session/CombatPanel.vue';
 import {
@@ -421,6 +432,7 @@ import {
     CAMPAIGN_QUERY_FOR_PLAY,
     SPELL_OPTIONS_QUERY,
 } from '~/graphql/session';
+import { isPlayerVisibleEventPayload, type PlayerVisibleEventPayload } from '~/types/player-visible-event';
 
 definePageMeta({});
 
@@ -429,13 +441,15 @@ const router = useRouter();
 const campaignId = computed(() => route.params.id as string);
 
 type ActiveSession = NonNullable<ResultOf<typeof ACTIVE_SESSION_QUERY>['activeSession']>;
-type PersistedGameEvent = Omit<ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents'][number], 'content'> & {
+type GameEventsConnection = ResultOf<typeof GAME_EVENTS_QUERY>['gameEvents'];
+type GameEventNode = GameEventsConnection['edges'][number]['node'];
+type PersistedGameEvent = Omit<GameEventNode, 'content'> & {
     content: Record<string, unknown>
 };
 type SpellOption = ResultOf<typeof SPELL_OPTIONS_QUERY>['srdSpells']['edges'][number]['node'];
 
 // ── Campaign ─────────────────────────────────────────────────────────────────
-const { data: campaignData, fetching: campaignFetching } = useQuery({
+const { data: campaignData, fetching: campaignFetching, executeQuery: refetchCampaign } = useQuery({
     query: CAMPAIGN_QUERY_FOR_PLAY,
     variables: computed(() => ({ id: campaignId.value })),
 });
@@ -492,6 +506,7 @@ const { data: activeSessionData, executeQuery: refetchActiveSession } = useQuery
 });
 
 const { executeMutation: startSessionMutation } = useMutation(START_SESSION_MUTATION);
+const innerVoiceText = ref('');
 
 function applySessionData(session: ActiveSession): void {
     sessionId.value = session.id;
@@ -506,6 +521,9 @@ watch(
     async (data) => {
         if (data?.activeSession) {
             applySessionData(data.activeSession);
+            if (data.activeSession.lastInnerVoice) {
+                innerVoiceText.value = data.activeSession.lastInnerVoice;
+            }
         } else if (data !== undefined) {
             const result = await startSessionMutation({ campaignId: campaignId.value });
             if (result.data?.startSession) {
@@ -519,27 +537,119 @@ watch(
 const isCombat = computed(() => sceneType.value === 'COMBAT');
 
 // ── Events / Transcript ───────────────────────────────────────────────────────
+const GAME_EVENTS_PAGE_SIZE = 60;
 const persistedEvents = ref<PersistedGameEvent[]>([]);
 const inProgressNarrative = ref('');
-const innerVoiceText = ref('');
 const lastSeenSequence = ref(0);
+const earliestCursor = ref<string | null>(null);
+const hasPreviousPage = ref(false);
+const isLoadingEarlier = ref(false);
+const eventsBeforeCursor = ref<string | null>(null);
+const transcriptRef = ref<HTMLElement | null>(null);
+const topSentinelRef = ref<HTMLElement | null>(null);
+const suppressNextTranscriptAutoScroll = ref(false);
 
 const { executeQuery: refetchEvents } = useQuery({
     query: GAME_EVENTS_QUERY,
-    variables: computed(() => ({ sessionId: sessionId.value })),
-    pause: computed(() => !sessionId.value),
+    variables: computed(() => ({
+        sessionId: sessionId.value,
+        last: GAME_EVENTS_PAGE_SIZE,
+        before: eventsBeforeCursor.value,
+    })),
+    pause: true,
     context: { requestPolicy: 'network-only' },
 });
 
+function getEventNodes(connection: GameEventsConnection | null | undefined): PersistedGameEvent[] {
+    return (connection?.edges ?? []).map((edge) => edge.node as PersistedGameEvent);
+}
+
+function applyEventConnection(connection: GameEventsConnection | null | undefined): void {
+    persistedEvents.value = getEventNodes(connection);
+    earliestCursor.value = connection?.pageInfo.startCursor ?? null;
+    hasPreviousPage.value = connection?.pageInfo.hasPreviousPage ?? false;
+}
+
+const visibleMechanicalEvents = computed(() =>
+    persistedEvents.value
+        .filter((event) => event.eventType === 'PLAYER_VISIBLE_EVENT')
+        .map((event) => event.content)
+        .filter(isPlayerVisibleEventPayload),
+);
+
+const recentCombatEvents = computed<PlayerVisibleEventPayload[]>(() =>
+    visibleMechanicalEvents.value.filter((event) => event.category === 'COMBAT').slice(-8),
+);
+
+async function fetchEventsPage(before: string | null = null): Promise<GameEventsConnection | null | undefined> {
+    eventsBeforeCursor.value = before;
+    const { data } = await refetchEvents({ requestPolicy: 'network-only' });
+    eventsBeforeCursor.value = null;
+    return data.value?.gameEvents;
+}
+
 watch(sessionId, async (id) => {
     if (!id) return;
-    const { data } = await refetchEvents({ requestPolicy: 'network-only' });
-    persistedEvents.value = (data.value?.gameEvents ?? []) as PersistedGameEvent[];
+    applyEventConnection(await fetchEventsPage());
+});
+
+async function loadEarlierEvents(): Promise<void> {
+    if (!hasPreviousPage.value || !earliestCursor.value || isLoadingEarlier.value || !transcriptRef.value) {
+        return;
+    }
+
+    isLoadingEarlier.value = true;
+    const scrollEl = transcriptRef.value;
+    const previousScrollHeight = scrollEl.scrollHeight;
+
+    try {
+        const connection = await fetchEventsPage(earliestCursor.value);
+        const earlierEvents = getEventNodes(connection);
+        const existingIds = new Set(persistedEvents.value.map((event) => event.id));
+
+        suppressNextTranscriptAutoScroll.value = true;
+        persistedEvents.value = [
+            ...earlierEvents.filter((event) => !existingIds.has(event.id)),
+            ...persistedEvents.value,
+        ];
+        earliestCursor.value = connection?.pageInfo.startCursor ?? earliestCursor.value;
+        hasPreviousPage.value = connection?.pageInfo.hasPreviousPage ?? false;
+
+        await nextTick();
+        scrollEl.scrollTop += scrollEl.scrollHeight - previousScrollHeight;
+    } finally {
+        suppressNextTranscriptAutoScroll.value = false;
+        isLoadingEarlier.value = false;
+    }
+}
+
+let topSentinelObserver: IntersectionObserver | null = null;
+
+onMounted(() => {
+    if (!topSentinelRef.value || !transcriptRef.value || typeof IntersectionObserver === 'undefined') {
+        return;
+    }
+
+    topSentinelObserver = new IntersectionObserver(
+        (entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                void loadEarlierEvents();
+            }
+        },
+        { root: transcriptRef.value },
+    );
+    topSentinelObserver.observe(topSentinelRef.value);
+});
+
+onUnmounted(() => {
+    topSentinelObserver?.disconnect();
+    topSentinelObserver = null;
 });
 
 // ── DM Stream Subscription ───────────────────────────────────────────────────
 const isStreaming = ref(false);
 const suggestedActions = ref<string[]>([]);
+const pendingCheck = ref<{ skill?: string; ability?: string; dc: number } | null>(null);
 
 const { data: streamData } = useSubscription({
     query: DM_STREAM_SUBSCRIPTION,
@@ -567,6 +677,10 @@ watch(streamData, async (data) => {
         case 'TOOL_RESULT':
             break;
 
+        case 'PENDING_CHECK':
+            if (chunk.pendingCheck) pendingCheck.value = chunk.pendingCheck as { skill?: string; ability?: string; dc: number };
+            break;
+
         case 'SUGGESTED_ACTION':
             if (chunk.action) suggestedActions.value.push(chunk.action);
             break;
@@ -587,13 +701,13 @@ watch(streamData, async (data) => {
             }
 
             isStreaming.value = false;
-            const { data: eventsData } = await refetchEvents({ requestPolicy: 'network-only' });
-            persistedEvents.value = (eventsData.value?.gameEvents ?? []) as PersistedGameEvent[];
+            applyEventConnection(await fetchEventsPage());
             inProgressNarrative.value = '';
             const { data: sessionData } = await refetchActiveSession({ requestPolicy: 'network-only' });
             if (sessionData.value?.activeSession) {
                 applySessionData(sessionData.value.activeSession);
             }
+            await refetchCampaign({ requestPolicy: 'network-only' });
             await refetchCharacter({ requestPolicy: 'network-only' });
             break;
     }
@@ -619,6 +733,7 @@ async function handleSend() {
     playerInput.value = '';
     innerVoiceText.value = '';
     suggestedActions.value = [];
+    pendingCheck.value = null;
     lastSeenSequence.value = 0;
 
     await sendInput({ sessionId: sessionId.value, text });
@@ -777,12 +892,13 @@ async function handlePrepareSpellsSubmit(): Promise<void> {
     await refetchCharacter({ requestPolicy: 'network-only' });
 }
 
-// ── Scroll to bottom on new content ──────────────────────────────────────────
-const transcriptRef = ref<HTMLElement | null>(null);
-
 watch(
     [persistedEvents, inProgressNarrative],
     () => {
+        if (suppressNextTranscriptAutoScroll.value) {
+            return;
+        }
+
         nextTick(() => {
             if (transcriptRef.value) {
                 transcriptRef.value.scrollTop = transcriptRef.value.scrollHeight;

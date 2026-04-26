@@ -8,6 +8,7 @@ export const ACTIVE_SESSION_QUERY = graphql(`
       characterId
       sceneType
       levelUpPending
+      lastInnerVoice
       startedAt
       endedAt
       combatSession {
@@ -21,13 +22,22 @@ export const ACTIVE_SESSION_QUERY = graphql(`
 `);
 
 export const GAME_EVENTS_QUERY = graphql(`
-  query GameEvents($sessionId: ID!) {
-    gameEvents(sessionId: $sessionId) {
-      id
-      sessionId
-      eventType
-      content
-      createdAt
+  query GameEvents($sessionId: ID!, $last: Int = 60, $before: String) {
+    gameEvents(sessionId: $sessionId, last: $last, before: $before) {
+      edges {
+        cursor
+        node {
+          id
+          sessionId
+          eventType
+          content
+          createdAt
+        }
+      }
+      pageInfo {
+        hasPreviousPage
+        startCursor
+      }
     }
   }
 `);
@@ -88,6 +98,7 @@ export const DM_STREAM_SUBSCRIPTION = graphql(`
       toolName
       toolResult
       action
+      pendingCheck
       status
       sceneType
       sessionId

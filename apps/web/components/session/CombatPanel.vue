@@ -74,6 +74,37 @@
             </div>
         </div>
 
+        <!-- Recent combat events -->
+        <div v-if="combatEvents.length"
+            class="px-3 py-2 border-t border-grimoire-accent-dim/20 relative z-10"
+            data-testid="combat-event-feed">
+            <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mb-2">Recent</p>
+
+            <div class="space-y-1">
+                <div
+                    v-for="event in combatEvents.slice(-6)"
+                    :key="`${event.kind}-${event.title}-${event.summary ?? ''}`"
+                    class="flex items-start justify-between gap-2 border-l border-grimoire-accent-dim/30 pl-2 py-0.5"
+                    data-testid="combat-event-row"
+                >
+                    <div class="min-w-0">
+                        <p class="font-['Cinzel',serif] text-xs uppercase tracking-widest text-grimoire-muted">
+                            {{ event.kind.replaceAll('_', ' ') }}
+                        </p>
+
+                        <p class="font-['IM_Fell_English',serif] text-sm leading-tight text-grimoire-text/80 truncate">
+                            {{ event.title }}
+                        </p>
+                    </div>
+
+                    <span v-if="combatEventAmount(event) !== null"
+                        class="font-mono text-xs text-grimoire-text/80">
+                        {{ combatEventAmount(event) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
         <!-- Player action economy (only on player's turn) -->
         <div
             v-if="playerCombatant && activeCombatant?.id === playerCombatant.id"
@@ -173,8 +204,10 @@
 <script setup lang="ts">
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import { type ResultOf } from 'gql.tada';
+import { computed } from 'vue';
 
 import { type ACTIVE_SESSION_QUERY } from '~/graphql/session';
+import { type PlayerVisibleEventPayload } from '~/types/player-visible-event';
 
 export type Combatant = {
     id: string
@@ -207,12 +240,14 @@ type Props = {
     characterId?: string
     spellSlots?: SpellSlot[]
     isStreaming?: boolean
+    combatEvents?: PlayerVisibleEventPayload[]
 };
 
 const props = withDefaults(defineProps<Props>(), {
     characterId: undefined,
     spellSlots: () => [],
     isStreaming: false,
+    combatEvents: () => [],
 });
 
 const emit = defineEmits<{
@@ -259,6 +294,11 @@ const hasSpellSlots = computed(() =>
 const activeSpellSlots = computed(() =>
     (props.spellSlots ?? []).filter((s) => s.total > 0),
 );
+
+function combatEventAmount(event: PlayerVisibleEventPayload): number | null {
+    const amount = event.values?.amount;
+    return typeof amount === 'number' ? amount : null;
+}
 
 function handleQuickAction(text: string): void {
     emit('action', text);

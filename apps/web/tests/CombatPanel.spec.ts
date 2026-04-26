@@ -163,6 +163,32 @@ describe('CombatPanel', () => {
         });
     });
 
+    describe('combat event feed', () => {
+        it('renders combat visible events as dense rows without hidden stats', () => {
+            const wrapper = mount(CombatPanel, {
+                props: {
+                    combatSession: makeCombatSession(),
+                    combatEvents: [
+                        {
+                            category: 'COMBAT',
+                            kind: 'DAMAGE_APPLIED',
+                            title: 'Damage applied',
+                            values: { amount: 7 },
+                        },
+                    ],
+                },
+                global: { stubs: globalStubs },
+            });
+
+            expect(wrapper.find('[data-testid="combat-event-feed"]').exists()).toBe(true);
+            expect(wrapper.findAll('[data-testid="combat-event-row"]')).toHaveLength(1);
+            expect(wrapper.text()).toContain('DAMAGE APPLIED');
+            expect(wrapper.text()).toContain('7');
+            expect(wrapper.text()).not.toContain('armorClass');
+            expect(wrapper.text()).not.toContain('passiveScore');
+        });
+    });
+
     describe('action economy states', () => {
         it('shows action economy section when character is the active combatant', () => {
             const playerCombatant = makeCombatant({ id: 'player-1', type: 'CHARACTER' });
