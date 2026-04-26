@@ -41,7 +41,6 @@ export class ConnectionArgs implements ConnectionArguments {
         description: 'Paginate last',
     })
     @ValidateIf((object) => object.last !== undefined)
-    @Validate(CannotUseWithout, ['before'])
     @Validate(CannotUseWith, ['after', 'first'])
     @Min(1)
     readonly last?: number;

@@ -13,7 +13,7 @@ import { SrdRace } from '../srd/entities/srd-race.entity';
 import { getRequiredIntegrationDatabaseUrl } from '../test-integration-environment.js';
 import { type AbilityScores, EquipSlot } from './character.enums';
 import { CharacterService } from './character.service';
-import { Campaign } from './entities/campaign.entity';
+import { Campaign } from '../campaign/entities/campaign.entity';
 import { CharacterItem } from './entities/character-item.entity';
 import { Character } from './entities/character.entity';
 import { Item } from './entities/item.entity';
