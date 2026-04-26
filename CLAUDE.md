@@ -141,3 +141,9 @@ LLM_BACKGROUND_MODEL=claude-haiku-4-5-20251001
 Full design spec: `docs/superpowers/specs/2026-04-13-dnd-app-design.md`
 
 Covers: all data models, module responsibilities, narrative design, memory system, world tick, prompt caching strategy, frontend layout, error handling, and testing approach.
+
+## UI Design System
+
+Frontend design reference: `DESIGN.md`
+
+Covers: the Dark Grimoire colour palette and tokens, typography rules (IM Fell English vs Cinzel), animation utility classes, background texture, ornamental components, layout structure, Nuxt UI integration, and component conventions. Consult before adding any new UI elements to `apps/web/`.
