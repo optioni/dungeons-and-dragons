@@ -1,8 +1,5 @@
-# suggest-actions-tool Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change interactive-stream-signals. Update Purpose after archive.
-## Requirements
 ### Requirement: suggest_actions emits player option chips and an optional pending check hint
 The system SHALL expose a `suggest_actions` LLM tool that accepts `actions: string[]` and an optional `pending_check` object. When the LLM invokes the tool during an active DM turn, the runtime SHALL emit one `SUGGESTED_ACTION` stream chunk per action for the current response so the client can render actionable player options.
 
@@ -38,4 +35,3 @@ The frontend SHALL display the pending check hint — skill or ability name plus
 #### Scenario: No pending check hint when PENDING_CHECK chunk is absent
 - **WHEN** the frontend receives `SUGGESTED_ACTION` chunks with no preceding `PENDING_CHECK` chunk
 - **THEN** no pending check hint is shown above the action buttons
-

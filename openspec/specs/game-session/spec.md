@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines the durable session model for gameplay sittings — how sessions are created, how game events form an append-only transcript, how player input is accepted, and how sessions are ended.
-
 ## Requirements
-
 ### Requirement: Session records persist campaign-scoped play state
 The system SHALL persist a `GameSession` record for each gameplay sitting. Each `GameSession` SHALL belong to exactly one `Campaign` and SHALL store `campaignId`, `startedAt`, `endedAt`, `sceneType`, `levelUpPending` (boolean, default false), and `activeDungeonId` (FK → Dungeon, nullable, default null). The system SHALL allow at most one active session (`endedAt = null`) per campaign at a time.
 
@@ -59,15 +57,23 @@ The system SHALL persist `GameEvent` records as the durable transcript for a ses
 - **THEN** the system appends a `TOOL_CALL` event whose `content` includes the tool name, arguments, structured result, and success or failure state
 
 ### Requirement: Session queries return transcript state for resume
-The system SHALL expose owner-scoped GraphQL queries for retrieving gameplay session state. The query surface SHALL allow the play UI to fetch the active session for a campaign and its historical `GameEvent` transcript in chronological order.
+The system SHALL expose owner-scoped GraphQL queries for retrieving gameplay session state. The query surface SHALL allow the play UI to fetch the active session for a campaign and its historical `GameEvent` transcript in chronological order. The `gameEvents` field SHALL return a `GameEventConnection` with relay cursor pagination, accepting `last: Int` (default 60) and `before: String` arguments. The context loader SHALL continue to read all events directly via ORM and is not subject to this pagination.
 
 #### Scenario: Play route can fetch active session for a campaign
 - **WHEN** the owner queries for the current gameplay state of a campaign with an active session
-- **THEN** the response includes the active `GameSession` identifier, its `sceneType`, and the persisted transcript needed to resume play
+- **THEN** the response includes the active `GameSession` identifier, its `sceneType`, and the paginated transcript needed to resume play
 
 #### Scenario: Transcript is ordered oldest to newest
 - **WHEN** the owner queries the `GameEvent` history for a session
 - **THEN** the returned events are ordered chronologically from earliest to latest so the client can render the transcript without re-sorting
+
+#### Scenario: gameEvents returns a relay Connection
+- **WHEN** the owner queries `gameEvents(sessionId: ID!, last: 60)` for an active session
+- **THEN** the response is a `GameEventConnection` with `edges[].node`, `edges[].cursor`, and `pageInfo.hasPreviousPage`
+
+#### Scenario: Omitting last defaults to 60 events
+- **WHEN** the owner queries `gameEvents(sessionId: ID!)` without specifying `last`
+- **THEN** the response contains at most 60 events
 
 ### Requirement: Player input is accepted only for an active owned session
 The system SHALL expose a mutation for sending player input into an active session. The mutation SHALL validate that the session belongs to the authenticated user through the owning campaign, SHALL reject blank input, and SHALL reject input for an ended session.
@@ -103,6 +109,17 @@ The system SHALL expose an `endSession` mutation for the owner of an active sess
 - **WHEN** the owner submits player input for a session that was force-ended via campaign closure
 - **THEN** the mutation returns an error indicating the session is no longer active
 
+### Requirement: GameSession stores the latest inner monologue text
+`GameSession` SHALL include a `lastInnerVoice` field: a nullable text column (default null) that holds the most recently generated inner monologue for the session. It SHALL be exposed on the `GameSession` GraphQL type as a nullable `String`. It SHALL be included in the `activeSession` query response.
+
+#### Scenario: New sessions have no inner monologue
+- **WHEN** a new `GameSession` is created
+- **THEN** `lastInnerVoice` is null
+
+#### Scenario: Field returned in activeSession query
+- **WHEN** the frontend queries `activeSession`
+- **THEN** the response includes `lastInnerVoice` (null or a string)
+
 ### Requirement: A state-changed event is emitted after each game-engine tool call
 After each state-changing tool call (apply_damage, heal, give_item, travel_to, update_npc, instant_death), the game engine SHALL emit a `StateChangedEvent` via `EventEmitter2`. The event SHALL include `type` (one of TRAVEL | DAMAGE | GIVE_ITEM | NPC_UPDATE | NPC_KILLED), `entityId` (the affected entity's id), and `campaignId`. The event is fire-and-forget — the tool response is not blocked by event handlers.
 
@@ -117,3 +134,4 @@ After each state-changing tool call (apply_damage, heal, give_item, travel_to, u
 #### Scenario: State-changed event does not block the tool response
 - **WHEN** the event handler for `StateChangedEvent` encounters an error
 - **THEN** the tool response has already been returned and the error is logged without affecting the LLM's result
+
