@@ -240,6 +240,8 @@ enum EventType {
   PLAYER_INPUT
   DM_NARRATIVE
   TOOL_CALL
+  DICE_ROLL
+  PLAYER_VISIBLE_EVENT
   SYSTEM
 }
 
@@ -251,6 +253,7 @@ type GameSession {
   startedAt: DateTime!
   endedAt: DateTime
   levelUpPending: Boolean!
+  lastInnerVoice: String
   combatSession: CombatSession
   characterId: ID
 }
@@ -582,6 +585,7 @@ type DmStreamChunk {
   toolName: String
   toolResult: JSON
   action: String
+  pendingCheck: JSON
   status: String
   sceneType: String
   sessionId: ID!
@@ -592,9 +596,20 @@ enum DmStreamChunkType {
   INNER_VOICE
   TOOL_RESULT
   SUGGESTED_ACTION
+  PENDING_CHECK
   STATUS
   CAMPAIGN_ENDED
   DONE
+}
+
+type GameEventEdge {
+  cursor: String!
+  node: GameEvent!
+}
+
+type GameEventConnection {
+  edges: [GameEventEdge!]!
+  pageInfo: PageInfo!
 }
 
 type CampaignEdge {
@@ -796,7 +811,20 @@ type Query {
   ): CampaignConnection!
   campaign(id: ID!): Campaign!
   activeSession(campaignId: ID!): GameSession
-  gameEvents(sessionId: ID!): [GameEvent!]!
+  gameEvents(
+    """Paginate before opaque cursor"""
+    before: String
+
+    """Paginate after opaque cursor"""
+    after: String
+
+    """Paginate first"""
+    first: Int
+
+    """Paginate last"""
+    last: Int
+    sessionId: ID!
+  ): GameEventConnection!
   diaryEntries(
     """Paginate before opaque cursor"""
     before: String
