@@ -323,60 +323,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -828,60 +775,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -1020,60 +914,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -1194,60 +1035,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -1388,60 +1176,7 @@
           "deleteRule": "cascade"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -1567,60 +1302,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -1747,60 +1429,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -1911,60 +1540,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -2075,6 +1651,21 @@
           "default": "false",
           "comment": null,
           "enumItems": []
+        },
+        "last_inner_voice": {
+          "name": "last_inner_voice",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": []
         }
       },
       "indexes": [
@@ -2118,60 +1709,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -2312,60 +1850,7 @@
           "deleteRule": "set null"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -2581,60 +2066,7 @@
           "deleteRule": "set null"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -2746,60 +2178,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -2922,60 +2301,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -3087,60 +2413,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -3207,60 +2480,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -3401,60 +2621,7 @@
           "deleteRule": "cascade"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -3731,60 +2898,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -3896,60 +3010,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -4086,60 +3147,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -4251,60 +3259,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -4476,60 +3431,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -4625,60 +3527,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -4819,60 +3668,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -4983,60 +3779,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -5160,60 +3903,7 @@
           "deleteRule": "no action"
         }
       },
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -5350,60 +4040,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -5495,60 +4132,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -5700,60 +4284,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -5965,60 +4496,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -6155,60 +4633,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -6420,60 +4845,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -6565,60 +4937,7 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     },
     {
@@ -6775,116 +5094,10 @@
       ],
       "checks": [],
       "foreignKeys": {},
-      "nativeEnums": {
-        "memory_subject_type": {
-          "name": "memory_subject_type",
-          "schema": "public",
-          "items": [
-            "npc",
-            "character",
-            "location",
-            "faction",
-            "item",
-            "general"
-          ]
-        },
-        "quest_entity_type": {
-          "name": "quest_entity_type",
-          "schema": "public",
-          "items": [
-            "NPC",
-            "LOCATION",
-            "ITEM",
-            "WORLD_EVENT",
-            "DUNGEON"
-          ]
-        },
-        "quest_objective_status": {
-          "name": "quest_objective_status",
-          "schema": "public",
-          "items": [
-            "INCOMPLETE",
-            "COMPLETE"
-          ]
-        },
-        "quest_objective_type": {
-          "name": "quest_objective_type",
-          "schema": "public",
-          "items": [
-            "REACH_LOCATION",
-            "NPC_DEAD",
-            "NPC_ALIVE",
-            "HAVE_ITEM",
-            "TALK_TO_NPC",
-            "MANUAL"
-          ]
-        },
-        "quest_status": {
-          "name": "quest_status",
-          "schema": "public",
-          "items": [
-            "ACTIVE",
-            "COMPLETED",
-            "FAILED"
-          ]
-        }
-      },
+      "nativeEnums": {},
       "comment": null
     }
   ],
   "views": [],
-  "nativeEnums": {
-    "memory_subject_type": {
-      "name": "memory_subject_type",
-      "schema": "public",
-      "items": [
-        "npc",
-        "character",
-        "location",
-        "faction",
-        "item",
-        "general"
-      ]
-    },
-    "quest_entity_type": {
-      "name": "quest_entity_type",
-      "schema": "public",
-      "items": [
-        "NPC",
-        "LOCATION",
-        "ITEM",
-        "WORLD_EVENT",
-        "DUNGEON"
-      ]
-    },
-    "quest_objective_status": {
-      "name": "quest_objective_status",
-      "schema": "public",
-      "items": [
-        "INCOMPLETE",
-        "COMPLETE"
-      ]
-    },
-    "quest_objective_type": {
-      "name": "quest_objective_type",
-      "schema": "public",
-      "items": [
-        "REACH_LOCATION",
-        "NPC_DEAD",
-        "NPC_ALIVE",
-        "HAVE_ITEM",
-        "TALK_TO_NPC",
-        "MANUAL"
-      ]
-    },
-    "quest_status": {
-      "name": "quest_status",
-      "schema": "public",
-      "items": [
-        "ACTIVE",
-        "COMPLETED",
-        "FAILED"
-      ]
-    }
-  }
+  "nativeEnums": {}
 }
