@@ -196,6 +196,13 @@ export class InnerMonologueService {
                         type: DmStreamChunkType.INNER_VOICE,
                         text,
                     });
+                    try {
+                        session.lastInnerVoice = text;
+                        await this.sessionRepository.getEntityManager().flush();
+                    } catch (flushError) {
+                        const errorClass = flushError instanceof Error ? flushError.constructor.name : 'UnknownError';
+                        this.logger.error(`Inner monologue flush failed: sessionId=${sessionId} errorClass=${errorClass}`);
+                    }
                 }
 
                 this.streamPublisher.publish(sessionId, { type: DmStreamChunkType.DONE });

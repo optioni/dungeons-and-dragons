@@ -393,6 +393,7 @@ describe('ContextLoader', () => {
 
             const result = await service.loadWorldBlock(1);
 
+            expect(result).toContain('ID: 42');
             expect(result).toContain('## Merchant Inventory');
             expect(result).toContain('Aldric (merchant)');
             expect(result).toContain('Iron Dagger x2 — 5 gp');

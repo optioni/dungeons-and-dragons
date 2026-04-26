@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { Character } from '../character/entities/character.entity.js';
 import { type EnvironmentConfig } from '../config/environment.validation.js';
 import { Faction } from '../world/entities/faction.entity.js';
 import { LocationDiscovery } from '../world/entities/location-discovery.entity.js';
@@ -127,11 +128,12 @@ export class CampaignSetupService {
 
         this.campaignService.assertStatus(campaign, [CampaignSetupStatus.DRAFT]);
 
-        // Verify the campaign has an associated character
         const em = this.campaignRepo.getEntityManager();
-        const characterCount = await em.count('Character' as never, { campaign: { id: campaignId } });
+        const character = await em.findOne(Character, { campaign: { id: campaignId } } as never, {
+            populate: ['race', 'srdClass'] as never,
+        });
 
-        if (characterCount === 0) {
+        if (!character) {
             throw new BadRequestException({
                 step: 'generate_concepts',
                 code: 'NO_CHARACTER',
@@ -179,7 +181,13 @@ export class CampaignSetupService {
                     content: [
                         {
                             type: 'text',
-                            text: `Generate 3-4 distinct D&D 5e campaign story concepts for a ${input.tone.toLowerCase()} tone campaign with ${input.deathMode.toLowerCase().replace('_', ' ')} death rules. Each concept should have a unique premise, central conflict, and hint at the type of antagonist. Make them varied in theme and scope.`,
+                            text: [
+                                `Generate 3-4 distinct D&D 5e campaign story concepts for a ${input.tone.toLowerCase()} tone campaign with ${input.deathMode.toLowerCase().replace('_', ' ')} death rules.`,
+                                '',
+                                this.formatCharacterConceptContext(character),
+                                '',
+                                'Each concept should have a unique premise, central conflict, and hint at the type of antagonist. Make them varied in theme and scope, and make each concept feel specifically suited to this character rather than a generic campaign pitch.',
+                            ].join('\n'),
                         },
                     ],
                 }],
@@ -210,6 +218,26 @@ export class CampaignSetupService {
         await em.flush();
 
         return campaign;
+    }
+
+    private formatCharacterConceptContext(character: Character): string {
+        const personalityLines = [
+            character.personalityTraits.length > 0
+                ? `Personality traits: ${character.personalityTraits.join('; ')}`
+                : null,
+            character.ideals.length > 0 ? `Ideals: ${character.ideals.join('; ')}` : null,
+            character.bonds.length > 0 ? `Bonds: ${character.bonds.join('; ')}` : null,
+            character.flaws.length > 0 ? `Flaws: ${character.flaws.join('; ')}` : null,
+        ].filter((line): line is string => line !== null);
+
+        return [
+            'Player character:',
+            `Name: ${character.name}`,
+            `Race: ${character.race.name}`,
+            `Class: ${character.srdClass.name}`,
+            `Level: ${character.level}`,
+            ...(personalityLines.length > 0 ? personalityLines : ['No explicit personality details recorded.']),
+        ].join('\n');
     }
 
     /**

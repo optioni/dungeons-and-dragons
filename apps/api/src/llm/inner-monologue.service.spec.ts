@@ -20,12 +20,17 @@ describe('InnerMonologueService', () => {
     let anthropicMessages: Record<string, ReturnType<typeof vi.fn>>;
     let loggerErrorSpy: ReturnType<typeof vi.spyOn>;
     let service: InnerMonologueService;
+    let mockSession: { id: number; campaign: { id: number }; lastInnerVoice?: string | null };
+    let mockSessionEntityManager: Record<string, ReturnType<typeof vi.fn>>;
 
     beforeEach(() => {
+        mockSession = { id: 5, campaign: { id: 11 } };
+        mockSessionEntityManager = {
+            findOne: vi.fn().mockResolvedValue(mockSession),
+            flush: vi.fn().mockResolvedValue(undefined),
+        };
         sessionRepository = {
-            getEntityManager: vi.fn().mockReturnValue({
-                findOne: vi.fn().mockResolvedValue({ id: 5, campaign: { id: 11 } }),
-            }),
+            getEntityManager: vi.fn().mockReturnValue(mockSessionEntityManager),
         };
         characterRepository = {
             getEntityManager: vi.fn().mockReturnValue({
@@ -210,6 +215,32 @@ describe('InnerMonologueService', () => {
         anthropicMessages.create.mockRejectedValue(new Error('haiku offline'));
 
         await expect(service.runIfApplicable(5, SceneType.SOCIAL, 'A priest watches from the archway.'))
+            .resolves
+            .toBeUndefined();
+
+        expect(loggerErrorSpy).toHaveBeenCalled();
+    });
+
+    it('writes lastInnerVoice to session after generating inner monologue', async () => {
+        anthropicMessages.create.mockResolvedValueOnce({
+            content: [{ type: 'text', text: 'She mistrusts his stillness.' }],
+            stop_reason: 'end_turn',
+        });
+
+        await service.runIfApplicable(5, SceneType.SOCIAL, 'The captain watches from the doorway.');
+
+        expect(mockSession.lastInnerVoice).toBe('She mistrusts his stillness.');
+        expect(mockSessionEntityManager.flush).toHaveBeenCalled();
+    });
+
+    it('swallows flush errors without propagating', async () => {
+        anthropicMessages.create.mockResolvedValueOnce({
+            content: [{ type: 'text', text: 'A flash of recognition.' }],
+            stop_reason: 'end_turn',
+        });
+        mockSessionEntityManager.flush.mockRejectedValueOnce(new Error('db error'));
+
+        await expect(service.runIfApplicable(5, SceneType.SOCIAL, 'The stranger speaks.'))
             .resolves
             .toBeUndefined();
 

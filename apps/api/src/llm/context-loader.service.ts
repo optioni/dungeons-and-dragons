@@ -31,7 +31,8 @@ const BASE_SYSTEM_PROMPT = `You are the Dungeon Master for a solo D&D 5e campaig
 
 Always use tool calls for mechanical actions (dice rolls, stat changes, scene transitions). Never invent mechanical outcomes in prose.
 Never end a narrative turn with a prompt asking what the player does or says (e.g. "What does X do?", "What do you say?"). The player decides their own next action.
-Never use <hr> or horizontal rule separators in narrative output.`;
+Never use <hr> or horizontal rule separators in narrative output.
+When calling suggest_actions at a moment where the player's action will require a skill or ability check, include pending_check with the anticipated skill or ability name and DC so the player knows what is at stake before they choose.`;
 
 function formatAbilityModifier(score: number): string {
     const modifier = Math.floor((score - 10) / 2);
@@ -174,6 +175,7 @@ export class ContextLoader {
                 }
 
                 const locationLines = [
+                    `ID: ${currentLocation.id}`,
                     `Name: ${locationName}`,
                     `Description: ${currentLocation.description}`,
                     ...(currentLocation.currentState ? [`State: ${currentLocation.currentState}`] : []),
