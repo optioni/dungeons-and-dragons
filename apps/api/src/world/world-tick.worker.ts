@@ -258,7 +258,7 @@ export class WorldTickWorker extends WorkerHost {
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 400,
-                system: 'You are a world simulation engine for a D&D campaign. Respond only with valid JSON.',
+                system: 'You are a world simulation engine for a D&D campaign. Respond only with valid JSON. Do not include markdown, code fences, comments, or explanatory prose. Use JSON null for absent optional values.',
                 messages: [
                     {
                         role: 'user',
@@ -273,12 +273,12 @@ ${recentMemoriesSection}
 
 Available locations: ${locationList}
 
-Respond with JSON:
+Respond with JSON matching this shape:
 {
   "agenda": "updated agenda text",
-  "nextTickInGameDay": <integer day number for next evaluation, e.g. ${inGameDay + 3}>,
-  "newLocationId": <number or null>,
-  "departureDescription": "<narrative of departure, or null if not moving>"
+  "nextTickInGameDay": ${inGameDay + 3},
+  "newLocationId": null,
+  "departureDescription": null
 }`,
                     },
                 ],
@@ -366,7 +366,7 @@ Respond with JSON:
             const response = await this.anthropic.messages.create({
                 model: this.backgroundModel,
                 max_tokens: 600,
-                system: 'You are a world simulation engine for a D&D campaign. Respond only with valid JSON.',
+                system: 'You are a world simulation engine for a D&D campaign. Respond only with valid JSON. Do not include markdown, code fences, comments, or explanatory prose. Use JSON null for absent optional values and only valid NpcRelationshipType enum values: ALLY, RIVAL, ENEMY, NEUTRAL, FAMILY, MENTOR, STUDENT.',
                 messages: [
                     {
                         role: 'user',
@@ -377,14 +377,14 @@ NPC B (${targetNpc.name}): ${targetNpc.profession ?? 'unknown'}, personality: ${
 Relationship: ${rel.type} — ${rel.description ?? 'no description'}
 ${sourceMemorySection}${targetMemorySection}
 
-Respond with JSON:
+Respond with JSON matching this shape:
 {
   "dialogue": [{"speaker": "A", "line": "..."}, {"speaker": "B", "line": "..."}],
-  "relationshipChange": {"type": "<NpcRelationshipType or null>", "description": "..."} | null,
-  "itemExchanged": {"npcItemId": <number>, "toNpcId": <number>} | null,
-  "newAgendaSource": "<new agenda for ${sourceNpc.name} or null>",
-  "newAgendaTarget": "<new agenda for ${targetNpc.name} or null>",
-  "sharedMemories": [{"receiverNpcId": <number>, "content": "...", "senderNpcId": <number>}]
+  "relationshipChange": null,
+  "itemExchanged": null,
+  "newAgendaSource": null,
+  "newAgendaTarget": null,
+  "sharedMemories": [{"receiverNpcId": ${sourceNpc.id}, "content": "...", "senderNpcId": ${targetNpc.id}}]
 }`,
                     },
                 ],
