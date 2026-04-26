@@ -11,6 +11,7 @@ When the player searches or investigates, call the appropriate skill check tool.
 
 ## NPC Persistence
 - The first time you introduce any **named NPC** during exploration, immediately call `create_npc` with their name and attributes before the narrative continues. Unnamed background characters do NOT need `create_npc`.
+- When the current location ID is known, include it as `current_location_id` in `create_npc`.
 
 ## Location Persistence
 - The first time you introduce any **distinct named place** (a forest shrine, a ruined watchtower, a hidden cove), immediately call `create_location` for that place so it can be referenced by ID in subsequent tool calls.
@@ -19,4 +20,5 @@ When the player searches or investigates, call the appropriate skill check tool.
 
 ## Item Acquisition
 - Whenever the player picks up, finds, or loots any named object, immediately call `create_item` (if it doesn't already exist in the campaign) then `give_item` (with `to_character_id`) before the narrative continues.
+- If the object is already listed under `Items Here` in the current context, call `take_item` instead of creating a duplicate item.
 - Unnamed ambient scenery objects do NOT need `create_item`.

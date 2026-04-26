@@ -10,6 +10,7 @@ The player is in a settlement (town, city, outpost, camp). Focus on:
 
 ## NPC Persistence
 - The first time you introduce any **named NPC**, immediately call `create_npc` with their name and attributes before the narrative continues. Unnamed background characters (a few dockworkers, a passing cart driver) do NOT need `create_npc`.
+- When the current location ID is known, include it as `current_location_id` in `create_npc`.
 - Use the returned `npcId` for all subsequent `update_npc`, `record_npc_memory`, and item tool calls.
 
 ## Location Persistence
@@ -19,4 +20,5 @@ The player is in a settlement (town, city, outpost, camp). Focus on:
 
 ## Item Acquisition
 - Whenever the player receives any named object, immediately call `create_item` then `give_item` (with `to_character_id`) before the narrative continues.
+- If the object is already listed under `Items Here` in the current context, call `take_item` instead of creating a duplicate item.
 - Unnamed ambient objects do NOT need `create_item`.
