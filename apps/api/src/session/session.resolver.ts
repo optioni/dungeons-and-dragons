@@ -3,16 +3,24 @@ import { BadRequestException, ForbiddenException, Logger } from '@nestjs/common'
 import {
     Args, ID, Mutation, Query, ResolveField, Resolver, Root, Subscription,
 } from '@nestjs/graphql';
+import { type Connection } from 'graphql-relay';
 
 import { type User } from '../auth/entities/user.entity.js';
 import { Character } from '../character/entities/character.entity.js';
 import { CurrentUser } from '../graphql/decorators/current-user.decorator.js';
+import { GraphqlService } from '../graphql/graphql.service.js';
+import { createRelayConnection } from '../graphql/relay';
+import { GameEventsConnectionArgs } from './args/game-events-connection.args.js';
 import { DmOrchestrator } from './dm-orchestrator.service.js';
 import { DmStreamChunk } from './dto/dm-stream-chunk.dto.js';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';
 import { SessionService } from './session.service.js';
 import { StreamPublisher } from './stream-publisher.service.js';
+
+export const GameEventConnection = createRelayConnection(GameEvent);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type GameEventConnection = InstanceType<typeof GameEventConnection>;
 
 /**
  * GraphQL resolver for session lifecycle, transcript queries, player input mutation,
@@ -27,6 +35,7 @@ export class SessionResolver {
         private readonly streamPublisher: StreamPublisher,
         private readonly dmOrchestrator: DmOrchestrator,
         private readonly em: EntityManager,
+        private readonly graphqlService: GraphqlService,
     ) {}
 
     /** Starts or resumes the active session for a campaign. */
@@ -56,13 +65,13 @@ export class SessionResolver {
         return this.sessionService.getActiveSession(Number(campaignId), user.id);
     }
 
-    /** Returns all events for a session ordered oldest-first. */
-    @Query(() => [GameEvent])
+    /** Returns paginated events for a session ordered oldest-first. */
+    @Query(() => GameEventConnection)
     async gameEvents(
-        @Args('sessionId', { type: () => ID }) sessionId: string,
+        @Args() { sessionId, ...connArgs }: GameEventsConnectionArgs,
         @CurrentUser() user: User,
-    ): Promise<GameEvent[]> {
-        return this.sessionService.getGameEvents(Number(sessionId), user.id);
+    ): Promise<Connection<GameEvent>> {
+        return this.sessionService.getGameEvents(Number(sessionId), user.id, connArgs, this.graphqlService);
     }
 
     /** Resolves the active campaign character attached to the session, if one exists. */
@@ -93,6 +102,9 @@ export class SessionResolver {
             this.logger.error(`Input rejected: sessionId=${sessionId} reason=session_ended`);
             throw new BadRequestException('Session is no longer active');
         }
+
+        session.lastInnerVoice = null;
+        await this.em.flush();
 
         // Runs async — stream chunks are published via StreamPublisher
         void this.dmOrchestrator.runTurn(Number(sessionId), text);

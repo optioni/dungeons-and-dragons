@@ -8,6 +8,7 @@ import { WorldModule } from '../world/world.module.js';
 import { DmOrchestrator } from './dm-orchestrator.service.js';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';
+import { PlayerVisibleEventMapper } from './player-visible-event.mapper.js';
 import { SessionResolver } from './session.resolver.js';
 import { SessionService } from './session.service.js';
 import { StreamPublisher } from './stream-publisher.service.js';
@@ -28,6 +29,7 @@ import { StreamPublisher } from './stream-publisher.service.js';
     providers: [
         SessionService,
         StreamPublisher,
+        PlayerVisibleEventMapper,
         DmOrchestrator,
         SessionResolver,
     ],

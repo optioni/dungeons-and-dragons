@@ -201,13 +201,24 @@ describe('SessionModule integration', () => {
                 eventType: EventType.DM_NARRATIVE,
                 content: { narrative: 'Second' },
             });
-            em.persist([event1, event2]);
+            const event3 = em.create(GameEvent, {
+                session,
+                eventType: EventType.PLAYER_VISIBLE_EVENT,
+                content: {
+                    category: 'INVENTORY',
+                    kind: 'ITEM_GAINED',
+                    title: 'Item gained',
+                    values: { quantity: 1 },
+                },
+            });
+            em.persist([event1, event2, event3]);
             await em.flush();
 
             const events = await em.find(GameEvent, { session: session.id }, { orderBy: { createdAt: 'ASC' } });
-            expect(events).toHaveLength(2);
+            expect(events).toHaveLength(3);
             expect(events[0].eventType).toBe(EventType.PLAYER_INPUT);
             expect(events[1].eventType).toBe(EventType.DM_NARRATIVE);
+            expect(events[2].eventType).toBe(EventType.PLAYER_VISIBLE_EVENT);
         });
 
         it('stores content as jsonb correctly for each event type', async () => {

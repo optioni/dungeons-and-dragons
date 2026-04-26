@@ -26,6 +26,7 @@ function makeMockEm(overrides: Record<string, unknown> = {}): Record<string, Ret
 function makeMockRepo(em: ReturnType<typeof makeMockEm>): Record<string, unknown> {
     return {
         getEntityManager: vi.fn().mockReturnValue(em),
+        createQueryBuilder: vi.fn(),
     };
 }
 
@@ -229,27 +230,28 @@ describe('SessionService', () => {
     });
 
     describe('getGameEvents', () => {
-        it('returns events for an owned session in chronological order', async () => {
+        it('returns paginated events for an owned session in chronological order', async () => {
             const session = Object.assign(new GameSession(), {
                 id: sessionId,
                 campaign: { id: campaignId, userId },
                 endedAt: null,
             });
-            const events = [
-                Object.assign(new GameEvent(), { id: 1, createdAt: new Date('2024-01-01') }),
-                Object.assign(new GameEvent(), { id: 2, createdAt: new Date('2024-01-02') }),
-            ];
+            const qb = { andWhere: vi.fn().mockReturnThis() };
+            const connection = { edges: [], pageInfo: { hasPreviousPage: false, hasNextPage: false } };
+            const graphqlService = { findAndPaginate: vi.fn().mockResolvedValue(connection) };
             em.findOne.mockResolvedValueOnce(session);
-            em.find.mockResolvedValueOnce(events);
+            vi.mocked(eventRepo.createQueryBuilder as ReturnType<typeof vi.fn>).mockReturnValue(qb);
 
-            const result = await service.getGameEvents(sessionId, userId);
+            const result = await service.getGameEvents(sessionId, userId, {}, graphqlService as never);
 
-            expect(em.find).toHaveBeenCalledWith(
-                GameEvent,
-                { session: sessionId },
-                { orderBy: { createdAt: 'ASC' } },
+            expect(qb.andWhere).toHaveBeenCalledWith({ session: sessionId });
+            expect(graphqlService.findAndPaginate).toHaveBeenCalledWith(
+                qb,
+                undefined,
+                [{ field: 'createdAt', direction: 'ASC' }],
+                { last: 60 },
             );
-            expect(result).toBe(events);
+            expect(result).toBe(connection);
         });
 
         it('throws NotFoundException if session is not owned', async () => {
@@ -259,7 +261,7 @@ describe('SessionService', () => {
             });
             em.findOne.mockResolvedValueOnce(session);
 
-            await expect(service.getGameEvents(sessionId, userId)).rejects.toThrow(NotFoundException);
+            await expect(service.getGameEvents(sessionId, userId, {}, {} as never)).rejects.toThrow(NotFoundException);
         });
     });
 });

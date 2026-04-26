@@ -3,11 +3,16 @@ import { type EntityRepository } from '@mikro-orm/postgresql';
 import {
     BadRequestException, forwardRef, Inject, Injectable, NotFoundException,
 } from '@nestjs/common';
+import { type Connection } from 'graphql-relay';
 
 import { CampaignService } from '../campaign/campaign.service.js';
+import { GraphqlService } from '../graphql/graphql.service.js';
+import { type ConnectionArgs, OrderByDirection } from '../graphql/relay';
 import { GameEvent } from './entities/game-event.entity.js';
 import { GameSession } from './entities/game-session.entity.js';
 import { EventType, SceneType } from './session.enums.js';
+
+const DEFAULT_GAME_EVENTS_PAGE_SIZE = 60;
 
 /**
  * Owns GameSession and GameEvent persistence. All methods are owner-scoped —
@@ -84,12 +89,26 @@ export class SessionService {
     }
 
     /**
-     * Returns all events for a session in chronological order. Owner-scoped.
+     * Returns owner-scoped session events as a relay connection in chronological order.
      */
-    async getGameEvents(sessionId: number, userId: number): Promise<GameEvent[]> {
+    async getGameEvents(
+        sessionId: number,
+        userId: number,
+        connArgs: ConnectionArgs,
+        graphqlService: GraphqlService,
+    ): Promise<Connection<GameEvent>> {
         await this.findOwnedSession(sessionId, userId);
-        const em = this.eventRepository.getEntityManager();
-        return em.find(GameEvent, { session: sessionId }, { orderBy: { createdAt: 'ASC' } });
+        const qb = this.eventRepository.createQueryBuilder();
+        const pageArgs = connArgs.first === undefined && connArgs.last === undefined
+            ? { ...connArgs, last: DEFAULT_GAME_EVENTS_PAGE_SIZE }
+            : connArgs;
+
+        return graphqlService.findAndPaginate(
+            qb.andWhere({ session: sessionId }),
+            undefined,
+            [{ field: 'createdAt', direction: OrderByDirection.ASC }],
+            pageArgs,
+        );
     }
 
     /**

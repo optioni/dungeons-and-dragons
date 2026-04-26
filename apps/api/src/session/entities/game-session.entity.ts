@@ -57,6 +57,11 @@ export class GameSession extends BaseEntity {
     @Property({ type: 'boolean', default: false })
     levelUpPending: Opt<boolean> = false;
 
+    /** The most recent inner monologue text, cleared when the player sends their next input. */
+    @Field(() => String, { nullable: true })
+    @Property({ type: 'text', nullable: true })
+    lastInnerVoice: string | null = null;
+
     /** Active combat encounter, if any. Null when not in combat. */
     @Field(() => CombatSession, { nullable: true })
     @OneToOne(() => CombatSession, (cs) => cs.session, { nullable: true, orphanRemoval: true })

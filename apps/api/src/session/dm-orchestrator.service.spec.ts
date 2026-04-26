@@ -56,6 +56,7 @@ describe('DmOrchestrator', () => {
     let mockAnthropicMessages: Record<string, ReturnType<typeof vi.fn>>;
     let em: Record<string, ReturnType<typeof vi.fn>>;
     let npcMemoryService: Record<string, ReturnType<typeof vi.fn>>;
+    let playerVisibleEventMapper: Record<string, ReturnType<typeof vi.fn>>;
     let orchestrator: DmOrchestrator;
 
     beforeEach(() => {
@@ -117,6 +118,10 @@ describe('DmOrchestrator', () => {
                 .mockResolvedValueOnce([{ content: 'The reeve fears smugglers.' }]),
         };
 
+        playerVisibleEventMapper = {
+            map: vi.fn().mockReturnValue([]),
+        };
+
         const mockStream = makeMockAnthropicStream([{ type: 'text', text: 'The room is quiet.' }]);
         mockAnthropicMessages = {
             stream: vi.fn().mockReturnValue(mockStream),
@@ -130,6 +135,7 @@ describe('DmOrchestrator', () => {
             streamPublisher as never,
             em as never,
             npcMemoryService as never,
+            playerVisibleEventMapper as never,
             {
                 getOrThrow: vi.fn().mockImplementation((key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-sonnet-4-6')),
                 get: vi.fn().mockImplementation((key: string) => (key === 'NPC_MEMORY_SCENE_LIMIT' ? 10 : undefined)),
@@ -211,6 +217,54 @@ describe('DmOrchestrator', () => {
         expect(toolCallEvents[0][2]).toMatchObject({
             toolUseId: 'toolu_abc',
             toolName: 'set_scene_type',
+        });
+    });
+
+    it('persists PLAYER_VISIBLE_EVENT rows after mapped tool calls', async () => {
+        /* eslint-disable @typescript-eslint/naming-convention */
+        const toolUseBlock = {
+            type: 'tool_use',
+            id: 'toolu_damage',
+            name: 'apply_damage',
+            input: { target_id: 'npc-1', amount: 7, damage_type: 'slashing' },
+        };
+        const mockStream = {
+            async* [Symbol.asyncIterator]() {},
+            finalMessage: vi.fn().mockResolvedValueOnce({
+                content: [toolUseBlock],
+                stop_reason: 'tool_use',
+            }).mockResolvedValueOnce({
+                content: [],
+                stop_reason: 'end_turn',
+            }),
+        };
+        /* eslint-enable @typescript-eslint/naming-convention */
+        mockAnthropicMessages.stream.mockReturnValue(mockStream);
+        toolRegistry.dispatch.mockResolvedValue({ success: true, data: { newHp: 3 } });
+        playerVisibleEventMapper.map.mockReturnValue([
+            {
+                category: 'COMBAT',
+                kind: 'DAMAGE_APPLIED',
+                title: 'Damage applied',
+                values: { amount: 7 },
+            },
+        ]);
+
+        await orchestrator.runTurn(sessionId, playerInput);
+
+        const toolCallIndex = sessionService.appendEvent.mock.calls.findIndex(
+            (callArgs: unknown[]) => callArgs[1] === EventType.TOOL_CALL,
+        );
+        const visibleEventIndex = sessionService.appendEvent.mock.calls.findIndex(
+            (callArgs: unknown[]) => callArgs[1] === EventType.PLAYER_VISIBLE_EVENT,
+        );
+
+        expect(toolCallIndex).toBeGreaterThanOrEqual(0);
+        expect(visibleEventIndex).toBeGreaterThan(toolCallIndex);
+        expect(sessionService.appendEvent.mock.calls[visibleEventIndex][2]).toMatchObject({
+            category: 'COMBAT',
+            kind: 'DAMAGE_APPLIED',
+            title: 'Damage applied',
         });
     });
 
@@ -429,6 +483,7 @@ describe('DmOrchestrator', () => {
             streamPublisher as never,
             em as never,
             npcMemoryService as never,
+            playerVisibleEventMapper as never,
             {
                 getOrThrow: vi.fn().mockImplementation((key: string) => (key === 'ANTHROPIC_API_KEY' ? 'test-key' : 'claude-sonnet-4-6')),
                 get: vi.fn().mockImplementation((key: string) => (key === 'NPC_MEMORY_SCENE_LIMIT' ? 3 : undefined)),

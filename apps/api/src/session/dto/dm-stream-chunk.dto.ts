@@ -8,6 +8,7 @@ export enum DmStreamChunkType {
     INNER_VOICE = 'INNER_VOICE',
     TOOL_RESULT = 'TOOL_RESULT',
     SUGGESTED_ACTION = 'SUGGESTED_ACTION',
+    PENDING_CHECK = 'PENDING_CHECK',
     STATUS = 'STATUS',
     CAMPAIGN_ENDED = 'CAMPAIGN_ENDED',
     DONE = 'DONE',
@@ -49,6 +50,10 @@ export class DmStreamChunk {
     /** Suggested player action — present for SUGGESTED_ACTION. */
     @Field(() => String, { nullable: true })
     action?: string;
+
+    /** Pending check hint — present for PENDING_CHECK. */
+    @Field(() => GraphQLJSON, { nullable: true })
+    pendingCheck?: { skill?: string; ability?: string; dc: number };
 
     /** Status message (e.g. scene change) — present for STATUS. */
     @Field(() => String, { nullable: true })

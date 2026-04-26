@@ -12,6 +12,7 @@ import { ToolRegistry } from '../llm/tool-registry.service.js';
 import { Npc } from '../world/entities/npc.entity.js';
 import { NpcMemoryService } from '../world/npc-memory.service.js';
 import { DmStreamChunkType } from './dto/dm-stream-chunk.dto.js';
+import { PlayerVisibleEventMapper } from './player-visible-event.mapper.js';
 import { EventType } from './session.enums.js';
 import { SessionService } from './session.service.js';
 import { StreamPublisher } from './stream-publisher.service.js';
@@ -33,11 +34,21 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'suggest_actions',
-        description: 'Suggests a short list of possible next actions for the player to choose from.',
+        description: 'Suggests a short list of possible next actions for the player to choose from. If the player\'s chosen action will require a skill or ability check, include pending_check with the anticipated skill/ability name and DC so it can be telegraphed to the player before they confirm.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 actions: { type: 'array', items: { type: 'string' as const }, description: 'Concise action labels' },
+                pending_check: {
+                    type: 'object' as const,
+                    description: 'Optional upcoming check to telegraph to the player',
+                    properties: {
+                        skill: { type: 'string' as const, description: 'Skill name (e.g. "Persuasion") — mutually exclusive with ability' },
+                        ability: { type: 'string' as const, description: 'Ability name (STR/DEX/CON/INT/WIS/CHA) — mutually exclusive with skill' },
+                        dc: { type: 'number' as const, description: 'Difficulty class for the anticipated check' },
+                    },
+                    required: ['dc'],
+                },
             },
             required: ['actions'],
         },
@@ -223,7 +234,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
             type: 'object' as const,
             properties: {
                 location_id: { type: 'number', description: 'ID of the location to discover' },
-                source: { type: 'string', description: 'Discovery source (e.g. "EXPLORATION", "NPC_DIALOGUE", "MAP")' },
+                source: { type: 'string', description: 'Discovery source enum: EXPLORATION, NPC, MAP, QUEST, PLAYER_ACTION, WORLD_TICK, or SETUP' },
                 source_id: { type: 'number', description: 'ID of the source entity (optional)' },
             },
             required: ['location_id', 'source'],
@@ -799,6 +810,7 @@ export class DmOrchestrator {
         private readonly streamPublisher: StreamPublisher,
         private readonly em: EntityManager,
         private readonly npcMemoryService: NpcMemoryService,
+        private readonly playerVisibleEventMapper: PlayerVisibleEventMapper,
         private readonly configService: ConfigService<EnvironmentConfig>,
     ) {
         this.anthropic = new Anthropic({
@@ -949,6 +961,13 @@ export class DmOrchestrator {
                     toolResult: suggestActionsResult,
                 });
 
+                await this.appendPlayerVisibleEvents(
+                    sessionId,
+                    block.name,
+                    block.input as Record<string, unknown>,
+                    suggestActionsResult,
+                );
+
                 continue;
             }
 
@@ -966,6 +985,18 @@ export class DmOrchestrator {
                 toolInput: block.input,
                 toolResult: result,
             });
+
+            await this.appendPlayerVisibleEvents(
+                sessionId,
+                block.name,
+                block.input as Record<string, unknown>,
+                result,
+            );
+
+            const diceRollContent = this.extractDiceRollContent(block.name, block.input as Record<string, unknown>, result);
+            if (diceRollContent) {
+                await this.sessionService.appendEvent(sessionId, EventType.DICE_ROLL, diceRollContent);
+            }
 
             this.streamPublisher.publish(sessionId, {
                 type: DmStreamChunkType.TOOL_RESULT,
@@ -999,6 +1030,21 @@ export class DmOrchestrator {
             { role: 'assistant', content: finalMessage.content },
             { role: 'user', content: toolResults },
         ], narrativeRef, loopIterations);
+    }
+
+    /**
+     * Persists authored player-facing consequences without exposing raw tool payloads.
+     */
+    private async appendPlayerVisibleEvents(
+        sessionId: number,
+        toolName: string,
+        toolInput: Record<string, unknown>,
+        toolResult: { success: boolean; data?: unknown; errorCode?: string; message?: string },
+    ): Promise<void> {
+        const events = this.playerVisibleEventMapper.map({ toolName, toolInput, toolResult });
+        for (const event of events) {
+            await this.sessionService.appendEvent(sessionId, EventType.PLAYER_VISIBLE_EVENT, event);
+        }
     }
 
     /**
@@ -1072,6 +1118,18 @@ export class DmOrchestrator {
             };
         }
 
+        const rawPendingCheck = input.pending_check as { skill?: string; ability?: string; dc?: number } | undefined;
+        if (rawPendingCheck && typeof rawPendingCheck.dc === 'number') {
+            this.streamPublisher.publish(sessionId, {
+                type: DmStreamChunkType.PENDING_CHECK,
+                pendingCheck: {
+                    skill: typeof rawPendingCheck.skill === 'string' ? rawPendingCheck.skill : undefined,
+                    ability: typeof rawPendingCheck.ability === 'string' ? rawPendingCheck.ability : undefined,
+                    dc: rawPendingCheck.dc,
+                },
+            });
+        }
+
         for (const action of actions) {
             this.streamPublisher.publish(sessionId, {
                 type: DmStreamChunkType.SUGGESTED_ACTION,
@@ -1080,6 +1138,58 @@ export class DmOrchestrator {
         }
 
         return { success: true, data: { count: actions.length } };
+    }
+
+    /** Extracts dice roll content for DICE_ROLL event persistence, or null if not applicable. */
+    private extractDiceRollContent(
+        toolName: string,
+        input: Record<string, unknown>,
+        result: unknown,
+    ): Record<string, unknown> | null {
+        const typedResult = result as { success?: boolean; data?: Record<string, unknown>; expression?: string; rolls?: number[]; total?: number };
+
+        if (!typedResult.success) {
+            return null;
+        }
+
+        if (toolName === 'check_skill') {
+            const data = typedResult.data;
+            if (!data) return null;
+            return {
+                tool: 'check_skill',
+                skill: input.skill,
+                roll: data['roll'],
+                modifier: data['modifier'],
+                total: data['total'],
+                dc: data['dc'],
+                passed: data['passed'],
+            };
+        }
+
+        if (toolName === 'check_ability') {
+            const data = typedResult.data;
+            if (!data) return null;
+            return {
+                tool: 'check_ability',
+                ability: input.ability,
+                roll: data['roll'],
+                modifier: data['modifier'],
+                total: data['total'],
+                dc: data['dc'],
+                passed: data['passed'],
+            };
+        }
+
+        if (toolName === 'roll_dice') {
+            return {
+                tool: 'roll_dice',
+                expression: typedResult.expression ?? input.expression,
+                rolls: typedResult.rolls,
+                total: typedResult.total,
+            };
+        }
+
+        return null;
     }
 
     /** Emits stream-only follow-up statuses for successful tool dispatches that pause freeform play. */
