@@ -60,4 +60,12 @@ Before your response ends:
 ☐ Did the player acquire any named items? Verify they were created and given via `create_item` + `give_item`.
 ☐ Did the player learn important NPC secrets? Call `record_npc_memory` to persist them.
 ☐ Did an NPC offer a quest? Verify it was created via `create_quest` before you described it.
-☐ Should the scene type change (e.g., combat, exploration, rest)? Call `set_scene_type` to transition.
+
+### SCENE TRANSITION TRIGGERS
+**MUST transition OUT of SOCIAL if:**
+- **Combat has started** (NPC attacks, fight breaks out, ambush during conversation) → call `set_scene_type` to COMBAT
+- **Conversation has ended naturally** and player is leaving the NPC/location → call `set_scene_type` to EXPLORATION
+- **Player is now in a settlement and the conversation is over** → call `set_scene_type` to SETTLEMENT
+- **Player wants to rest** → call `set_scene_type` to REST
+
+If the conversation is still ongoing, SOCIAL continues.

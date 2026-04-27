@@ -64,4 +64,12 @@ Before your response ends:
 ☐ Did the player acquire items outside rooms? Verify they were created via `create_item` + `give_item`.
 ☐ Did the room's state change materially? Call `update_room_state` if needed.
 ☐ Did you introduce any named dungeon NPCs? Verify they were created via `create_npc`.
-☐ Does the player want to exit the dungeon? Call `exit_dungeon` and `set_scene_type` to return to the overworld.
+
+### SCENE TRANSITION TRIGGERS
+**MUST transition OUT of DUNGEON if:**
+- **Player explicitly exits the dungeon** ("I leave the dungeon", "let's get out of here") → call `exit_dungeon`, then call `set_scene_type` to:
+  - EXPLORATION (if returning to wilderness/outdoor area)
+  - SETTLEMENT (if dungeon is near a town and player heads there)
+- **Player is forced out** (cave-in, magical barrier, environmental event) → call `exit_dungeon`, then `set_scene_type` as appropriate
+
+If player is still exploring the dungeon, DUNGEON continues. Do NOT exit the dungeon or change scene type unless the player is actually leaving.

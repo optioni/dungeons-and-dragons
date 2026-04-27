@@ -35,6 +35,16 @@ Before narrating the first round:
 
 ### EXIT CHECKLIST
 Before your response ends:
-☐ Is combat still active? If all enemies are defeated, fled, or surrendered, call `end_combat` and `set_scene_type` to return to EXPLORATION, SOCIAL, or SETTLEMENT as appropriate.
 ☐ Did the player use spells or abilities that consume resources? Verify you called `use_spell_slot`, `apply_condition`, etc.
 ☐ Are NPC enemies defeated/stable? Verify deaths and healing were applied correctly.
+
+### SCENE TRANSITION TRIGGERS
+**MUST transition OUT of COMBAT when:**
+- **All enemies are defeated, fled, or surrendered** → call `end_combat`, then call `set_scene_type` to:
+  - EXPLORATION (if outdoors/wilderness)
+  - SOCIAL (if there are NPCs to interact with afterward)
+  - SETTLEMENT (if in a town/city)
+  - REST (if player wants to rest after combat)
+  - DUNGEON (if still inside a dungeon)
+
+Do NOT call `set_scene_type` until combat is truly over. If enemies are still present or reinforcements are coming, COMBAT continues.

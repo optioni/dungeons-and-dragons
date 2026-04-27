@@ -54,4 +54,13 @@ Before your response ends:
 ☐ Did you mention any named NPCs, items, or locations? Verify all were created via their respective tools.
 ☐ Did the player investigate or attempt something with uncertain outcome? Ensure you called `check_skill` or `check_ability`.
 ☐ Did world state materially change (location got damaged, discovered ruins, uncovered a secret)? Call `update_location_state` or `record_lore` if appropriate.
-☐ Did the player want to move to a different scene type (e.g., rest, combat, social)? Call `set_scene_type` to transition.
+
+### SCENE TRANSITION TRIGGERS
+**MUST transition OUT of EXPLORATION if:**
+- **Player entered a settlement/town/city** → call `set_scene_type` to SETTLEMENT
+- **Player is engaged in extended dialogue with an NPC** (negotiation, information gathering, social interaction lasting multiple exchanges) → call `set_scene_type` to SOCIAL
+- **Combat has started** (enemies attack, player draws weapon, ambush triggers) → call `set_scene_type` to COMBAT
+- **Player explicitly wants to rest** (8+ hours) → call `set_scene_type` to REST (then `take_long_rest`)
+- **Player enters a dungeon** (structured room-by-room exploration) → call `set_scene_type` to DUNGEON
+
+If none of these apply, EXPLORATION continues.

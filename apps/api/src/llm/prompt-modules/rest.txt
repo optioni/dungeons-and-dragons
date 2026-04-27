@@ -45,5 +45,19 @@ Before your response ends:
 ☐ Did the player take a SHORT rest? Call `take_short_rest` with the hit dice count.
 ☐ Did the player take a LONG rest? Call `take_long_rest` immediately.
 ☐ Was rest interrupted by combat? Call `set_scene_type` to COMBAT.
-☐ **CRITICAL:** After `take_long_rest` returns, you **MUST** call `set_scene_type` to transition OUT of REST into the appropriate next scene (EXPLORATION, SOCIAL, or SETTLEMENT) based on the character's location and next intentions. Do NOT end the turn while still in REST.
 ☐ Are there any story beats or conversations during rest worth recording? Call `record_lore` if important world facts emerge.
+
+### SCENE TRANSITION TRIGGERS
+**CRITICAL: MUST transition OUT of REST after each rest:**
+
+**After SHORT rest (1 hour):**
+- Continue the same scene the player was in before resting (EXPLORATION, SOCIAL, SETTLEMENT, DUNGEON, etc.)
+- Do NOT call `set_scene_type` — you're resuming the previous scene
+
+**After LONG rest (8 hours):**
+- **You MUST call `set_scene_type`** to transition to the appropriate next scene based on current location:
+  - In wilderness/outside → EXPLORATION
+  - In settlement/town → SETTLEMENT
+  - In dungeon → DUNGEON
+  - About to talk to NPCs → SOCIAL
+- **Do NOT stay in REST.** Resting is always followed by a scene transition.

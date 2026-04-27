@@ -67,4 +67,12 @@ Before your response ends:
 ☐ Did you reveal important NPC secrets or rumors? Call `record_npc_memory` to persist them.
 ☐ Did an NPC offer a quest? Verify it was created via `create_quest`.
 ☐ Did the player's actions shift a faction's attitude? Call `shift_faction_disposition`.
-☐ Does the player want to leave the settlement or change scenes? Call `set_scene_type` to EXPLORATION, COMBAT, SOCIAL, or REST as appropriate.
+
+### SCENE TRANSITION TRIGGERS
+**MUST transition OUT of SETTLEMENT if:**
+- **Player leaves the settlement** (says "I head out", "I leave town", "let's go back to the wilderness") → call `set_scene_type` to EXPLORATION
+- **Combat breaks out** (guards attack, bandits ambush, faction conflict escalates) → call `set_scene_type` to COMBAT
+- **Player wants to rest** (8+ hours in an inn or safe location) → call `set_scene_type` to REST
+- **Player enters a specific location type requiring new scene** (dungeon near town) → call `set_scene_type` to DUNGEON
+
+If player is still exploring the settlement, shopping, talking to NPCs, SETTLEMENT continues.
