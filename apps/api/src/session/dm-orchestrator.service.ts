@@ -669,11 +669,11 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Memory ────────────────────────────────────────────────────────────────
     {
         name: 'record_memory',
-        description: 'Persists a memory fact about an entity (character, NPC, location, faction, quest, world).',
+        description: 'Persists a memory fact about an entity.',
         input_schema: {
             type: 'object' as const,
             properties: {
-                subject_type: { type: 'string', description: 'Subject type: CHARACTER, NPC, LOCATION, FACTION, QUEST, WORLD' },
+                subject_type: { type: 'string', enum: ['character', 'npc', 'location', 'faction', 'item', 'general'], description: 'Subject type' },
                 content: { type: 'string', description: 'Memory statement to persist' },
                 subject_id: { type: 'string', description: 'Subject entity ID (optional)' },
             },
@@ -687,7 +687,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
             type: 'object' as const,
             properties: {
                 query: { type: 'string', description: 'Search query' },
-                subject_type: { type: 'string', description: 'Filter by subject type (optional)' },
+                subject_type: { type: 'string', enum: ['character', 'npc', 'location', 'faction', 'item', 'general'], description: 'Filter by subject type (optional)' },
                 subject_id: { type: 'string', description: 'Filter by subject ID (optional)' },
                 limit: { type: 'number', description: 'Max results (default 5)' },
             },
@@ -952,7 +952,11 @@ export class DmOrchestrator {
                     block.input as Record<string, unknown>,
                 );
 
-                this.logger.log(`Tool dispatch: sessionId=${sessionId} tool=${block.name} success=${suggestActionsResult.success}`);
+                if (suggestActionsResult.success) {
+                    this.logger.log(`Tool dispatch: sessionId=${sessionId} tool=${block.name} success=true`);
+                } else {
+                    this.logger.warn(`Tool dispatch failed: sessionId=${sessionId} tool=${block.name} errorCode=${(suggestActionsResult as { errorCode?: string }).errorCode ?? 'unknown'} message=${(suggestActionsResult as { message?: string }).message ?? ''}`);
+                }
 
                 await this.sessionService.appendEvent(sessionId, EventType.TOOL_CALL, {
                     toolUseId: block.id,
@@ -977,7 +981,12 @@ export class DmOrchestrator {
                 block.input as Record<string, unknown>,
             );
 
-            this.logger.log(`Tool dispatch: sessionId=${sessionId} tool=${block.name} success=${(result as { success?: boolean }).success ?? 'unknown'}`);
+            const toolSuccess = (result as { success?: boolean }).success;
+            if (toolSuccess !== false) {
+                this.logger.log(`Tool dispatch: sessionId=${sessionId} tool=${block.name} success=true`);
+            } else {
+                this.logger.warn(`Tool dispatch failed: sessionId=${sessionId} tool=${block.name} errorCode=${(result as { errorCode?: string }).errorCode ?? 'unknown'} message=${(result as { message?: string }).message ?? ''}`);
+            }
 
             await this.sessionService.appendEvent(sessionId, EventType.TOOL_CALL, {
                 toolUseId: block.id,
