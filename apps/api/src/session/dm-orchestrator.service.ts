@@ -952,7 +952,7 @@ export class DmOrchestrator {
             const streamDuration = Date.now() - streamStartedAt;
             this.logger.log(`Anthropic stream complete: sessionId=${sessionId} provider=anthropic model=${this.dmModel} stopReason=${finalMessage.stop_reason} duration=${streamDuration}ms`);
 
-            await this.handleToolUseLoop(sessionId, finalMessage, messages, narrativeRef, loopIterations);
+            await this.handleToolUseLoop(sessionId, system, finalMessage, messages, narrativeRef, loopIterations);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             const errorStack = error instanceof Error ? error.stack : '';
@@ -966,6 +966,7 @@ export class DmOrchestrator {
 
     private async handleToolUseLoop(
         sessionId: number,
+        system: Anthropic.TextBlockParam[],
         finalMessage: Anthropic.Message,
         messages: Anthropic.MessageParam[],
         narrativeRef: { text: string },
