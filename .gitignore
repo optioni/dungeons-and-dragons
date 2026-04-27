@@ -28,6 +28,7 @@ dist
 .output
 .engram
 .playwright-cli
+storybook-static
 
 # Nuxt
 .nuxt

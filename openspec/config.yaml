@@ -87,5 +87,8 @@ rules:
     - Follow TDD — write the failing test before the implementation
     - One clear responsibility per file/module
     - Document all public classes, methods, and non-obvious logic with JSDoc comments
+    - For changes that touch visible `apps/web` UI, including components, routes, layout, typography, styling, interactive controls, or visual states, include concrete Storybook story tasks for each new or changed visible state.
+    - If a change touches `apps/web` but has no visible UI impact, include an explicit task or note saying Storybook coverage is not applicable and why.
+    - Backend-only, infrastructure-only, data-only, and OpenSpec-only changes do not need to mention Storybook coverage.
     - The final tasks of EVERY change MUST be: run lint, run typecheck, run tests — in that order. Fix all errors before the change is considered complete. These are mandatory, not optional.
     - After completing each task group (numbered section), clear the conversation context with /clear before starting the next group. This keeps token usage low and prevents stale context from earlier groups polluting later ones.
