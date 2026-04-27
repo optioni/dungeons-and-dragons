@@ -221,6 +221,7 @@ describe('ContextLoader', () => {
 
             const result = await service.loadWorldBlock(1, 7);
 
+            expect(result).toContain('ID: 7');
             expect(result).toContain('Race: Elf');
             expect(result).toContain('Class: Wizard');
             expect(result).toContain('STR: 8 (-1)');
