@@ -9,22 +9,22 @@ export const PLAYER_VISIBLE_EVENT_CATEGORIES = [
 
 export type PlayerVisibleEventCategory = typeof PLAYER_VISIBLE_EVENT_CATEGORIES[number];
 
-export type PlayerVisibleEventEntity = {
+export interface PlayerVisibleEventEntity {
     type: string
     id?: string
     name: string
-};
+}
 
 export type PlayerVisibleEventValue = string | number | boolean;
 
-export type PlayerVisibleEventPayload = {
+export interface PlayerVisibleEventPayload {
     category: PlayerVisibleEventCategory
     kind: string
     title: string
     summary?: string
     entities?: PlayerVisibleEventEntity[]
     values?: Record<string, PlayerVisibleEventValue>
-};
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -43,7 +43,7 @@ function isEntity(value: unknown): value is PlayerVisibleEventEntity {
 }
 
 function isVisibleValue(value: unknown): value is PlayerVisibleEventValue {
-    return ['string', 'number', 'boolean'].includes(typeof value);
+    return ['boolean', 'number', 'string'].includes(typeof value);
 }
 
 export function isPlayerVisibleEventPayload(value: unknown): value is PlayerVisibleEventPayload {
@@ -81,5 +81,5 @@ export function isTranscriptVisibleMechanicalEvent(value: unknown): value is Pla
         return false;
     }
 
-    return value.category !== 'COMBAT' || ['COMBAT_STARTED', 'COMBAT_ENDED', 'DEATH_SAVE_ROLLED', 'CHARACTER_DEATH'].includes(value.kind);
+    return value.category !== 'COMBAT' || ['CHARACTER_DEATH', 'COMBAT_ENDED', 'COMBAT_STARTED', 'DEATH_SAVE_ROLLED'].includes(value.kind);
 }
