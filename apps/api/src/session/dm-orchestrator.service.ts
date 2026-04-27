@@ -890,7 +890,13 @@ export class DmOrchestrator {
             await this.runToolLoop(sessionId, systemBlocks, messages, narrativeRef, loopIterations);
         } catch (error) {
             const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
-            this.logger.error(`DM turn failed: sessionId=${sessionId} errorClass=${errorClass}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : '';
+            this.logger.error(
+              `DM turn failed: sessionId=${sessionId} sceneType=${sceneType} errorClass=${errorClass} errorMessage=${errorMessage}`,
+              errorStack,
+            );
+            this.logger.debug(`Context: playerInput="${playerInput}" loopIterations=${loopIterations.count}`);
         } finally {
             if (narrativeRef.text) {
                 await this.sessionService.appendEvent(sessionId, EventType.DM_NARRATIVE, {
@@ -921,29 +927,50 @@ export class DmOrchestrator {
         const streamStartedAt = Date.now();
         this.logger.log(`Anthropic stream start: sessionId=${sessionId} model=${this.dmModel} iteration=${loopIterations.count}`);
 
-        /* eslint-disable @typescript-eslint/naming-convention */
-        const stream = this.anthropic.messages.stream({
-            model: this.dmModel,
-            max_tokens: 2048,
-            system,
-            tools: DM_TOOLS,
-            messages,
-        });
-        /* eslint-enable @typescript-eslint/naming-convention */
+        try {
+            /* eslint-disable @typescript-eslint/naming-convention */
+            const stream = this.anthropic.messages.stream({
+                model: this.dmModel,
+                max_tokens: 2048,
+                system,
+                tools: DM_TOOLS,
+                messages,
+            });
+            /* eslint-enable @typescript-eslint/naming-convention */
 
-        for await (const event of stream) {
-            if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-                narrativeRef.text += event.delta.text;
-                this.streamPublisher.publish(sessionId, {
-                    type: DmStreamChunkType.NARRATIVE_CHUNK,
-                    text: event.delta.text,
-                });
+            for await (const event of stream) {
+                if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+                    narrativeRef.text += event.delta.text;
+                    this.streamPublisher.publish(sessionId, {
+                        type: DmStreamChunkType.NARRATIVE_CHUNK,
+                        text: event.delta.text,
+                    });
+                }
             }
-        }
 
-        const finalMessage = await stream.finalMessage();
-        const streamDuration = Date.now() - streamStartedAt;
-        this.logger.log(`Anthropic stream complete: sessionId=${sessionId} provider=anthropic model=${this.dmModel} stopReason=${finalMessage.stop_reason} duration=${streamDuration}ms`);
+            const finalMessage = await stream.finalMessage();
+            const streamDuration = Date.now() - streamStartedAt;
+            this.logger.log(`Anthropic stream complete: sessionId=${sessionId} provider=anthropic model=${this.dmModel} stopReason=${finalMessage.stop_reason} duration=${streamDuration}ms`);
+
+            await this.handleToolUseLoop(sessionId, finalMessage, messages, narrativeRef, loopIterations);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorStack = error instanceof Error ? error.stack : '';
+            this.logger.error(
+              `Anthropic stream failed: sessionId=${sessionId} iteration=${loopIterations.count} errorMessage=${errorMessage}`,
+              errorStack,
+            );
+            throw error;
+        }
+    }
+
+    private async handleToolUseLoop(
+        sessionId: number,
+        finalMessage: Anthropic.Message,
+        messages: Anthropic.MessageParam[],
+        narrativeRef: { text: string },
+        loopIterations: { count: number },
+    ): Promise<void> {
 
         if (finalMessage.stop_reason !== 'tool_use') {
             return;
@@ -994,59 +1021,71 @@ export class DmOrchestrator {
                 continue;
             }
 
-            const result = await this.toolRegistry.dispatch(
-                sessionId,
-                block.name,
-                block.input as Record<string, unknown>,
-            );
+            try {
+                const result = await this.toolRegistry.dispatch(
+                    sessionId,
+                    block.name,
+                    block.input as Record<string, unknown>,
+                );
 
-            const toolSuccess = (result as { success?: boolean }).success;
-            if (toolSuccess !== false) {
-                this.logger.log(`Tool dispatch: sessionId=${sessionId} tool=${block.name} success=true`);
-            } else {
-                this.logger.warn(`Tool dispatch failed: sessionId=${sessionId} tool=${block.name} errorCode=${(result as { errorCode?: string }).errorCode ?? 'unknown'} message=${(result as { message?: string }).message ?? ''}`);
-            }
+                const toolSuccess = (result as { success?: boolean }).success;
+                if (toolSuccess !== false) {
+                    this.logger.log(`Tool dispatch: sessionId=${sessionId} tool=${block.name} success=true`);
+                } else {
+                    const errorCode = (result as { errorCode?: string }).errorCode ?? 'unknown';
+                    const errorMessage = (result as { message?: string }).message ?? '';
+                    this.logger.warn(`Tool dispatch failed: sessionId=${sessionId} tool=${block.name} errorCode=${errorCode} errorMessage=${errorMessage} input=${JSON.stringify(block.input)}`);
+                }
 
-            await this.sessionService.appendEvent(sessionId, EventType.TOOL_CALL, {
-                toolUseId: block.id,
-                toolName: block.name,
-                toolInput: block.input,
-                toolResult: result,
-            });
-
-            await this.appendPlayerVisibleEvents(
-                sessionId,
-                block.name,
-                block.input as Record<string, unknown>,
-                result,
-            );
-
-            const diceRollContent = this.extractDiceRollContent(block.name, block.input as Record<string, unknown>, result);
-            if (diceRollContent) {
-                await this.sessionService.appendEvent(sessionId, EventType.DICE_ROLL, diceRollContent);
-            }
-
-            this.streamPublisher.publish(sessionId, {
-                type: DmStreamChunkType.TOOL_RESULT,
-                toolName: block.name,
-                toolResult: result,
-            });
-
-            const status = this.getToolSuccessStatus(block.name, result);
-            if (status) {
-                this.streamPublisher.publish(sessionId, {
-                    type: DmStreamChunkType.STATUS,
-                    status,
+                await this.sessionService.appendEvent(sessionId, EventType.TOOL_CALL, {
+                    toolUseId: block.id,
+                    toolName: block.name,
+                    toolInput: block.input,
+                    toolResult: result,
                 });
-            }
 
-            /* eslint-disable @typescript-eslint/naming-convention */
-            toolResults.push({
-                type: 'tool_result',
-                tool_use_id: block.id,
-                content: JSON.stringify(result),
-            });
-            /* eslint-enable @typescript-eslint/naming-convention */
+                await this.appendPlayerVisibleEvents(
+                    sessionId,
+                    block.name,
+                    block.input as Record<string, unknown>,
+                    result,
+                );
+
+                const diceRollContent = this.extractDiceRollContent(block.name, block.input as Record<string, unknown>, result);
+                if (diceRollContent) {
+                    await this.sessionService.appendEvent(sessionId, EventType.DICE_ROLL, diceRollContent);
+                }
+
+                this.streamPublisher.publish(sessionId, {
+                    type: DmStreamChunkType.TOOL_RESULT,
+                    toolName: block.name,
+                    toolResult: result,
+                });
+
+                const status = this.getToolSuccessStatus(block.name, result);
+                if (status) {
+                    this.streamPublisher.publish(sessionId, {
+                        type: DmStreamChunkType.STATUS,
+                        status,
+                    });
+                }
+
+                /* eslint-disable @typescript-eslint/naming-convention */
+                toolResults.push({
+                    type: 'tool_result',
+                    tool_use_id: block.id,
+                    content: JSON.stringify(result),
+                });
+                /* eslint-enable @typescript-eslint/naming-convention */
+            } catch (toolError) {
+                const errorMessage = toolError instanceof Error ? toolError.message : String(toolError);
+                const errorStack = toolError instanceof Error ? toolError.stack : '';
+                this.logger.error(
+                  `Tool dispatch threw exception: sessionId=${sessionId} tool=${block.name} errorMessage=${errorMessage} input=${JSON.stringify(block.input)}`,
+                  errorStack,
+                );
+                // Continue to next tool call rather than breaking - the stream may have more tool calls
+            }
         }
 
         if (toolResults.length === 0) {
