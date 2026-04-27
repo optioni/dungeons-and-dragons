@@ -211,9 +211,10 @@ export class PlayerVisibleEventMapper {
         extraValues: Record<string, PlayerVisibleEventValue | undefined> = {},
     ): PlayerVisibleEventPayload {
         const itemId = data.itemId ?? toolInput.item_id;
+        const itemName = stringValue(data.itemName) ?? 'Item';
         const quantity = numberValue(data.quantity) ?? numberValue(toolInput.quantity) ?? 1;
         return this.event(category, kind, title, quantity > 1 ? `Quantity ${quantity}.` : undefined, {
-            entities: [entity('ITEM', itemId, 'Item')],
+            entities: [entity('ITEM', itemId, itemName)],
             values: compactValues({ quantity, ...extraValues }),
         });
     }
