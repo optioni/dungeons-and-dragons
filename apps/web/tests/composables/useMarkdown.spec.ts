@@ -24,7 +24,7 @@ describe('parseMarkdown', () => {
     });
 
     it('strips script tags', () => {
-        const result = parseMarkdown('<script>alert("xss")<\/script>');
+        const result = parseMarkdown('<script>alert("xss")</script>');
         expect(result).not.toContain('<script>');
         expect(result).not.toContain('alert');
     });

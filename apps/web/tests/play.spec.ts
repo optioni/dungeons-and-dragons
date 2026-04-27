@@ -43,12 +43,12 @@ interface CharacterOverrides {
 }
 
 interface QueryMockOptions {
-    initialEvents?: Record<string, unknown>[]
-    completedEvents?: Record<string, unknown>[]
+    initialEvents?: Array<Record<string, unknown>>
+    completedEvents?: Array<Record<string, unknown>>
     sendInputMutation?: ReturnType<typeof vi.fn>
 }
 
-function toGameEventsConnection(events: Record<string, unknown>[] = []) {
+function toGameEventsConnection(events: Array<Record<string, unknown>> = []) {
     return {
         edges: events.map((event, index) => ({
             cursor: `cursor-${index + 1}`,

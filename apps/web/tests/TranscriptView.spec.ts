@@ -34,10 +34,9 @@ describe('TranscriptView mechanical events', () => {
         });
 
         expect(wrapper.find('[data-testid="mechanical-event-annotation"]').exists()).toBe(true);
-        expect(wrapper.text()).toContain('QUEST QUEST OBJECTIVE UPDATED');
-        expect(wrapper.text()).toContain('Quest objective updated');
-        expect(wrapper.text()).toContain('Second clue discovered.');
-        expect(wrapper.text()).toContain('2');
+        expect(wrapper.text()).toContain('Quest objective updated — Second clue discovered.');
+        expect(wrapper.text()).not.toContain('QUEST QUEST OBJECTIVE UPDATED');
+        expect(wrapper.text()).not.toContain('quantity');
     });
 
     it('does not render raw or hidden payload fields from visible event content', () => {
