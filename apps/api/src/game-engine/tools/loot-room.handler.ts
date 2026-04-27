@@ -74,7 +74,7 @@ export class LootRoomHandler {
         const checkerResult = await this.questService.runAutoChecker(session.campaign.id);
         return {
             success: true,
-            data: { roomId, itemId, quantity },
+            data: { roomId, itemId, itemName: roomItem.item.name, quantity },
             ...(checkerResult.questCompleted ? { questCompleted: checkerResult.questCompleted } : {}),
         };
     }

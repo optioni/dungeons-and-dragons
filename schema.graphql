@@ -166,6 +166,7 @@ enum ItemType {
   GEAR
   CURRENCY
   OTHER
+  MISC
 }
 
 type CharacterItem {

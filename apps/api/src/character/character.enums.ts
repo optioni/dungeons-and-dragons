@@ -26,6 +26,7 @@ export enum ItemType {
     GEAR = 'GEAR',
     CURRENCY = 'CURRENCY',
     OTHER = 'OTHER',
+    MISC = 'MISC',
 }
 
 registerEnumType(ItemType, { name: 'ItemType' });

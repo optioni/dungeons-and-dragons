@@ -41,7 +41,7 @@ export class ItemService {
         const item = this.em.create(Item, {
             name: fields.name,
             description: fields.description,
-            itemType: (fields.itemType as ItemType) ?? ItemType.OTHER,
+            itemType: (Object.values(ItemType).includes(fields.itemType as ItemType) ? fields.itemType : ItemType.OTHER) as ItemType,
             weight: fields.weight ?? null,
             value: fields.value ?? null,
         });
@@ -122,7 +122,7 @@ export class ItemService {
 
         this.events?.emit(STATE_CHANGED_EVENT, new StateChangedEvent('GIVE_ITEM', String(itemId), campaignId));
 
-        return { success: true, data: { itemId, quantity } };
+        return { success: true, data: { itemId, itemName: item.name, quantity } };
     }
 
     /** Sets the equipped slot for a CharacterItem. */
