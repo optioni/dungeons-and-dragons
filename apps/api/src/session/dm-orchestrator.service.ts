@@ -255,16 +255,6 @@ const DM_TOOLS: Anthropic.Tool[] = [
             required: ['name', 'description'],
         },
     },
-    {
-        name: 'update_campaign_settings',
-        description: 'Updates campaign-level settings such as travel encounter toggle.',
-        input_schema: {
-            type: 'object' as const,
-            properties: {
-                travel_encounter_enabled: { type: 'boolean', description: 'Enable or disable random travel encounters' },
-            },
-        },
-    },
     // ── Items ─────────────────────────────────────────────────────────────────
     {
         name: 'create_item',
