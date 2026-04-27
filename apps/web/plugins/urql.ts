@@ -3,7 +3,7 @@ import {
     useRouter,
     useRuntimeConfig,
 } from '#imports';
-import install, { createClient, fetchExchange, mapExchange, subscriptionExchange } from '@urql/vue';
+import urqlInstall, { createClient, fetchExchange, mapExchange, subscriptionExchange } from '@urql/vue';
 import { createClient as createSSEClient } from 'graphql-sse';
 
 export default defineNuxtPlugin((nuxtApp) => {
@@ -25,26 +25,26 @@ export default defineNuxtPlugin((nuxtApp) => {
         fetchExchange,
         ...(import.meta.client
             ? [
-                  subscriptionExchange({
-                      forwardSubscription: (request) => {
-                          const sseClient = createSSEClient({
-                              url: `${apiUrl}/graphql`,
-                              fetchFn: (
-                                  input: Parameters<typeof fetch>[0],
-                                  init?: Parameters<typeof fetch>[1],
-                              ) => fetch(input, { ...init, credentials: 'include' }),
-                          });
-                          return {
-                              subscribe: (sink) => ({
-                                  unsubscribe: sseClient.subscribe(
-                                      { query: request.query ?? '', variables: request.variables },
-                                      sink,
-                                  ),
-                              }),
-                          };
-                      },
-                  }),
-              ]
+                subscriptionExchange({
+                    forwardSubscription: (request) => {
+                        const sseClient = createSSEClient({
+                            url: `${apiUrl}/graphql`,
+                            fetchFn: (
+                                input: Parameters<typeof fetch>[0],
+                                init?: Parameters<typeof fetch>[1],
+                            ) => fetch(input, { ...init, credentials: 'include' }),
+                        });
+                        return {
+                            subscribe: (sink) => ({
+                                unsubscribe: sseClient.subscribe(
+                                    { query: request.query ?? '', variables: request.variables },
+                                    sink,
+                                ),
+                            }),
+                        };
+                    },
+                }),
+            ]
             : []),
     ];
 
@@ -55,5 +55,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     });
 
     // Register via @urql/vue's install, which wraps the client in a shallowRef
-    nuxtApp.vueApp.use(install, urqlClient);
+    nuxtApp.vueApp.use(urqlInstall, urqlClient);
 });
