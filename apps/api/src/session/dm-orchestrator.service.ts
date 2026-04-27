@@ -34,11 +34,11 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'suggest_actions',
-        description: 'Suggests a short list of possible next actions for the player to choose from. If the player\'s chosen action will require a skill or ability check, include pending_check with the anticipated skill/ability name and DC so it can be telegraphed to the player before they confirm.',
+        description: 'Presents action options to the player at a decision point. Include pending_check if an action will trigger a skill/ability check, telegraphing the DC so the player knows the stakes before committing. Use when multiple valid paths exist (talk to NPC, sneak past guards, fight, negotiate).',
         input_schema: {
             type: 'object' as const,
             properties: {
-                actions: { type: 'array', items: { type: 'string' as const }, description: 'Concise action labels' },
+                actions: { type: 'array', items: { type: 'string' as const }, description: 'Concise action labels (3–5 options)' },
                 pending_check: {
                     type: 'object' as const,
                     description: 'Optional upcoming check to telegraph to the player',
@@ -56,11 +56,11 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Dice ─────────────────────────────────────────────────────────────────
     {
         name: 'roll_dice',
-        description: 'Rolls a dice expression (e.g. "2d6+3") and returns the total and individual rolls.',
+        description: 'Rolls a dice expression for NPC actions, random events, or other mechanics outside character skill checks. Examples: "2d6" for wandering monster check, "1d20+5" for an NPC attack roll, "3d6" for random encounter damage. Use check_skill/check_ability for character-initiated rolls with DCs.',
         input_schema: {
             type: 'object' as const,
             properties: {
-                expression: { type: 'string', description: 'Dice expression such as "1d20", "2d6+3"' },
+                expression: { type: 'string', description: 'Dice expression such as "1d20", "2d6+3", "4d6"' },
             },
             required: ['expression'],
         },
@@ -94,7 +94,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Combat ───────────────────────────────────────────────────────────────
     {
         name: 'start_combat',
-        description: 'Starts a combat encounter. Rolls initiative for all participants.',
+        description: 'Initiates combat: rolls initiative for all participants and sets combat state. Call this the moment combat begins (enemy appears, player draws weapon, ambush triggers).',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -109,25 +109,25 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'advance_initiative',
-        description: 'Advances combat to the next participant in initiative order.',
+        description: 'Moves to the next combatant in initiative order. Call after a combatant completes their turn.',
         input_schema: { type: 'object' as const, properties: {} },
     },
     {
         name: 'apply_damage',
-        description: 'Applies damage to a combatant. Target ID is "character" or an NPC encounter key.',
+        description: 'Applies damage to a combatant after a hit lands. Always include damage_type (slashing, piercing, bludgeoning, fire, cold, acid, poison, radiant, necrotic, psychic, thunder, force, etc.).',
         input_schema: {
             type: 'object' as const,
             properties: {
                 target_id: { type: 'string', description: '"character" or the NPC encounter key' },
                 amount: { type: 'number', description: 'HP to subtract' },
-                damage_type: { type: 'string', description: 'Damage type (e.g. "slashing", "fire")' },
+                damage_type: { type: 'string', description: 'Damage type (slashing, fire, poison, necrotic, etc.)' },
             },
             required: ['target_id', 'amount', 'damage_type'],
         },
     },
     {
         name: 'heal',
-        description: 'Restores HP to a combatant up to their maximum.',
+        description: 'Restores HP from a healing spell, potion, or ability. Capped at max HP. Use during combat for healing spells/potions; use outside combat to represent natural rest recovery via take_short_rest or take_long_rest.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -139,19 +139,19 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'apply_condition',
-        description: 'Applies a D&D 5e condition to a combatant.',
+        description: 'Applies a D&D 5e condition (Poisoned, Stunned, Restrained, Blinded, Charmed, etc.) from spells, abilities, or environmental effects. Conditions modify future rolls and actions.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 target_id: { type: 'string', description: '"character" or the NPC encounter key' },
-                condition: { type: 'string', description: 'Condition name (e.g. "Poisoned", "Stunned")' },
+                condition: { type: 'string', description: 'Condition name (Poisoned, Stunned, Restrained, Blinded, Charmed, Frightened, Prone, etc.)' },
             },
             required: ['target_id', 'condition'],
         },
     },
     {
         name: 'remove_condition',
-        description: 'Removes a condition from a combatant.',
+        description: 'Removes a condition from a combatant when a spell ends it, an action removes it, or a save succeeds.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -163,7 +163,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'roll_death_save',
-        description: 'Rolls a death saving throw for a downed character.',
+        description: 'Rolls a death saving throw (d20 + 0) when the character is at 0 HP and making death saves. Success: +1 success counter; Failure: +1 failure counter. 3 successes = stabilized; 3 failures = dead.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -174,7 +174,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'stabilise',
-        description: 'Stabilises a downed character without HP (stops death saves).',
+        description: 'Stabilizes a downed character (at 0 HP) by stopping death saves and setting HP to 1. Use when a healing spell reaches them, an ally uses Healer\'s Kit, or another stabilization ability triggers.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -185,7 +185,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'instant_death',
-        description: 'Kills a character instantly (massive damage rule).',
+        description: 'Kills a character instantly from massive environmental damage (falling from a cliff, lava, crushed by a collapsing structure). Use when damage in a single hit exceeds max HP by 10+.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -196,13 +196,13 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'end_combat',
-        description: 'Ends the current combat encounter and clears combat state.',
+        description: 'Ends combat when all enemies are defeated, fled, surrendered, or the encounter is resolved. Clears combat state and resets initiative.',
         input_schema: { type: 'object' as const, properties: {} },
     },
     // ── Rest ─────────────────────────────────────────────────────────────────
     {
         name: 'take_short_rest',
-        description: 'Takes a short rest. Spends hit dice to recover HP.',
+        description: 'Takes a 1-hour short rest: player spends hit dice to recover HP, short-rest ability recharges trigger. No day advance; no world tick. Use when player wants to rest briefly during the same day (after combat, mid-adventure).',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -218,23 +218,23 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Travel ───────────────────────────────────────────────────────────────
     {
         name: 'travel_to',
-        description: 'Moves the player to a previously discovered location. May trigger a random encounter.',
+        description: 'Moves the player to a previously discovered location (one already in the campaign database). May trigger a random encounter en route. Call when player chooses to travel or when moving between discovered locations.',
         input_schema: {
             type: 'object' as const,
             properties: {
-                location_id: { type: 'number', description: 'ID of the target location' },
+                location_id: { type: 'number', description: 'ID of the target location (must be previously discovered or created)' },
             },
             required: ['location_id'],
         },
     },
     {
         name: 'discover_location',
-        description: 'Marks a pre-seeded location as discovered. Only use for locations with known IDs from campaign setup.',
+        description: 'Marks a pre-seeded location as discovered. Use ONLY for locations with known IDs from campaign setup (e.g., major towns, dungeons, landmarks seeded during character creation). Do NOT use for places you invent on the fly—use create_location instead. Always provide source (EXPLORATION, NPC, MAP, QUEST, PLAYER_ACTION).',
         input_schema: {
             type: 'object' as const,
             properties: {
-                location_id: { type: 'number', description: 'ID of the location to discover' },
-                source: { type: 'string', description: 'Discovery source enum: EXPLORATION, NPC, MAP, QUEST, PLAYER_ACTION, WORLD_TICK, or SETUP' },
+                location_id: { type: 'number', description: 'ID of the pre-seeded location to discover' },
+                source: { type: 'string', description: 'Discovery source: EXPLORATION, NPC, MAP, QUEST, PLAYER_ACTION, WORLD_TICK, SETUP' },
                 source_id: { type: 'number', description: 'ID of the source entity (optional)' },
             },
             required: ['location_id', 'source'],
@@ -284,11 +284,11 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'give_item',
-        description: 'Transfers an item from the registry into a character or NPC inventory.',
+        description: 'Transfers an item from the campaign registry into a character or NPC inventory. Always call after create_item. Specify either to_character_id or to_npc_id (not both).',
         input_schema: {
             type: 'object' as const,
             properties: {
-                item_id: { type: 'number', description: 'Item ID to give' },
+                item_id: { type: 'number', description: 'Item ID to give (must exist in campaign)' },
                 quantity: { type: 'number', description: 'Quantity to give (default 1)' },
                 to_character_id: { type: 'number', description: 'Character receiving the item' },
                 to_npc_id: { type: 'number', description: 'NPC receiving the item' },
@@ -298,19 +298,19 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'equip_item',
-        description: 'Equips a character item to a specific slot.',
+        description: 'Equips a character item to a specific slot (MAIN_HAND, OFF_HAND, ARMOR, ACCESSORY). Use when character equips a weapon, dons armor, or puts on a ring.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 character_item_id: { type: 'number', description: 'CharacterItem row ID' },
-                slot: { type: 'string', description: 'Equipment slot (e.g. "mainHand", "offHand", "armor")' },
+                slot: { type: 'string', description: 'Equipment slot (MAIN_HAND, OFF_HAND, ARMOR, ACCESSORY)' },
             },
             required: ['character_item_id', 'slot'],
         },
     },
     {
         name: 'unequip_item',
-        description: 'Removes a character item from its equipped slot.',
+        description: 'Unequips a character item from its equipped slot. Use when character removes armor, drops a weapon, or takes off an accessory.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -321,7 +321,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'buy_item',
-        description: 'Purchases an item from an NPC merchant. Deducts gold from the character.',
+        description: 'Character purchases an item from an NPC merchant—deducts gold from character, item goes to inventory. Use in SETTLEMENT scenes during shopping. Handles currency automatically; only specify if merchant price differs from item value.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -335,7 +335,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'sell_item',
-        description: 'Sells a character item to an NPC merchant. Adds gold to the character.',
+        description: 'Character sells an item to an NPC merchant—adds gold to character, item leaves inventory. Use in SETTLEMENT scenes during shopping. Merchant determines buyback price.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -349,14 +349,14 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'restock_merchant',
-        description: 'Sets the inventory for an NPC merchant, replacing any existing stock.',
+        description: 'Updates an NPC merchant\'s inventory (stock and prices). Replaces existing stock. Use during world tick to refresh merchant wares or in SETTLEMENT scenes to establish a shop.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 npc_id: { type: 'number', description: 'Merchant NPC ID' },
                 items: {
                     type: 'array',
-                    description: 'Items to stock',
+                    description: 'Items to stock with quantities and prices',
                     items: {
                         type: 'object' as const,
                         properties: {
@@ -372,21 +372,21 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'place_item',
-        description: 'Places an item at an overworld location. Use when an NPC leaves something behind or the DM places environmental treasure. Stacks quantity if the item is already there.',
+        description: 'Places an item at an overworld location (on ground, on a shelf, left behind by an NPC). Stacks quantity if item is already there. Use when NPCs leave items or DM places environmental treasure.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 location_id: { type: 'number', description: 'Location where the item is placed' },
-                item_id: { type: 'number', description: 'ID of the item to place (must exist in campaign)' },
+                item_id: { type: 'number', description: 'ID of the item to place (must exist)' },
                 quantity: { type: 'number', description: 'Quantity to place (default 1)' },
-                note: { type: 'string', description: 'Short description of how the item came to be here (optional)' },
+                note: { type: 'string', description: 'Narrative note (e.g. "left on the altar") (optional)' },
             },
             required: ['location_id', 'item_id'],
         },
     },
     {
         name: 'take_item',
-        description: 'Transfers an item from an overworld location into the active character\'s inventory. Use when the player picks up a placed item.',
+        description: 'Transfers an item from an overworld location into character inventory. Use when player picks up a placed item. Opposite of place_item.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -400,7 +400,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Leveling ──────────────────────────────────────────────────────────────
     {
         name: 'trigger_level_up',
-        description: 'Signals that the character has earned enough XP to level up and should choose improvements.',
+        description: 'Signals character has earned a level: pauses session for player to choose ability score improvements (ASI) or a feat, and roll for HP. Call when character XP reaches threshold.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -410,7 +410,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'apply_level_up',
-        description: 'Applies chosen level-up improvements (ability scores or feat, hit points).',
+        description: 'Applies level-up choices after player selects ASI (ability score improvements) or a feat, and rolls HP on hit die. Call to finalize the level-up.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -424,19 +424,19 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'use_spell_slot',
-        description: 'Expends a spell slot of the given level.',
+        description: 'Expends a spell slot when character casts a spell. Always call when a spell is cast to track remaining slots. Use after describing the spell effect.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 character_id: { type: 'number', description: 'Spellcaster character' },
-                level: { type: 'number', description: 'Spell slot level (1–9)' },
+                level: { type: 'number', description: 'Spell slot level (1–9, or 0 for cantrips which don\'t consume slots)' },
             },
             required: ['level'],
         },
     },
     {
         name: 'prepare_spells',
-        description: 'Sets the list of prepared spells for the character.',
+        description: 'Sets prepared spells for Wizard/Cleric/Druid characters after long rest. Player chooses spells they can cast. Use after long_rest if character is a preparation-based caster.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -448,7 +448,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'trigger_spell_prep',
-        description: 'Signals that the player must choose prepared spells before freeform play continues.',
+        description: 'Signals character must choose prepared spells after long rest (for Wizard/Cleric/Druid). Pauses session until player selects spells.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -479,7 +479,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'update_npc',
-        description: 'Partially updates an existing NPC\'s fields.',
+        description: 'Updates an NPC\'s disposition, location, agenda, or alive status after significant changes (disposition shift from story, NPC dies/recovers, agenda changes, NPC moves locations). Use sparingly—only for material story changes.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -501,7 +501,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'add_to_party',
-        description: 'Makes an NPC a companion who travels with the player.',
+        description: 'Makes an NPC a companion who travels with the player, fights in combat, and accompanies them. Suspends NPC\'s world tick agenda. Use when NPC joins the party (romance, quest requirement, voluntary companionship).',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -512,7 +512,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'remove_from_party',
-        description: 'Removes an NPC companion from the party.',
+        description: 'Removes an NPC companion from the party (leaves voluntarily, dies, betrays player, or quest completes). Resumes NPC\'s world tick agenda.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -547,13 +547,13 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'trigger_world_event',
-        description: 'Creates an active world event (crisis, opportunity, or background development).',
+        description: 'Creates an active world event: a crisis, opportunity, or background development with stakes and deadline. Use when significant world changes happen (bandits blockade a road, plague spreads, faction power shift, natural disaster, antagonist makes a move). Provides context for future adventures.',
         input_schema: {
             type: 'object' as const,
             properties: {
-                description: { type: 'string', description: 'What is happening' },
+                description: { type: 'string', description: 'What is happening and why it matters' },
                 location_id: { type: 'number', description: 'Relevant location ID (optional)' },
-                deadline_in_game_date: { type: 'string', description: 'In-game date by which it must be resolved (optional)' },
+                deadline_in_game_date: { type: 'string', description: 'In-game date deadline for resolution (optional)' },
                 source: { type: 'string', description: 'Event source: PLAYER_ACTION, WORLD_TICK, ANTAGONIST, CATASTROPHE' },
             },
             required: ['description', 'source'],
@@ -561,24 +561,24 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'resolve_world_event',
-        description: 'Marks an active world event as resolved and records the outcome.',
+        description: 'Marks an active world event as resolved and records the outcome. Use when event deadline is met, crisis is averted, opportunity seized, or event no longer relevant.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 world_event_id: { type: 'number', description: 'Event to resolve' },
-                outcome: { type: 'string', description: 'Narrative outcome of the event' },
+                outcome: { type: 'string', description: 'Narrative outcome (what happened, why it happened, consequences)' },
             },
             required: ['world_event_id', 'outcome'],
         },
     },
     {
         name: 'advance_antagonist_stage',
-        description: 'Marks the current antagonist plan stage as complete and moves to the next stage.',
+        description: 'Marks the current antagonist plan stage as complete and advances to the next stage. Use when player completes a major quest related to the antagonist or antagonist\'s plan progresses. Moves the campaign toward climax.',
         input_schema: { type: 'object' as const, properties: {} },
     },
     {
         name: 'record_lore',
-        description: 'Appends a discovered fact to the campaign\'s permanent lore document.',
+        description: 'Appends a discovered fact to the campaign\'s permanent lore document. Use for world-building facts the player discovers (history, secrets, prophecies, discovered truths). Persists for future reference and recap.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -590,7 +590,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Dungeon ───────────────────────────────────────────────────────────────
     {
         name: 'enter_dungeon',
-        description: 'Enters a dungeon, placing the player at the entry room.',
+        description: 'Enters a dungeon and places player at entry room. Initializes dungeon exploration session. Call when player decides to explore a dungeon.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -601,7 +601,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'move_to_room',
-        description: 'Moves the player to an adjacent dungeon room.',
+        description: 'Moves player to an adjacent dungeon room. Call each time player moves (not just describing movement, but actually changing rooms). Updates exploration state.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -612,12 +612,12 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'exit_dungeon',
-        description: 'Exits the current dungeon and returns the player to the overworld.',
+        description: 'Exits the current dungeon and returns player to the overworld. Use when player leaves dungeon intentionally or is forced out. Call before set_scene_type to EXPLORATION/SETTLEMENT.',
         input_schema: { type: 'object' as const, properties: {} },
     },
     {
         name: 'spawn_encounter',
-        description: 'Spawns a combat encounter in the current dungeon room.',
+        description: 'Triggers a combat encounter in a dungeon room. Use when a room contains a keyed encounter or wandering monster emerges. Call spawn_encounter, then set_scene_type to COMBAT.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -629,33 +629,33 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'update_room_state',
-        description: 'Updates the exploration state of a dungeon room.',
+        description: 'Updates a dungeon room\'s state when it materially changes (EXPLORED, CLEARED, FLOODED, COLLAPSED, etc.). Remembers state for future visits.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 room_id: { type: 'number', description: 'Room to update' },
-                state: { type: 'string', description: 'New room state (e.g. "EXPLORED", "CLEARED")' },
+                state: { type: 'string', description: 'New room state (EXPLORED, CLEARED, FLOODED, COLLAPSED, LOCKED, TRAPPED, etc.)' },
             },
             required: ['room_id', 'state'],
         },
     },
     {
         name: 'add_room_item',
-        description: 'Adds an item to a dungeon room for the player to find. Only valid during an active dungeon session.',
+        description: 'Places an item in a dungeon room. Use when DM adds treasure, plants loot, or introduces an item the player can find. Only valid during active dungeon session.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 room_id: { type: 'number', description: 'Room to place the item in' },
-                item_id: { type: 'number', description: 'Item to place' },
+                item_id: { type: 'number', description: 'Item to place (must exist)' },
                 quantity: { type: 'number', description: 'Quantity (default 1)' },
-                container_name: { type: 'string', description: 'Container description (e.g. "chest", "corpse") (optional)' },
+                container_name: { type: 'string', description: 'Container description (e.g. "chest", "corpse", "altar") (optional)' },
             },
             required: ['room_id', 'item_id'],
         },
     },
     {
         name: 'loot_room',
-        description: 'Transfers an item from a dungeon room into the character\'s inventory. Only valid during an active dungeon session.',
+        description: 'Transfers an item from a dungeon room to character inventory when player picks it up. Use loot_room (not create_item + give_item) for dungeon loot. Only valid during active dungeon session.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -669,7 +669,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Memory ────────────────────────────────────────────────────────────────
     {
         name: 'record_memory',
-        description: 'Persists a memory fact about an entity.',
+        description: 'Persists a fact about an entity (character detail, location lore, faction belief, item history). Use for world-building facts the DM wants to remember long-term. Searchable via search_memories.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -682,11 +682,11 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'search_memories',
-        description: 'Performs a semantic search over recorded memory facts.',
+        description: 'Performs a semantic search over recorded memory facts to retrieve relevant lore, history, or relationships. Use when the DM needs to recall something specific (e.g., "what do we know about the Thieves Guild?").',
         input_schema: {
             type: 'object' as const,
             properties: {
-                query: { type: 'string', description: 'Search query' },
+                query: { type: 'string', description: 'Search query (e.g. "Thieves Guild relationships")' },
                 subject_type: { type: 'string', enum: ['character', 'npc', 'location', 'faction', 'item', 'general'], description: 'Filter by subject type (optional)' },
                 subject_id: { type: 'string', description: 'Filter by subject ID (optional)' },
                 limit: { type: 'number', description: 'Max results (default 5)' },
@@ -731,7 +731,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'complete_quest',
-        description: 'Marks a quest as completed and awards XP and gold rewards.',
+        description: 'Marks a quest as completed, awards XP and gold rewards to character. Call when player accomplishes all quest objectives or quest giver confirms completion.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -742,7 +742,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'fail_quest',
-        description: 'Marks a quest as failed.',
+        description: 'Marks a quest as failed (objective becomes impossible, deadline passed, quest giver dies, player betrays quest giver). Use only when quest can no longer be completed.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -753,12 +753,12 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'update_quest_objective',
-        description: 'Updates the status of a specific quest objective.',
+        description: 'Updates a quest objective status as player makes progress (PENDING → COMPLETED when objective is achieved, or PENDING → FAILED if objective becomes impossible). Auto-completes quests when all objectives are done.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 objective_id: { type: 'number', description: 'Objective to update' },
-                status: { type: 'string', description: 'New status: PENDING, COMPLETED, FAILED' },
+                status: { type: 'string', description: 'New status: PENDING, COMPLETED, or FAILED' },
             },
             required: ['objective_id', 'status'],
         },
@@ -766,15 +766,25 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Campaign ──────────────────────────────────────────────────────────────
     {
         name: 'end_campaign',
-        description: 'Ends the campaign permanently. Use only when the story reaches a definitive conclusion or the character dies in PERMADEATH mode.',
+        description: 'Permanently ends the campaign: character dies (PERMADEATH mode), story reaches definitive conclusion, or player requests end. Archives the campaign and shows epitaph to player.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 campaign_id: { type: 'number', description: 'Campaign to end' },
-                reason: { type: 'string', description: 'Why the campaign is ending' },
+                reason: { type: 'string', description: 'Reason for ending (e.g. "character death", "quest complete", "player choice")' },
                 epitaph: { type: 'string', description: 'Final narrative epitaph to display' },
             },
             required: ['campaign_id', 'reason', 'epitaph'],
+        },
+    },
+    {
+        name: 'update_campaign_settings',
+        description: 'Adjusts campaign-level settings (e.g., toggle random travel encounters). Use to customize difficulty or pacing.',
+        input_schema: {
+            type: 'object' as const,
+            properties: {
+                travel_encounter_enabled: { type: 'boolean', description: 'Enable/disable random travel encounters' },
+            },
         },
     },
 ];
