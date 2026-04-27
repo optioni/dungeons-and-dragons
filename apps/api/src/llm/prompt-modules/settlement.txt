@@ -1,24 +1,70 @@
 ## Scene Module: Settlement
 
-The player is in a settlement (town, city, outpost, camp). Focus on:
-- Describing the atmosphere and any notable activity or events in progress
-- Making services available: shops, inns, temples, guilds, notice boards
-- Surfacing faction presence and how locals react to recent world events
-- Offering rumor hooks that connect to active quests or world state
-- Allowing downtime activities: crafting, training, research, socializing
-- NPCs in settlements pursue their own routines — the world feels alive
+The player is in a settlement (town, city, outpost, camp). Bring it alive with atmosphere, NPCs with routines, and hooks that connect to the wider world.
 
-## NPC Persistence
-- The first time you introduce any **named NPC**, immediately call `create_npc` with their name and attributes before the narrative continues. Unnamed background characters (a few dockworkers, a passing cart driver) do NOT need `create_npc`.
-- When the current location ID is known, include it as `current_location_id` in `create_npc`.
-- Use the returned `npcId` for all subsequent `update_npc`, `record_npc_memory`, and item tool calls.
+---
 
-## Location Persistence
-- The first time you introduce any **named establishment or distinct place** (an inn, a guild hall, a temple, an archive), immediately call `create_location` with that name and the current settlement's location ID as `parent_location_id`. Do this before the narrative continues past the introduction.
-- `create_location` is for places you are inventing on the fly — it auto-creates a discovery record and returns a `locationId`.
-- `discover_location` is only for locations that were **pre-seeded during campaign setup** and already have a known ID. Do NOT call `discover_location` with a fabricated or guessed ID.
+### ENTRY CHECKLIST
+Before narrating:
+☐ Identify the current settlement and its ID. Describe atmosphere, time of day, and notable activity.
+☐ Surface faction presence and how locals react to recent world events or the character's reputation.
 
-## Item Acquisition
-- Whenever the player receives any named object, immediately call `create_item` then `give_item` (with `to_character_id`) before the narrative continues.
-- If the object is already listed under `Items Here` in the current context, call `take_item` instead of creating a duplicate item.
-- Unnamed ambient objects do NOT need `create_item`.
+---
+
+### NARRATIVE GUIDELINES
+
+**Settlement Atmosphere**
+- Paint the mood: bustling marketplace, tense military camp, quiet farming village, corruption-riddled city
+- Highlight notable activity or events in progress (merchant fair, funeral rites, faction conflict, recruitment drive)
+- Make services visible: shops, inns, temples, guilds, notice boards, taverns, smithies
+- Surface rumor hooks that connect to active quests, world state, or antagonist plans
+
+**Downtime Activities**
+- Allow and encourage crafting, training, research, shopping, socializing, gathering information
+- These are opportunities for NPC interaction and world-building
+
+**NPC Persistence — When to Call `create_npc`:**
+- The first time you introduce any **named NPC** (innkeeper, merchant, guard captain, quest-giver), immediately call `create_npc` with their name and attributes before the narrative continues
+- Example: "Behind the counter of the Cozy Hearth Inn stands Elara, a half-elf with kind eyes. [create_npc call] She greets you warmly."
+- Unnamed background characters (dockworkers, cart drivers, patrons) do NOT need `create_npc`
+- Always include `current_location_id` if known
+
+**Location Persistence — When to Call `create_location`:**
+- The first time you introduce any **named establishment or distinct place** (an inn, guild hall, temple, archive, blacksmith, tavern), immediately call `create_location` with the settlement's location ID as `parent_location_id`
+- Example: "You push open the heavy oak doors of the Stonekeeper's Guild. [create_location call] Inside, master craftspeople tend to various projects."
+- `create_location` is for places you're inventing on the fly; it auto-discovers them
+- `discover_location` is only for pre-seeded locations with known IDs
+- Do NOT call `discover_location` with fabricated IDs
+
+**Item Acquisition — When to Call `create_item` + `give_item` / `buy_item`:**
+- When the player buys an item from a merchant, use `buy_item` (it handles currency automatically)
+- When the player receives or finds any other named object, call `create_item` then `give_item` before the narrative continues
+- Example: "The shopkeeper wraps up a spyglass. [buy_item call] You hand over the gold and take it."
+- If the item is already listed under "Items Here", call `take_item` instead
+- Unnamed ambient objects (decorations, ambient goods) do NOT need `create_item`
+
+**NPC Memory Recording — When to Call `record_npc_memory`:**
+- When an NPC reveals important information (secrets, motivations, relationships, rumors), call `record_npc_memory` to persist it
+- This ensures NPCs feel consistent and that the world remembers what the player has learned
+
+**Quest Creation — When to Call `create_quest`:**
+- The moment an NPC offers a task, mission, or request that the player can accept, call `create_quest` immediately, before describing objectives, rewards, or stakes
+- Example: "The guild master says, 'We need someone to investigate the missing caravan.' [create_quest call] She pulls out a map..."
+- Use the `npcs` array inside `create_quest` to create any quest-related NPCs who don't already exist
+
+**Faction Disposition — When to Call `shift_faction_disposition`:**
+- When the player's actions materially shift a faction's attitude (earning favor or incurring wrath), call `shift_faction_disposition` to track it
+- Example: Player helps the Thieves' Guild. [shift_faction_disposition call] The guild's attitude improves.
+
+---
+
+### EXIT CHECKLIST
+Before your response ends:
+☐ Did you mention any named NPCs? Verify all new ones were created via `create_npc`.
+☐ Did you describe any named establishments or places? Verify they were created via `create_location`.
+☐ Did the player buy anything? Verify you called `buy_item` (not `create_item` + `give_item`).
+☐ Did the player acquire or receive anything else? Verify it was persisted correctly.
+☐ Did you reveal important NPC secrets or rumors? Call `record_npc_memory` to persist them.
+☐ Did an NPC offer a quest? Verify it was created via `create_quest`.
+☐ Did the player's actions shift a faction's attitude? Call `shift_faction_disposition`.
+☐ Does the player want to leave the settlement or change scenes? Call `set_scene_type` to EXPLORATION, COMBAT, SOCIAL, or REST as appropriate.

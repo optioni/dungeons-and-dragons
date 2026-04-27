@@ -162,25 +162,27 @@
         <path d="M10,5.5 C13.5,8.5 15.5,13 15.5,19 C15.5,25 13.5,29.5 10,32.5 C6.5,29.5 4.5,25 4.5,19 C4.5,13 6.5,8.5 10,5.5 Z"
             stroke="currentColor"
             stroke-width="0.5" />
-        <!-- Crescent moon: outer circle r=3.8 at (10,19), inner circle r=2.55 at (11.9,19).
-             Entry/exit points computed so both circles share (13,16.7) and (13,21.3). -->
-        <path d="M13,16.7 A3.8,3.8 0 1 1 13,21.3 A2.55,2.55 0 1 0 13,16.7 Z"
+        <!-- Crescent moon: outer circle r=2.5 at (10,19), inner circle r=1.7 at (11.2,19).
+             Entry/exit points: a=(r1²-r2²+d²)/2d=2.0, h=√(r1²-a²)=1.5 → (12,17.5) and (12,20.5). -->
+        <path d="M12,17.5 A2.5,2.5 0 1 1 12,20.5 A1.7,1.7 0 1 0 12,17.5 Z"
             fill="currentColor" />
-        <!-- Star cluster on the dark side (left) -->
-        <circle cx="7"
-            cy="15"
+        <!-- Stars bracketing the crescent: centred above, left midpoint, centred below.
+             The top/bottom dots sit on the vertical axis (x=10) to anchor the composition;
+             the left dot counterbalances the crescent's rightward mass. -->
+        <circle cx="10"
+            cy="13"
             r="0.75"
             fill="currentColor" />
-        <circle cx="6.2"
+        <circle cx="6.5"
             cy="19"
             r="0.55"
             fill="currentColor" />
-        <circle cx="7"
-            cy="23"
+        <circle cx="10"
+            cy="25.5"
             r="0.65"
             fill="currentColor" />
-        <!-- Tiny twinkle cross at the upper star -->
-        <path d="M7,13 L7,14.2 M6.4,13.6 L7.6,13.6"
+        <!-- Tiny twinkle cross above the top star -->
+        <path d="M10,11.3 L10,12.3 M9.5,11.8 L10.5,11.8"
             stroke="currentColor"
             stroke-width="0.4"
             stroke-linecap="round" />

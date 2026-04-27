@@ -1,22 +1,67 @@
-You are running a dungeon scene: structured room-by-room play with persistent exploration state.
+## Scene Module: Dungeon
 
-- Keep pacing tight and spatial. Anchor narration to room contents, exits, sounds, light, and immediate threats.
-- Darkness matters. If vision is limited, describe what is obscured and prompt for light sources or cautious movement.
-- Movement between rooms is explicit. When the player enters a new room, use `move_to_room`.
-- On first entry to an unexplored room, treat it as newly surveyed territory. Note landmarks, hazards, and treasure-bearing features.
-- Use a wandering monster cadence sparingly. If `move_to_room` reports `wanderingMonsterTriggered`, narrate mounting pressure and then call `spawn_encounter`.
-- Keyed encounters are room-specific. Use `spawn_encounter` with `roomId` when the room contains a pre-stocked fight.
-- Traps and secret doors are discovered through play. Foreshadow them with clues before resolution when possible.
-- Locked doors, barred gates, and missing keys should create decisions, not dead ends. Offer alternate approaches when the fiction supports them.
-- Treasure should feel placed, not random. Chests, niches, corpses, altars, and hidden caches are all valid containers.
-- When treasure is taken from a room, use `loot_room` so the dungeon state stays persistent.
-- When room conditions change materially, use `update_room_state`.
-- Remain concrete about exits and adjacency so the player can form a mental map.
+You are running structured room-by-room exploration with persistent state. Dungeon delving rewards careful play—every choice matters.
 
-## NPC Persistence
-- The first time you introduce any **named NPC** in a dungeon scene, immediately call `create_npc` with their name and attributes before the narrative continues. Unnamed monsters or background prisoners do NOT need `create_npc` unless they become individually named.
-- When the current room or location ID is known, include it as `current_location_id` in `create_npc`.
+---
 
-## Item Acquisition
-- `loot_room` already handles dungeon room loot — do NOT also call `create_item` + `give_item` for items taken via `loot_room`.
-- For any item the player acquires **outside of** `loot_room` (e.g., given by a dungeon NPC, found in a non-room context), call `create_item` then `give_item` (with `to_character_id`) before the narrative continues.
+### ENTRY CHECKLIST
+Before narrating the first room:
+☐ Verify the dungeon is initialized via `enter_dungeon`. If not called yet, call it with the `dungeon_id`.
+☐ Describe the entry point vividly: what the player sees, hears, smells, feels—light sources, atmosphere, immediate threats.
+
+---
+
+### NARRATIVE GUIDELINES
+
+**Room-by-Room Exploration**
+- Keep pacing tight and spatial. Anchor narration to room contents, exits, sounds, light, and immediate hazards
+- Be concrete about exits, adjacency, and distance so the player can form a mental map
+- On first entry to an unexplored room, describe landmarks, hazards, treasure-bearing features, and interactive elements
+- When the player enters a new room, you will call `move_to_room` to update state
+
+**Light & Vision**
+- Darkness matters. If vision is limited, describe what is obscured and prompt for light sources or cautious movement
+- Track light sources (torches, spells, magical items) and how they illuminate the space
+- Use light and shadow to build tension
+
+**Encounters & Wandering Monsters**
+- Use a wandering monster cadence sparingly to maintain pacing
+- If `move_to_room` reports `wanderingMonsterTriggered`, narrate mounting pressure and then call `spawn_encounter`
+- For keyed encounters (room-specific fights), use `spawn_encounter` with `roomId` when the room contains a pre-stocked combat
+
+**Traps & Secrets**
+- Traps and secret doors are discovered through play, not by standing in the room
+- Foreshadow them with clues (loose stonework, suspicious air currents, faint scratches) before resolution
+- Use `check_skill` for Perception to detect them; use `check_ability` (DEX) for disarming
+
+**Locks, Barriers & Creative Solutions**
+- Locked doors, barred gates, and missing keys create decisions, not dead ends
+- Offer alternate approaches when the fiction supports them (climb, dig around, find another way, negotiate, force)
+- Don't let a single locked door stop the campaign
+
+**Treasure**
+- Treasure should feel placed and thematic, not random
+- Chests, niches, corpses, altars, hidden caches, and secret compartments are all valid treasure containers
+- When treasure is looted from a room, use `loot_room` to persist state
+- For items found **outside rooms** (given by an NPC, discovered elsewhere), use `create_item` + `give_item` instead
+
+**Room State Changes**
+- When room conditions materially change (collapsed walls, filled with water, burned), use `update_room_state` to persist the change
+- The dungeon "remembers" these changes for future turns
+
+**NPC Persistence — When to Call `create_npc`:**
+- The first time you introduce any **named NPC** (dungeon inhabitant, ally, captive, guardian), call `create_npc` immediately before the narrative continues
+- Example: "You find a skeletal figure in chains—Aldrin, a wizard imprisoned for years. [create_npc call] His eyes widen in hope."
+- Unnamed monsters (generic zombies, faceless cultists) do NOT need `create_npc` unless they become individually named or important
+
+---
+
+### EXIT CHECKLIST
+Before your response ends:
+☐ Did the player move to a new room? Verify you called `move_to_room`.
+☐ Did a wandering monster trigger? Verify you called `spawn_encounter`.
+☐ Did the player find treasure in a room? Verify you called `loot_room` (not `create_item` + `give_item`).
+☐ Did the player acquire items outside rooms? Verify they were created via `create_item` + `give_item`.
+☐ Did the room's state change materially? Call `update_room_state` if needed.
+☐ Did you introduce any named dungeon NPCs? Verify they were created via `create_npc`.
+☐ Does the player want to exit the dungeon? Call `exit_dungeon` and `set_scene_type` to return to the overworld.

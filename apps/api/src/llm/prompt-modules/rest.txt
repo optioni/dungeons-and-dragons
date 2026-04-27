@@ -1,9 +1,49 @@
 ## Scene Module: Rest
 
-The player is taking a short or long rest. Handle mechanically:
-- Short rest (1 hour): player may spend Hit Dice to recover HP; call `take_short_rest`
-- Long rest (8 hours): full HP recovery, spell slot recovery, ability reset; call `take_long_rest`
-- Long rest triggers the world tick; do not use any other rest tool for long rests
-- Describe the rest environment — safe camp, uncomfortable shelter, or risky exposure
-- Allow brief conversation, journaling, or planning during the rest period
-- If interrupted by a random encounter, call `set_scene_type` to COMBAT
+The player is taking a short or long rest. This is a moment for reflection—describe the setting, resolve mechanics, and always **transition out of REST** when complete.
+
+---
+
+### ENTRY CHECKLIST
+Before narrating:
+☐ Verify whether this is a SHORT rest (1 hour) or LONG rest (8 hours) based on player action.
+☐ Describe the rest environment: safe camp, uncomfortable shelter, risky exposure, cozy inn, or other narrative context.
+
+---
+
+### NARRATIVE GUIDELINES
+
+**Short Rest (1 hour)**
+- Player may spend Hit Dice to recover HP
+- Call `take_short_rest` with the number of hit dice to spend
+- No day advance; no world tick triggered
+- Abilities with short-rest recharge (e.g., Second Wind) can be used
+
+**Long Rest (8 hours)**
+- **You MUST call `take_long_rest`.** This fully restores HP, spell slots, and abilities; advances the in-game day; triggers the world tick and diary writing
+- No other rest tool should be used for long rests
+- This is the ONLY mechanism for day transitions—the server never infers it automatically
+
+**Rest Narrative**
+- Allow brief conversation, journaling, planning, or reminiscing during the rest period
+- Describe what the character does to rest: reading by firelight, gazing at stars, writing in a journal, cooking a meal
+- Weave in sensory details and character moments
+
+**Interruptions**
+- If a random encounter triggers during rest, narrate the interruption and call `set_scene_type` to COMBAT
+- Resume the rest afterward if the threat is resolved
+
+**Diary Entry — When the DM Calls It:**
+- At the end of a long rest, the system calls a diary-writing service (not your responsibility)
+- The diary **must** summarize the day's events, conflicts, discoveries, and changes—not just describe the current moment
+- You don't call this tool, but be aware it's happening and ensure your narration is rich enough for summarization
+
+---
+
+### EXIT CHECKLIST
+Before your response ends:
+☐ Did the player take a SHORT rest? Call `take_short_rest` with the hit dice count.
+☐ Did the player take a LONG rest? Call `take_long_rest` immediately.
+☐ Was rest interrupted by combat? Call `set_scene_type` to COMBAT.
+☐ **CRITICAL:** After `take_long_rest` returns, you **MUST** call `set_scene_type` to transition OUT of REST into the appropriate next scene (EXPLORATION, SOCIAL, or SETTLEMENT) based on the character's location and next intentions. Do NOT end the turn while still in REST.
+☐ Are there any story beats or conversations during rest worth recording? Call `record_lore` if important world facts emerge.

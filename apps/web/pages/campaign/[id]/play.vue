@@ -551,6 +551,18 @@ const transcriptRef = ref<HTMLElement | null>(null);
 const topSentinelRef = ref<HTMLElement | null>(null);
 const suppressNextTranscriptAutoScroll = ref(false);
 
+let rafScrollId: number | null = null;
+
+function scrollToBottom(): void {
+    if (rafScrollId !== null) cancelAnimationFrame(rafScrollId);
+    rafScrollId = requestAnimationFrame(() => {
+        rafScrollId = null;
+        if (transcriptRef.value) {
+            transcriptRef.value.scrollTop = transcriptRef.value.scrollHeight;
+        }
+    });
+}
+
 const { executeQuery: refetchEvents } = useQuery({
     query: GAME_EVENTS_QUERY,
     variables: computed(() => ({
@@ -723,8 +735,26 @@ watch(streamData, async (data) => {
             }
 
             isStreaming.value = false;
-            applyEventConnection(await fetchEventsPage());
+            suppressNextTranscriptAutoScroll.value = true;
+
+            {
+                const connection = await fetchEventsPage();
+                const newEvents = getEventNodes(connection);
+                const existingIds = new Set(persistedEvents.value.map((e) => e.id));
+                persistedEvents.value = [
+                    ...persistedEvents.value,
+                    ...newEvents.filter((e) => !existingIds.has(e.id)),
+                ];
+                earliestCursor.value = connection?.pageInfo.startCursor ?? earliestCursor.value;
+                hasPreviousPage.value = connection?.pageInfo.hasPreviousPage ?? false;
+                rehydrateSuggestedActions(persistedEvents.value);
+            }
+
             inProgressNarrative.value = '';
+            await nextTick();
+            suppressNextTranscriptAutoScroll.value = false;
+            scrollToBottom();
+
             const { data: sessionData } = await refetchActiveSession({ requestPolicy: 'network-only' });
             if (sessionData.value?.activeSession) {
                 applySessionData(sessionData.value.activeSession);
@@ -917,16 +947,8 @@ async function handlePrepareSpellsSubmit(): Promise<void> {
 watch(
     [persistedEvents, inProgressNarrative],
     () => {
-        if (suppressNextTranscriptAutoScroll.value) {
-            return;
-        }
-
-        nextTick(() => {
-            if (transcriptRef.value) {
-                transcriptRef.value.scrollTop = transcriptRef.value.scrollHeight;
-            }
-        });
+        if (suppressNextTranscriptAutoScroll.value) return;
+        scrollToBottom();
     },
-    { deep: true },
 );
 </script>

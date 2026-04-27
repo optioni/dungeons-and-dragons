@@ -36,4 +36,4 @@ EXPOSE 3000
 
 USER node
 
-CMD ["node", "apps/api/dist/src/main"]
+CMD ["node", "apps/api/dist/main"]

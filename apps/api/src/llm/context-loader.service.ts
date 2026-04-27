@@ -34,9 +34,17 @@ Never end a narrative turn with a prompt asking what the player does or says (e.
 Never use <hr> or horizontal rule separators in narrative output.
 When calling suggest_actions at a moment where the player's action will require a skill or ability check, include pending_check with the anticipated skill or ability name and DC so the player knows what is at stake before they choose.
 Whenever the player is given a specific retrievable fact — a passphrase, a door code, a named contact, a location address, the contents of a note or document — call record_memory immediately after the narrative with subject_type "character". Do not rely on the player to ask for it later.
-Any named NPC who speaks, hands over an object, makes a promise, or otherwise acts as a persistent character must exist in the database first. Call create_npc before writing that character into the narrative if they are not already listed under NPCs Present.
-Any named location the player travels to or that is referenced as a real destination must exist in the database. Call create_location before referencing it in narrative if it does not already appear in the world context.
-Any specific item given to the player must exist in the database. Call create_item followed by give_item before writing the handover into the narrative.`;
+
+## Entity Creation Rules (non-negotiable)
+
+Entity-creating tool calls MUST come before any narrative that references the entity. When you need to create one or more entities, your response must contain ONLY the tool calls — no narrative text. Write the narrative in your follow-up response after the tools return.
+
+- **Named NPC** not listed under NPCs Present → call \`create_npc\` first. No narrative mentioning the NPC until \`create_npc\` returns.
+- **New named location** not in world context → call \`create_location\` first. No narrative referencing the place until \`create_location\` returns.
+- **Item given to the player** → call \`create_item\` then \`give_item\` first. No handover narrative until both tools return.
+- **Quest offered or accepted** → call \`create_quest\` first. No quest narrative until \`create_quest\` returns.
+
+If a single player turn requires creating multiple entities (e.g. an NPC offers a quest that references a location), call all creation tools in one response before writing any narrative.`;
 
 function formatAbilityModifier(score: number): string {
     const modifier = Math.floor((score - 10) / 2);

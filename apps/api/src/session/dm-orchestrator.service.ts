@@ -23,7 +23,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Utility ─────────────────────────────────────────────────────────────
     {
         name: 'set_scene_type',
-        description: 'Changes the active scene type for the current session, affecting prompt module and UI mode.',
+        description: 'Changes the active scene type and loads the appropriate narrative prompt module. When to use: (1) entering a new location/scenario type (exploration → combat, combat → settlement, settlement → rest), (2) after long_rest completes (MUST transition out of REST), (3) player explicitly chooses a different activity. Call this to shift narrative tone and narrative guidance.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -67,12 +67,12 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'check_skill',
-        description: 'Rolls a skill check against a DC for the active character and returns pass/fail.',
+        description: 'Rolls a skill check against a DC. When to use: only when the outcome is uncertain AND meaningful to the story. Examples: Perception to detect a hidden enemy, Persuasion to convince an NPC, Stealth to sneak past guards. Do NOT use for: trivial tasks, guaranteed successes, or pure narrative flavor. Always announce the DC before the player commits to the action.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 character_id: { type: 'number', description: 'Character performing the check' },
-                skill: { type: 'string', description: 'Skill name (e.g. "Perception", "Stealth")' },
+                skill: { type: 'string', description: 'Skill name (e.g. "Perception", "Stealth", "Persuasion")' },
                 dc: { type: 'number', description: 'Difficulty class to beat' },
             },
             required: ['character_id', 'skill', 'dc'],
@@ -80,7 +80,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'check_ability',
-        description: 'Rolls an ability check against a DC for the active character and returns pass/fail.',
+        description: 'Rolls an ability check against a DC (no proficiency bonus). When to use: for raw ability tests (strength to break something, dexterity to catch something, intelligence to recall lore, wisdom to sense danger). Follow the same rule as check_skill: only when outcome is uncertain and meaningful. Do NOT use for trivial or guaranteed outcomes.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -212,7 +212,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'take_long_rest',
-        description: 'Takes a long rest. Fully restores HP and spell slots, advances the in-game day, and triggers the world tick.',
+        description: 'Takes a long rest: restores HP/spell slots, advances the in-game day, triggers world tick and diary writing. When to use: when the player explicitly says they rest for 8 hours (only mechanism for day transitions). After this returns, you MUST call set_scene_type to transition OUT of REST into EXPLORATION/SOCIAL/SETTLEMENT. The diary summarizes the day\'s events—ensure your narration before this call is rich with conflict, discovery, and change.',
         input_schema: { type: 'object' as const, properties: {} },
     },
     // ── Travel ───────────────────────────────────────────────────────────────
@@ -242,14 +242,14 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'create_location',
-        description: 'Creates a new named location and auto-discovers it. Use this when the DM introduces any named place on the fly. For sub-locations (inn, archive, guild) within a settlement pass the settlement\'s ID as parent_location_id.',
+        description: 'Creates a named location on the fly and auto-discovers it. When to use: the FIRST time you introduce a distinct named place (a forest shrine, a ruined tower, an inn, a cave system). When NOT to use: for pre-seeded locations with known IDs (use discover_location instead). Always provide parent_location_id for sub-locations (inn within a town, shop within a settlement). Example: "You reach the Shattered Well, an ancient stone circle. [create_location: name=Shattered Well, description=Ancient stone circle half-swallowed by moss, parent_location_id=<settlement>] Inside, you find..."',
         input_schema: {
             type: 'object' as const,
             properties: {
                 name: { type: 'string', description: 'Location name' },
                 description: { type: 'string', description: 'One-sentence description' },
-                current_state: { type: 'string', description: 'Current narrative state (optional)' },
-                connected_location_ids: { type: 'array', items: { type: 'number' as const }, description: 'IDs of adjacent locations' },
+                current_state: { type: 'string', description: 'Current narrative state (SAFE, TENSE, RUINED, etc.) (optional)' },
+                connected_location_ids: { type: 'array', items: { type: 'number' as const }, description: 'IDs of adjacent locations (optional)' },
                 parent_location_id: { type: 'number', description: 'Parent settlement ID for sub-locations (optional)' },
             },
             required: ['name', 'description'],
@@ -268,15 +268,15 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Items ─────────────────────────────────────────────────────────────────
     {
         name: 'create_item',
-        description: 'Persists a new item in the campaign item registry. Must be called before give_item.',
+        description: 'Persists a named item in the campaign registry. When to use: the FIRST time you mention an item the player finds, receives, or loots (a rusty sword, a leather journal, a healing potion). When NOT to use: unnamed ambient objects (decorations, generic supplies, scenery). Always call before give_item or place_item. Example: "You find a brass key in the chest. [create_item: name=Brass Key, description=An old brass key with intricate filigree, item_type=QUEST] You pocket it."',
         input_schema: {
             type: 'object' as const,
             properties: {
                 name: { type: 'string', description: 'Item name' },
                 description: { type: 'string', description: 'Item description' },
-                item_type: { type: 'string', description: 'Item type (WEAPON, ARMOR, POTION, MISC, etc.)' },
+                item_type: { type: 'string', description: 'Item type (WEAPON, ARMOR, POTION, MISC, MAGIC, QUEST, DOCUMENT, CONSUMABLE, etc.)' },
                 weight: { type: 'number', description: 'Weight in lbs (optional)' },
-                value: { type: 'number', description: 'Value in copper pieces (optional)' },
+                value: { type: 'number', description: 'Value in gold pieces (optional)' },
                 srd_equipment_id: { type: 'number', description: 'SRD equipment reference ID (optional)' },
             },
             required: ['name', 'description', 'item_type'],
@@ -460,14 +460,14 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── World / NPCs ──────────────────────────────────────────────────────────
     {
         name: 'create_npc',
-        description: 'Persists a new named NPC mid-session. Call this the first time any named NPC is introduced, before the narrative continues.',
+        description: 'Persists a named NPC immediately after introduction, before the narrative continues. When to use: the FIRST time you introduce a named NPC with personality/role (the tavern keeper, a bandit leader, a lost child). When NOT to use: unnamed background NPCs (generic guards, passing merchants, faceless cultists). Always include current_location_id if known. Example: "Theron steps forward, scarred and wary. [create_npc: name=Theron, profession=scout, disposition=guarded] He eyes you..."',
         input_schema: {
             type: 'object' as const,
             properties: {
                 name: { type: 'string', description: 'NPC name' },
                 description: { type: 'string', description: 'Brief physical or contextual description (optional)' },
                 profession: { type: 'string', description: 'NPC role or occupation (optional)' },
-                disposition: { type: 'string', description: 'Attitude toward the player (e.g. "friendly", "hostile") (optional)' },
+                disposition: { type: 'string', description: 'Attitude toward the player (e.g. "friendly", "hostile", "wary") (optional)' },
                 personality_traits: { type: 'array', items: { type: 'string' as const }, description: 'Adjectives or phrases describing behaviour (optional)' },
                 speech_style: { type: 'string', description: 'Distinctive voice or verbal tics (optional)' },
                 core_motivation: { type: 'string', description: 'Primary drive behind all NPC decisions (optional)' },
@@ -523,24 +523,24 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'update_location_state',
-        description: 'Updates the narrative state of a location (e.g. "TENSE", "SAFE", "RUINED").',
+        description: 'Updates a location\'s narrative state to reflect changes. When to use: when a location\'s condition materially changes (fire spreads, building collapses, area becomes safe, creatures move in). Examples: "BURNING", "RUINED", "OCCUPIED", "SAFE", "HOSTILE", "CURSED". This ensures future visits to the location remember what changed.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 location_id: { type: 'number', description: 'Location to update' },
-                state: { type: 'string', description: 'New narrative state' },
+                state: { type: 'string', description: 'New narrative state (e.g. TENSE, SAFE, RUINED, BURNING, OCCUPIED)' },
             },
             required: ['location_id', 'state'],
         },
     },
     {
         name: 'shift_faction_disposition',
-        description: 'Changes a faction\'s attitude toward the player.',
+        description: 'Changes a faction\'s attitude toward the player when significant events shift their opinion. When to use: player helps a faction (earning favor), harms a faction (incurring wrath), or their actions sway a faction\'s alignment. Examples: helping the Thieves\' Guild with a heist, destroying a cult\'s plans, brokering peace between enemies. This creates lasting world consequences.',
         input_schema: {
             type: 'object' as const,
             properties: {
                 faction_id: { type: 'number', description: 'Faction to update' },
-                disposition: { type: 'string', description: 'New disposition (e.g. "hostile", "allied")' },
+                disposition: { type: 'string', description: 'New disposition (e.g. "allied", "friendly", "neutral", "hostile", "hunted")' },
             },
             required: ['faction_id', 'disposition'],
         },
@@ -696,7 +696,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     },
     {
         name: 'record_npc_memory',
-        description: 'Records a notable event or learned fact from an NPC\'s perspective for future recall.',
+        description: 'Records a notable fact or revelation about an NPC (their secret, motivation, relationship, or commitment) so the world remembers it. When to use: when an NPC reveals something important (a secret past, a hidden motivation, a promise made to the player, a betrayal witnessed). When NOT to use: for trivial dialogue or pure flavor. Example: NPC admits "I once served the Crimson Hand." [record_npc_memory: content="Former member of the Crimson Hand, now hunted by them"] This ensures future encounters with that NPC remember what was learned.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -709,7 +709,7 @@ const DM_TOOLS: Anthropic.Tool[] = [
     // ── Quests ────────────────────────────────────────────────────────────────
     {
         name: 'create_quest',
-        description: 'Creates a new quest with objectives. Can also create associated NPCs, locations, items, and world events in one call.',
+        description: 'Creates a quest with objectives. When to use: the MOMENT an NPC offers a task, mission, or quest-like request that the player can accept. Call BEFORE describing objectives, rewards, or stakes in prose. When NOT to use: for pure flavor, rumor, or background information. Example: NPC says "Bring me three herbs." [create_quest immediately] Then narrate quest details. Can also create associated NPCs, locations, items, and world events in one call.',
         input_schema: {
             type: 'object' as const,
             properties: {
@@ -972,6 +972,15 @@ export class DmOrchestrator {
                     suggestActionsResult,
                 );
 
+                // suggest_actions result must still be included so the assistant message and
+                // tool_result array stay in sync — the API rejects mismatched tool_use blocks.
+                /* eslint-disable @typescript-eslint/naming-convention */
+                toolResults.push({
+                    type: 'tool_result',
+                    tool_use_id: block.id,
+                    content: JSON.stringify(suggestActionsResult),
+                });
+                /* eslint-enable @typescript-eslint/naming-convention */
                 continue;
             }
 

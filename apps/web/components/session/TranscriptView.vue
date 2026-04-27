@@ -88,10 +88,9 @@
             </div>
 
             <div
-                class="prose prose-grimoire font-['IM_Fell_English',serif] text-[1.125rem] leading-relaxed text-grimoire-text whitespace-pre-wrap"
-            >
-                {{ props.inProgressText }}
-            </div>
+                class="prose prose-grimoire font-['IM_Fell_English',serif] text-[1.125rem] leading-relaxed text-grimoire-text"
+                v-html="parseMarkdown(props.inProgressText ?? '')"
+            />
         </div>
     </div>
 </template>

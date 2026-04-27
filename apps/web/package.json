@@ -2,15 +2,15 @@
   "name": "web",
   "version": "0.0.1",
   "private": true,
-    "scripts": {
-        "dev": "nuxt dev",
-        "build": "nuxt build",
-        "start": "node .output/server/index.mjs",
-        "storybook": "STORYBOOK_NUXT_MODULE=false storybook dev -p 6006",
-        "build:storybook": "STORYBOOK_NUXT_MODULE=false storybook build",
-        "lint": "eslint .",
-        "typecheck": "tsc --noEmit",
-        "test": "vitest run"
+  "scripts": {
+    "dev": "STORYBOOK_NUXT_MODULE=false nuxt dev",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "storybook": "STORYBOOK_NUXT_MODULE=false storybook dev -p 6006",
+    "build:storybook": "STORYBOOK_NUXT_MODULE=false storybook build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.2.8",
