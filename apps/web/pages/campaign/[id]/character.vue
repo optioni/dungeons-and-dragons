@@ -39,6 +39,7 @@
         <div v-if="charFetching"
             class="flex flex-col items-center gap-4 py-20 text-grimoire-muted relative z-10">
             <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
             <p class="font-['IM_Fell_English',serif] italic text-lg">Reading the chronicle...</p>
         </div>
 
@@ -201,7 +202,8 @@
                             }"
                         />
 
-                        <span class="font-['IM_Fell_English',serif]" :class="skillEntry.proficiency !== 'none' ? 'text-grimoire-text' : 'text-grimoire-muted'">
+                        <span class="font-['IM_Fell_English',serif]"
+                            :class="skillEntry.proficiency !== 'none' ? 'text-grimoire-text' : 'text-grimoire-muted'">
                             {{ skillEntry.name }}
                         </span>
 
@@ -216,7 +218,8 @@
             </div>
 
             <!-- Spell slots -->
-            <div v-if="hasSpellSlots" class="py-6 border-b border-grimoire-accent-dim/20">
+            <div v-if="hasSpellSlots"
+                class="py-6 border-b border-grimoire-accent-dim/20">
                 <h2 class="font-['Cinzel',serif] text-xs tracking-[0.4em] uppercase text-grimoire-muted mb-4">Spellcasting</h2>
 
                 <div class="space-y-3">
@@ -258,12 +261,21 @@
 
             <!-- Inventory -->
             <div class="py-6 border-b border-grimoire-accent-dim/20">
-                <h2 class="font-['Cinzel',serif] text-xs tracking-[0.4em] uppercase text-grimoire-muted mb-4">Inventory</h2>
+                <h2 class="font-['Cinzel',serif] text-xs tracking-[0.4em] uppercase text-grimoire-muted mb-4">
+                    Inventory
+                    <span class="text-grimoire-muted/40 text-[10px] ml-2">char {{ characterId ?? '—' }}</span>
+                </h2>
 
                 <div v-if="invFetching"
                     class="flex flex-col items-center gap-4 py-6 text-grimoire-muted">
                     <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
                     <p class="font-['IM_Fell_English',serif] italic">Consulting the pack...</p>
+                </div>
+
+                <div v-else-if="invError"
+                    class="font-['IM_Fell_English',serif] italic text-red-400 py-6 text-sm">
+                    Failed to load inventory: {{ invError.message }}
                 </div>
 
                 <div v-else-if="!inventory.length"
@@ -395,7 +407,7 @@ const characterId = computed(() => character.value?.id?.toString() ?? null);
 const charFetching = computed(() => fetchingById.value || fetchingByCampaign.value);
 const charError = computed(() => errorById.value || errorByCampaign.value);
 
-const { data: invData, fetching: invFetching, executeQuery: refetchInv } = useQuery({
+const { data: invData, fetching: invFetching, error: invError, executeQuery: refetchInv } = useQuery({
     query: CHARACTER_INVENTORY_QUERY,
     variables: computed(() => ({ characterId: characterId.value })),
     pause: computed(() => !characterId.value),

@@ -4,6 +4,7 @@
         <div v-if="campaignFetching"
             class="flex flex-col items-center gap-4 text-grimoire-muted relative z-10">
             <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
             <p class="font-['IM_Fell_English',serif] italic text-lg">The chronicle stirs...</p>
         </div>
 
@@ -40,7 +41,8 @@
             class="w-full max-w-2xl relative z-10">
             <!-- Cinzel progress indicator -->
             <div class="flex items-center mb-12">
-                <template v-for="(label, i) in wizardStepLabels" :key="i">
+                <template v-for="(label, i) in wizardStepLabels"
+                    :key="i">
                     <span
                         class="font-['Cinzel',serif] text-xs tracking-widest uppercase transition-colors"
                         :class="i === wizardStepIndex
@@ -60,7 +62,8 @@
             <!-- ── Character creation steps ──────────────────────────────────────── -->
             <template v-if="!campaign?.hasCharacter">
                 <!-- Step 1: Character name -->
-                <div v-if="step === 'charName'" class="space-y-8">
+                <div v-if="step === 'charName'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">Name your hero</h2>
 
@@ -77,7 +80,7 @@
                             placeholder="What is your name, adventurer?"
                             @input="charNameError = ''"
                             @keydown.enter="nextStep"
-                        />
+                        >
                     </div>
 
                     <u-alert v-if="charNameError"
@@ -100,7 +103,8 @@
                 </div>
 
                 <!-- Step 2: Race selection -->
-                <div v-else-if="step === 'charRace'" class="space-y-8">
+                <div v-else-if="step === 'charRace'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">Choose your lineage</h2>
 
@@ -112,6 +116,7 @@
                     <div v-if="racesFetching"
                         class="flex flex-col items-center gap-4 py-8 text-grimoire-muted">
                         <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
                         <p class="font-['IM_Fell_English',serif] italic text-lg">Consulting the lineages...</p>
                     </div>
 
@@ -160,7 +165,8 @@
                 </div>
 
                 <!-- Step 3: Class selection -->
-                <div v-else-if="step === 'charClass'" class="space-y-8">
+                <div v-else-if="step === 'charClass'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">Choose your calling</h2>
 
@@ -172,6 +178,7 @@
                     <div v-if="classesFetching"
                         class="flex flex-col items-center gap-4 py-8 text-grimoire-muted">
                         <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
                         <p class="font-['IM_Fell_English',serif] italic text-lg">Summoning the callings...</p>
                     </div>
 
@@ -221,7 +228,8 @@
                 </div>
 
                 <!-- Step 4: Ability scores -->
-                <div v-else-if="step === 'charAbilities'" class="space-y-8">
+                <div v-else-if="step === 'charAbilities'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">Your gifts and shortcomings</h2>
 
@@ -232,7 +240,8 @@
 
                     <div class="space-y-4">
                         <div class="flex flex-wrap gap-2 pb-4 border-b border-grimoire-accent-dim/20">
-                            <template v-for="value in STANDARD_ARRAY" :key="value">
+                            <template v-for="value in STANDARD_ARRAY"
+                                :key="value">
                                 <span
                                     class="px-3 py-1 rounded-sm text-sm font-mono transition-colors border"
                                     :class="isValueAvailable(value)
@@ -318,7 +327,8 @@
             <!-- ── Campaign setup steps ──────────────────────────────────────────── -->
             <template v-else>
                 <!-- Step: Tone + Death Mode -->
-                <div v-if="step === 'tone'" class="space-y-8">
+                <div v-if="step === 'tone'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">The shape of your story</h2>
 
@@ -393,7 +403,8 @@
                 </div>
 
                 <!-- Step: Concept selection -->
-                <div v-else-if="step === 'concepts'" class="space-y-8">
+                <div v-else-if="step === 'concepts'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">Three tales await</h2>
 
@@ -403,9 +414,10 @@
                     </div>
 
                     <div class="space-y-4">
-                        <div
+                        <button
                             v-for="(concept, i) in (campaign?.generatedConcepts as StoryConcept[] ?? [])"
                             :key="i"
+                            type="button"
                             class="p-6 border rounded-sm cursor-pointer transition-all duration-200 space-y-3"
                             :class="selectedConceptIndex === i
                                 ? 'border-grimoire-accent bg-grimoire-accent/10 shadow-[0_0_24px_color-mix(in_srgb,#c8922a_8%,transparent)]'
@@ -425,6 +437,7 @@
                             <!-- Conflict -->
                             <div>
                                 <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mr-2">Conflict</span>
+
                                 <span class="font-['IM_Fell_English',serif] text-sm text-grimoire-text/80">{{ concept.centralConflict }}</span>
                             </div>
 
@@ -432,7 +445,7 @@
                             <p class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted border-t border-grimoire-accent-dim/20 pt-3 mt-1 pl-3 border-l-2 border-l-grimoire-accent-dim/30">
                                 {{ concept.antagonistHint }}
                             </p>
-                        </div>
+                        </button>
                     </div>
 
                     <u-alert v-if="submitError"
@@ -454,7 +467,8 @@
                 </div>
 
                 <!-- Step: World generation -->
-                <div v-else-if="step === 'worldGen'" class="space-y-8">
+                <div v-else-if="step === 'worldGen'"
+                    class="space-y-8">
                     <div>
                         <h2 class="font-['IM_Fell_English',serif] text-3xl text-grimoire-text">Forge the world</h2>
 
@@ -484,6 +498,7 @@
                     <div v-if="submitting"
                         class="flex flex-col items-center gap-4 py-8">
                         <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
                         <p class="font-['IM_Fell_English',serif] italic text-lg text-grimoire-muted">
                             The world takes shape...
                         </p>

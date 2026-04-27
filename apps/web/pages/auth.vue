@@ -8,15 +8,46 @@
 
         <div class="w-full max-w-sm relative z-10 space-y-10 grimoire-page-enter">
             <!-- Decorative corner border -->
-            <div class="absolute -inset-8 pointer-events-none hidden sm:block" aria-hidden="true">
-                <svg class="w-full h-full opacity-10" viewBox="0 0 320 480" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                    <rect x="1" y="1" width="318" height="478" stroke="#c8922a" stroke-width="0.75" />
-                    <rect x="8" y="8" width="304" height="464" stroke="#c8922a" stroke-width="0.5" />
+            <div class="absolute -inset-8 pointer-events-none hidden sm:block"
+                aria-hidden="true">
+                <svg class="w-full h-full opacity-10"
+                    viewBox="0 0 320 480"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    preserveAspectRatio="none">
+                    <rect x="1"
+                        y="1"
+                        width="318"
+                        height="478"
+                        stroke="#c8922a"
+                        stroke-width="0.75" />
+
+                    <rect x="8"
+                        y="8"
+                        width="304"
+                        height="464"
+                        stroke="#c8922a"
+                        stroke-width="0.5" />
                     <!-- Corners -->
-                    <path d="M1 30 L1 1 L30 1" stroke="#c8922a" stroke-width="1.5" fill="none" />
-                    <path d="M319 30 L319 1 L290 1" stroke="#c8922a" stroke-width="1.5" fill="none" />
-                    <path d="M1 450 L1 479 L30 479" stroke="#c8922a" stroke-width="1.5" fill="none" />
-                    <path d="M319 450 L319 479 L290 479" stroke="#c8922a" stroke-width="1.5" fill="none" />
+                    <path d="M1 30 L1 1 L30 1"
+                        stroke="#c8922a"
+                        stroke-width="1.5"
+                        fill="none" />
+
+                    <path d="M319 30 L319 1 L290 1"
+                        stroke="#c8922a"
+                        stroke-width="1.5"
+                        fill="none" />
+
+                    <path d="M1 450 L1 479 L30 479"
+                        stroke="#c8922a"
+                        stroke-width="1.5"
+                        fill="none" />
+
+                    <path d="M319 450 L319 479 L290 479"
+                        stroke="#c8922a"
+                        stroke-width="1.5"
+                        fill="none" />
                 </svg>
             </div>
             <!-- Wordmark -->
@@ -29,8 +60,10 @@
             </div>
 
             <!-- Login form -->
-            <div v-if="!showRegister" class="space-y-6">
-                <u-form class="space-y-5" @submit.prevent="submitLogin">
+            <div v-if="!showRegister"
+                class="space-y-6">
+                <u-form class="space-y-5"
+                    @submit.prevent="submitLogin">
                     <div class="space-y-1.5">
                         <label class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted">
                             Email
@@ -91,8 +124,10 @@
             </div>
 
             <!-- Register form -->
-            <div v-else class="space-y-6">
-                <u-form class="space-y-5" @submit.prevent="submitRegister">
+            <div v-else
+                class="space-y-6">
+                <u-form class="space-y-5"
+                    @submit.prevent="submitRegister">
                     <div class="space-y-1.5">
                         <label class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted">
                             Email

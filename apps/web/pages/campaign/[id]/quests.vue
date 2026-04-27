@@ -40,6 +40,7 @@
             <div v-if="activeFetching"
                 class="flex flex-col items-center gap-4 py-12 text-grimoire-muted">
                 <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
                 <p class="font-['IM_Fell_English',serif] italic text-lg">Consulting the scroll...</p>
             </div>
 
@@ -106,7 +107,9 @@
                         <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase">
                             Completed ({{ finishedQuests.length }})
                         </span>
-                        <u-icon :name="showCompleted ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="text-xs" />
+
+                        <u-icon :name="showCompleted ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                            class="text-xs" />
                     </button>
 
                     <div v-if="showCompleted"

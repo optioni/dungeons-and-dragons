@@ -46,388 +46,397 @@
 
             <div class="space-y-8">
                 <!-- World Map Section (primary) -->
-                    <section class="space-y-4">
-                        <div class="flex items-center justify-between flex-wrap gap-3 border-b border-grimoire-accent-dim/25 pb-3">
-                            <div class="max-w-xl">
-                                <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80">Known Map</h2>
+                <section class="space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-3 border-b border-grimoire-accent-dim/25 pb-3">
+                        <div class="max-w-xl">
+                            <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80">Known Map</h2>
 
-                                <p class="font-['IM_Fell_English',serif] text-base leading-relaxed text-grimoire-text/80 mt-1">
-                                    {{ mapSummary }}
-                                </p>
-                            </div>
-
-                            <!-- Scale switcher -->
-                            <div class="flex gap-2">
-                                <button
-                                    v-for="scale in availableScales"
-                                    :key="scale"
-                                    type="button"
-                                    class="min-h-9 border px-3 font-['Cinzel',serif] text-xs tracking-widest uppercase transition-colors"
-                                    :class="selectedScale === scale
-                                        ? 'border-grimoire-accent bg-grimoire-accent/15 text-grimoire-accent'
-                                        : 'border-grimoire-accent-dim/40 text-grimoire-text/80 hover:border-grimoire-accent-dim hover:text-grimoire-text'"
-                                    @click="setScale(scale)"
-                                >
-                                    {{ scale }}
-                                </button>
-                            </div>
+                            <p class="font-['IM_Fell_English',serif] text-base leading-relaxed text-grimoire-text/80 mt-1">
+                                {{ mapSummary }}
+                            </p>
                         </div>
 
-                        <div class="flex flex-wrap gap-x-4 gap-y-2 text-grimoire-text/80">
+                        <!-- Scale switcher -->
+                        <div class="flex gap-2">
+                            <button
+                                v-for="scale in availableScales"
+                                :key="scale"
+                                type="button"
+                                class="min-h-9 border px-3 font-['Cinzel',serif] text-xs tracking-widest uppercase transition-colors"
+                                :class="selectedScale === scale
+                                    ? 'border-grimoire-accent bg-grimoire-accent/15 text-grimoire-accent'
+                                    : 'border-grimoire-accent-dim/40 text-grimoire-text/80 hover:border-grimoire-accent-dim hover:text-grimoire-text'"
+                                @click="setScale(scale)"
+                            >
+                                {{ scale }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 text-grimoire-text/80">
+                        <span
+                            v-for="item in mapLegend"
+                            :key="item.label"
+                            class="inline-flex items-center gap-2 font-['Cinzel',serif] text-[0.68rem] tracking-wider uppercase"
+                        >
                             <span
-                                v-for="item in mapLegend"
-                                :key="item.label"
-                                class="inline-flex items-center gap-2 font-['Cinzel',serif] text-[0.68rem] tracking-wider uppercase"
-                            >
-                                <span
-                                    class="h-3 w-3 rounded-full border"
-                                    :class="item.markerClass"
-                                />
+                                class="h-3 w-3 rounded-full border"
+                                :class="item.markerClass"
+                            />
 
-                                {{ item.label }}
-                            </span>
+                            {{ item.label }}
+                        </span>
+                    </div>
+
+                    <!-- Fixed-height map container to prevent panel shift on scale changes -->
+                    <div class="relative w-full aspect-video overflow-hidden border border-grimoire-accent-dim/30 bg-grimoire-raised shadow-xl">
+                        <div class="absolute inset-0 bg-grimoire-accent/5 pointer-events-none" />
+
+                        <div v-if="mapFetching"
+                            class="absolute inset-0 flex flex-col items-center justify-center gap-4 text-grimoire-text">
+                            <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
+                            <p class="font-['IM_Fell_English',serif] italic text-xl">Charting the realm...</p>
                         </div>
 
-                        <!-- Fixed-height map container to prevent panel shift on scale changes -->
-                        <div class="relative w-full aspect-video overflow-hidden border border-grimoire-accent-dim/30 bg-grimoire-raised shadow-xl">
-                            <div class="absolute inset-0 bg-grimoire-accent/5 pointer-events-none" />
+                        <div
+                            v-else-if="!worldMap || (worldMap.discoveredNodes.length === 0 && worldMap.frontierNodes.length === 0)"
+                            class="absolute inset-0 flex items-center justify-center"
+                        >
+                            <p class="font-['IM_Fell_English',serif] italic text-grimoire-text text-xl">No map data for this scale yet.</p>
+                        </div>
 
-                            <div v-if="mapFetching"
-                                class="absolute inset-0 flex flex-col items-center justify-center gap-4 text-grimoire-text">
-                                <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+                        <world-map-graph
+                            v-else
+                            class="relative z-10 w-full h-full"
+                            :discovered-nodes="worldMap.discoveredNodes"
+                            :frontier-nodes="worldMap.frontierNodes"
+                            :edges="worldMap.edges"
+                            :current-location-id="worldMap.currentLocationId"
+                            :previous-node-ids="previousNodeIds"
+                            aria-label="Campaign world map"
+                            @node-select="onMapNodeSelect"
+                        />
+                    </div>
+                </section>
 
-                                <p class="font-['IM_Fell_English',serif] italic text-xl">Charting the realm...</p>
-                            </div>
+                <!-- Diary Entries -->
+                <section class="space-y-4">
+                    <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Diary</h2>
 
-                            <div
-                                v-else-if="!worldMap || (worldMap.discoveredNodes.length === 0 && worldMap.frontierNodes.length === 0)"
-                                class="absolute inset-0 flex items-center justify-center"
-                            >
-                                <p class="font-['IM_Fell_English',serif] italic text-grimoire-text text-xl">No map data for this scale yet.</p>
-                            </div>
+                    <div v-if="diaryFetching"
+                        class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
+                        <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
 
-                            <world-map-graph
-                                v-else
-                                class="relative z-10 w-full h-full"
-                                :discovered-nodes="worldMap.discoveredNodes"
-                                :frontier-nodes="worldMap.frontierNodes"
-                                :edges="worldMap.edges"
-                                :current-location-id="worldMap.currentLocationId"
-                                :previous-node-ids="previousNodeIds"
-                                aria-label="Campaign world map"
-                                @node-select="onMapNodeSelect"
+                        <p class="font-['IM_Fell_English',serif] italic text-lg">Turning diary pages...</p>
+                    </div>
+
+                    <div v-else-if="!recentDiary.length"
+                        class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
+                        No diary entries yet.
+                    </div>
+
+                    <div v-else
+                        class="space-y-3">
+                        <!-- Diary search -->
+                        <div class="pb-2">
+                            <u-input
+                                v-model="diarySearch"
+                                placeholder="Search diary…"
+                                size="sm"
+                                icon="i-lucide-search"
                             />
                         </div>
-                    </section>
 
-                    <!-- Diary Entries -->
-                    <section class="space-y-4">
-                        <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Diary</h2>
+                        <div
+                            v-for="entry in filteredRecentDiary"
+                            :key="entry.id"
+                            class="bg-grimoire-surface border-l-2 border-grimoire-accent-dim/70 p-5"
+                        >
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent">{{ entry.inGameDate }}</span>
 
-                        <div v-if="diaryFetching"
-                            class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
-                            <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
-
-                            <p class="font-['IM_Fell_English',serif] italic text-lg">Turning diary pages...</p>
-                        </div>
-
-                        <div v-else-if="!recentDiary.length"
-                            class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
-                            No diary entries yet.
-                        </div>
-
-                        <div v-else
-                            class="space-y-3">
-                            <!-- Diary search -->
-                            <div class="pb-2">
-                                <u-input
-                                    v-model="diarySearch"
-                                    placeholder="Search diary…"
-                                    size="sm"
-                                    icon="i-lucide-search"
-                                />
-                            </div>
-
-                            <div
-                                v-for="entry in filteredRecentDiary"
-                                :key="entry.id"
-                                class="bg-grimoire-surface border-l-2 border-grimoire-accent-dim/70 p-5"
-                            >
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent">{{ entry.inGameDate }}</span>
-
-                                    <u-badge
-                                        v-if="entry.entryType === 'MEMORIAL'"
-                                        color="error"
-                                        variant="soft"
-                                        size="xs"
-                                    >
-                                        Memorial
-                                    </u-badge>
-                                </div>
-
-                                <p
-                                    class="font-['IM_Fell_English',serif] text-xl leading-relaxed text-grimoire-text"
-                                    :class="descriptionExpanded(`diary-${entry.id}`) ? '' : 'max-h-24 overflow-hidden'"
-                                >
-                                    {{ entry.content }}
-                                </p>
-
-                                <button
-                                    type="button"
-                                    class="mt-2 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent hover:text-grimoire-text transition-colors"
-                                    @click="toggleDescription(`diary-${entry.id}`)"
-                                >
-                                    {{ descriptionExpanded(`diary-${entry.id}`) ? 'Show less' : 'Read more' }}
-                                </button>
-                            </div>
-
-                            <!-- Older entries collapsed section -->
-                            <template v-if="filteredOlderDiary.length || diaryPageInfo?.hasNextPage">
-                                <div class="pt-2">
-                                    <u-button
-                                        variant="ghost"
-                                        color="neutral"
-                                        size="sm"
-                                        class="w-full"
-                                        @click="showOlderDiary = !showOlderDiary"
-                                    >
-                                        {{ showOlderDiary ? 'Hide older entries' : 'Show older entries' }}
-                                    </u-button>
-                                </div>
-
-                                <template v-if="showOlderDiary">
-                                    <div
-                                        v-for="entry in filteredOlderDiary"
-                                        :key="entry.id"
-                                        class="bg-grimoire-surface/80 border-l-2 border-grimoire-accent-dim/40 p-5"
-                                    >
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/70">{{ entry.inGameDate }}</span>
-                                        </div>
-
-                                        <p
-                                            class="font-['IM_Fell_English',serif] text-lg leading-relaxed text-grimoire-text"
-                                            :class="descriptionExpanded(`diary-${entry.id}`) ? '' : 'max-h-20 overflow-hidden'"
-                                        >
-                                            {{ entry.content }}
-                                        </p>
-
-                                        <button
-                                            type="button"
-                                            class="mt-2 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent hover:text-grimoire-text transition-colors"
-                                            @click="toggleDescription(`diary-${entry.id}`)"
-                                        >
-                                            {{ descriptionExpanded(`diary-${entry.id}`) ? 'Show less' : 'Read more' }}
-                                        </button>
-                                    </div>
-
-                                    <div v-if="diaryPageInfo?.hasNextPage"
-                                        class="flex justify-center pt-1">
-                                        <u-button
-                                            variant="soft"
-                                            color="neutral"
-                                            size="sm"
-                                            class="font-['Cinzel',serif] text-xs tracking-widest uppercase"
-                                            :loading="diaryLoadingMore"
-                                            @click="loadMoreDiary"
-                                        >
-                                            Load more diary entries
-                                        </u-button>
-                                    </div>
-                                </template>
-                            </template>
-                        </div>
-                    </section>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                    <!-- Active World Events -->
-                    <section class="space-y-4">
-                        <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Active World Events</h2>
-
-                        <div v-if="eventsFetching"
-                            class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
-                            <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
-
-                            <p class="font-['IM_Fell_English',serif] italic text-lg">Reading active omens...</p>
-                        </div>
-
-                        <div v-else-if="!worldEvents.length"
-                            class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
-                            No active world events.
-                        </div>
-
-                        <div v-else
-                            class="space-y-2">
-                            <button
-                                v-for="event in worldEvents"
-                                :key="event.id"
-                                type="button"
-                                class="group w-full bg-grimoire-surface border border-grimoire-accent-dim/25 rounded-sm px-4 py-3 text-left transition-colors hover:border-grimoire-accent-dim/70 hover:bg-grimoire-accent/10 focus:outline-none focus:ring-2 focus:ring-grimoire-accent/50"
-                                @click="openWorldEventModal(event.id)"
-                            >
-                                <div class="flex items-start gap-3">
-                                    <u-badge
-                                        color="warning"
-                                        variant="soft"
-                                        size="xs"
-                                        class="mt-1"
-                                    >
-                                        {{ event.status }}
-                                    </u-badge>
-
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-['IM_Fell_English',serif] text-lg leading-snug text-grimoire-text">
-                                            {{ eventTitle(event.description) }}
-                                        </p>
-
-                                        <p v-if="event.deadlineInGameDate"
-                                            class="mt-1 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/65">
-                                            Deadline: {{ event.deadlineInGameDate }}
-                                        </p>
-                                    </div>
-
-                                    <u-icon name="i-lucide-chevron-right" class="w-4 h-4 text-grimoire-accent opacity-50 transition-opacity group-hover:opacity-100 shrink-0 mt-0.5" />
-                                </div>
-                            </button>
-                        </div>
-                    </section>
-
-                    <!-- Factions -->
-                    <section class="space-y-4">
-                        <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Factions</h2>
-
-                        <div v-if="factionsFetching"
-                            class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
-                            <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
-
-                            <p class="font-['IM_Fell_English',serif] italic text-lg">Reading faction ledgers...</p>
-                        </div>
-
-                        <div v-else-if="!factions.length"
-                            class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
-                            No factions known yet.
-                        </div>
-
-                        <div v-else
-                            class="space-y-2">
-                            <button
-                                v-for="faction in factions"
-                                :key="faction.id"
-                                type="button"
-                                class="group w-full bg-grimoire-surface border border-grimoire-accent-dim/25 rounded-sm px-4 py-3 text-left transition-colors hover:border-grimoire-accent-dim/70 hover:bg-grimoire-accent/10 focus:outline-none focus:ring-2 focus:ring-grimoire-accent/50"
-                                @click="openFactionModal(faction.id)"
-                            >
-                                <div class="flex items-start gap-3">
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-['IM_Fell_English',serif] text-xl leading-tight text-grimoire-text">{{ faction.name }}</p>
-
-                                        <p class="mt-1 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/65">
-                                            <span v-if="faction.powerLevel != null">Power {{ faction.powerLevel }}/10</span>
-                                        </p>
-                                    </div>
-
-                                    <u-badge
-                                        v-if="faction.playerDisposition && isShortBadgeText(faction.playerDisposition)"
-                                        :color="dispositionColor(faction.playerDisposition)"
-                                        variant="soft"
-                                        size="xs"
-                                    >
-                                        {{ faction.playerDisposition }}
-                                    </u-badge>
-
-                                    <u-icon name="i-lucide-chevron-right" class="w-4 h-4 text-grimoire-accent opacity-50 transition-opacity group-hover:opacity-100 shrink-0 mt-0.5" />
-                                </div>
-                            </button>
-                        </div>
-                    </section>
-
-                    <!-- NPC Roster -->
-                    <section class="space-y-4">
-                        <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Known NPCs</h2>
-
-                        <div v-if="npcsFetching"
-                            class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
-                            <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
-
-                            <p class="font-['IM_Fell_English',serif] italic text-lg">Listening for familiar names...</p>
-                        </div>
-
-                        <div v-else-if="!npcs.length"
-                            class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
-                            No NPCs encountered yet.
-                        </div>
-
-                        <div v-else
-                            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
-                            <button
-                                v-for="npc in npcs"
-                                :key="npc.id"
-                                type="button"
-                                class="group w-full text-left bg-grimoire-surface border border-grimoire-accent-dim/25 rounded-sm px-4 py-3 hover:border-grimoire-accent-dim/70 hover:bg-grimoire-accent/10 transition-colors focus:outline-none focus:ring-2 focus:ring-grimoire-accent/50"
-                                @click="openNpcModal(npc.id)"
-                            >
-                                <div class="flex items-start gap-3">
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-['IM_Fell_English',serif] text-xl leading-tight text-grimoire-text">{{ npc.name }}</p>
-
-                                        <p v-if="npc.profession"
-                                            class="mt-1 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/65">
-                                            {{ npc.profession }}
-                                        </p>
-
-                                        <div v-if="npc.disposition && isShortBadgeText(npc.disposition) || (npc.partyStatus && npc.partyStatus !== 'NONE') || !npc.alive"
-                                            class="mt-1.5 flex flex-wrap gap-1.5">
-                                            <u-badge
-                                                v-if="npc.disposition && isShortBadgeText(npc.disposition)"
-                                                :color="dispositionColor(npc.disposition)"
-                                                variant="soft"
-                                                size="xs"
-                                            >
-                                                {{ npc.disposition }}
-                                            </u-badge>
-
-                                            <u-badge
-                                                v-if="npc.partyStatus && npc.partyStatus !== 'NONE'"
-                                                color="success"
-                                                variant="soft"
-                                                size="xs"
-                                            >
-                                                {{ npc.partyStatus }}
-                                            </u-badge>
-
-                                            <u-badge
-                                                v-if="!npc.alive"
-                                                color="error"
-                                                variant="soft"
-                                                size="xs"
-                                            >
-                                                Deceased
-                                            </u-badge>
-                                        </div>
-                                    </div>
-
-                                    <u-icon name="i-lucide-chevron-right" class="w-4 h-4 text-grimoire-accent opacity-50 transition-opacity group-hover:opacity-100 shrink-0 mt-0.5" />
-                                </div>
-                            </button>
-
-                            <div v-if="npcsPageInfo?.hasNextPage"
-                                class="flex justify-center pt-2 sm:col-span-2 xl:col-span-1">
-                                <u-button
+                                <u-badge
+                                    v-if="entry.entryType === 'MEMORIAL'"
+                                    color="error"
                                     variant="soft"
+                                    size="xs"
+                                >
+                                    Memorial
+                                </u-badge>
+                            </div>
+
+                            <p
+                                class="font-['IM_Fell_English',serif] text-xl leading-relaxed text-grimoire-text"
+                                :class="descriptionExpanded(`diary-${entry.id}`) ? '' : 'max-h-24 overflow-hidden'"
+                            >
+                                {{ entry.content }}
+                            </p>
+
+                            <button
+                                type="button"
+                                class="mt-2 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent hover:text-grimoire-text transition-colors"
+                                @click="toggleDescription(`diary-${entry.id}`)"
+                            >
+                                {{ descriptionExpanded(`diary-${entry.id}`) ? 'Show less' : 'Read more' }}
+                            </button>
+                        </div>
+
+                        <!-- Older entries collapsed section -->
+                        <template v-if="filteredOlderDiary.length || diaryPageInfo?.hasNextPage">
+                            <div class="pt-2">
+                                <u-button
+                                    variant="ghost"
                                     color="neutral"
                                     size="sm"
-                                    class="font-['Cinzel',serif] text-xs tracking-widest uppercase"
-                                    :loading="npcsLoadingMore"
-                                    @click="loadMoreNpcs"
+                                    class="w-full"
+                                    @click="showOlderDiary = !showOlderDiary"
                                 >
-                                    Load more NPCs
+                                    {{ showOlderDiary ? 'Hide older entries' : 'Show older entries' }}
                                 </u-button>
                             </div>
+
+                            <template v-if="showOlderDiary">
+                                <div
+                                    v-for="entry in filteredOlderDiary"
+                                    :key="entry.id"
+                                    class="bg-grimoire-surface/80 border-l-2 border-grimoire-accent-dim/40 p-5"
+                                >
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/70">{{ entry.inGameDate }}</span>
+                                    </div>
+
+                                    <p
+                                        class="font-['IM_Fell_English',serif] text-lg leading-relaxed text-grimoire-text"
+                                        :class="descriptionExpanded(`diary-${entry.id}`) ? '' : 'max-h-20 overflow-hidden'"
+                                    >
+                                        {{ entry.content }}
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        class="mt-2 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-accent hover:text-grimoire-text transition-colors"
+                                        @click="toggleDescription(`diary-${entry.id}`)"
+                                    >
+                                        {{ descriptionExpanded(`diary-${entry.id}`) ? 'Show less' : 'Read more' }}
+                                    </button>
+                                </div>
+
+                                <div v-if="diaryPageInfo?.hasNextPage"
+                                    class="flex justify-center pt-1">
+                                    <u-button
+                                        variant="soft"
+                                        color="neutral"
+                                        size="sm"
+                                        class="font-['Cinzel',serif] text-xs tracking-widest uppercase"
+                                        :loading="diaryLoadingMore"
+                                        @click="loadMoreDiary"
+                                    >
+                                        Load more diary entries
+                                    </u-button>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </section>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <!-- Active World Events -->
+                <section class="space-y-4">
+                    <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Active World Events</h2>
+
+                    <div v-if="eventsFetching"
+                        class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
+                        <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
+
+                        <p class="font-['IM_Fell_English',serif] italic text-lg">Reading active omens...</p>
+                    </div>
+
+                    <div v-else-if="!worldEvents.length"
+                        class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
+                        No active world events.
+                    </div>
+
+                    <div v-else
+                        class="space-y-2">
+                        <button
+                            v-for="event in worldEvents"
+                            :key="event.id"
+                            type="button"
+                            class="group w-full bg-grimoire-surface border border-grimoire-accent-dim/25 rounded-sm px-4 py-3 text-left transition-colors hover:border-grimoire-accent-dim/70 hover:bg-grimoire-accent/10 focus:outline-none focus:ring-2 focus:ring-grimoire-accent/50"
+                            @click="openWorldEventModal(event.id)"
+                        >
+                            <div class="flex items-start gap-3">
+                                <u-badge
+                                    color="warning"
+                                    variant="soft"
+                                    size="xs"
+                                    class="mt-1"
+                                >
+                                    {{ event.status }}
+                                </u-badge>
+
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-['IM_Fell_English',serif] text-lg leading-snug text-grimoire-text">
+                                        {{ eventTitle(event.description) }}
+                                    </p>
+
+                                    <p v-if="event.deadlineInGameDate"
+                                        class="mt-1 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/65">
+                                        Deadline: {{ event.deadlineInGameDate }}
+                                    </p>
+                                </div>
+
+                                <u-icon name="i-lucide-chevron-right"
+                                    class="w-4 h-4 text-grimoire-accent opacity-50 transition-opacity group-hover:opacity-100 shrink-0 mt-0.5" />
+
+                                <span class="sr-only">Open</span>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Factions -->
+                <section class="space-y-4">
+                    <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Factions</h2>
+
+                    <div v-if="factionsFetching"
+                        class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
+                        <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
+
+                        <p class="font-['IM_Fell_English',serif] italic text-lg">Reading faction ledgers...</p>
+                    </div>
+
+                    <div v-else-if="!factions.length"
+                        class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
+                        No factions known yet.
+                    </div>
+
+                    <div v-else
+                        class="space-y-2">
+                        <button
+                            v-for="faction in factions"
+                            :key="faction.id"
+                            type="button"
+                            class="group w-full bg-grimoire-surface border border-grimoire-accent-dim/25 rounded-sm px-4 py-3 text-left transition-colors hover:border-grimoire-accent-dim/70 hover:bg-grimoire-accent/10 focus:outline-none focus:ring-2 focus:ring-grimoire-accent/50"
+                            @click="openFactionModal(faction.id)"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-['IM_Fell_English',serif] text-xl leading-tight text-grimoire-text">{{ faction.name }}</p>
+
+                                    <p class="mt-1 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/65">
+                                        <span v-if="faction.powerLevel != null">Power {{ faction.powerLevel }}/10</span>
+                                    </p>
+                                </div>
+
+                                <u-badge
+                                    v-if="faction.playerDisposition && isShortBadgeText(faction.playerDisposition)"
+                                    :color="dispositionColor(faction.playerDisposition)"
+                                    variant="soft"
+                                    size="xs"
+                                >
+                                    {{ faction.playerDisposition }}
+                                </u-badge>
+
+                                <u-icon name="i-lucide-chevron-right"
+                                    class="w-4 h-4 text-grimoire-accent opacity-50 transition-opacity group-hover:opacity-100 shrink-0 mt-0.5" />
+
+                                <span class="sr-only">Open</span>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- NPC Roster -->
+                <section class="space-y-4">
+                    <h2 class="font-['Cinzel',serif] text-xs tracking-[0.3em] uppercase text-grimoire-text/80 border-b border-grimoire-accent-dim/25 pb-3">Known NPCs</h2>
+
+                    <div v-if="npcsFetching"
+                        class="flex flex-col items-center gap-3 py-6 text-grimoire-text">
+                        <span class="w-2.5 h-2.5 rounded-full bg-grimoire-accent grimoire-breathe" />
+
+                        <p class="font-['IM_Fell_English',serif] italic text-lg">Listening for familiar names...</p>
+                    </div>
+
+                    <div v-else-if="!npcs.length"
+                        class="font-['IM_Fell_English',serif] italic text-grimoire-text/75 py-6 text-lg leading-relaxed">
+                        No NPCs encountered yet.
+                    </div>
+
+                    <div v-else
+                        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
+                        <button
+                            v-for="npc in npcs"
+                            :key="npc.id"
+                            type="button"
+                            class="group w-full text-left bg-grimoire-surface border border-grimoire-accent-dim/25 rounded-sm px-4 py-3 hover:border-grimoire-accent-dim/70 hover:bg-grimoire-accent/10 transition-colors focus:outline-none focus:ring-2 focus:ring-grimoire-accent/50"
+                            @click="openNpcModal(npc.id)"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-['IM_Fell_English',serif] text-xl leading-tight text-grimoire-text">{{ npc.name }}</p>
+
+                                    <p v-if="npc.profession"
+                                        class="mt-1 font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-text/65">
+                                        {{ npc.profession }}
+                                    </p>
+
+                                    <div v-if="npc.disposition && isShortBadgeText(npc.disposition) || (npc.partyStatus && npc.partyStatus !== 'NONE') || !npc.alive"
+                                        class="mt-1.5 flex flex-wrap gap-1.5">
+                                        <u-badge
+                                            v-if="npc.disposition && isShortBadgeText(npc.disposition)"
+                                            :color="dispositionColor(npc.disposition)"
+                                            variant="soft"
+                                            size="xs"
+                                        >
+                                            {{ npc.disposition }}
+                                        </u-badge>
+
+                                        <u-badge
+                                            v-if="npc.partyStatus && npc.partyStatus !== 'NONE'"
+                                            color="success"
+                                            variant="soft"
+                                            size="xs"
+                                        >
+                                            {{ npc.partyStatus }}
+                                        </u-badge>
+
+                                        <u-badge
+                                            v-if="!npc.alive"
+                                            color="error"
+                                            variant="soft"
+                                            size="xs"
+                                        >
+                                            Deceased
+                                        </u-badge>
+                                    </div>
+                                </div>
+
+                                <u-icon name="i-lucide-chevron-right"
+                                    class="w-4 h-4 text-grimoire-accent opacity-50 transition-opacity group-hover:opacity-100 shrink-0 mt-0.5" />
+
+                                <span class="sr-only">Profile</span>
+                            </div>
+                        </button>
+
+                        <div v-if="npcsPageInfo?.hasNextPage"
+                            class="flex justify-center pt-2 sm:col-span-2 xl:col-span-1">
+                            <u-button
+                                variant="soft"
+                                color="neutral"
+                                size="sm"
+                                class="font-['Cinzel',serif] text-xs tracking-widest uppercase"
+                                :loading="npcsLoadingMore"
+                                @click="loadMoreNpcs"
+                            >
+                                Load more NPCs
+                            </u-button>
                         </div>
-                    </section>
-                </div>
+                    </div>
+                </section>
+            </div>
         </div>
 
         <!-- World Event Modal -->

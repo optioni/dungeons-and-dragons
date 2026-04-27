@@ -8,6 +8,7 @@
             class="flex-1 flex items-center justify-center">
             <div class="flex flex-col items-center gap-4 text-grimoire-muted relative z-10">
                 <span class="w-3 h-3 rounded-full bg-grimoire-accent grimoire-breathe" />
+
                 <p class="font-['IM_Fell_English',serif] italic text-lg">The grimoire stirs...</p>
             </div>
         </div>
@@ -110,31 +111,31 @@
                                 :inner-voice-text="innerVoiceText || undefined"
                                 :character-name="character?.name ?? null"
                             />
-
                         </div>
                     </div>
 
                     <!-- Suggested actions -->
                     <div v-if="suggestedActions.length"
-                        class="px-8 pb-2 relative z-10">
-                        <div class="max-w-2xl mx-auto">
+                        class="pb-3 relative z-10">
+                        <div class="max-w-2xl mx-auto px-8">
                             <p v-if="pendingCheck"
-                                class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted/60 text-center mb-2">
-                                a {{ pendingCheck.skill ?? pendingCheck.ability }} check awaits · DC {{ pendingCheck.dc }}
+                                class="font-['Cinzel',serif] text-[0.65rem] uppercase tracking-widest text-grimoire-accent-dim/70 mb-2">
+                                {{ pendingCheck.skill ?? pendingCheck.ability }} check · DC {{ pendingCheck.dc }}
                             </p>
 
-                            <p class="font-['IM_Fell_English',serif] italic text-sm text-grimoire-muted/60 leading-relaxed">
-                                <template v-for="(action, i) in suggestedActions" :key="action">
-                                    <button
-                                        class="hover:text-grimoire-text transition-colors duration-150"
-                                        type="button"
-                                        @click="handleSuggestedAction(action)"
-                                    >{{ action }}</button><span
-                                        v-if="i < suggestedActions.length - 1"
-                                        class="mx-2 text-grimoire-accent-dim/40 not-italic select-none"
-                                    >·</span>
-                                </template>
-                            </p>
+                            <div class="flex flex-col gap-1">
+                                <button
+                                    v-for="action in suggestedActions"
+                                    :key="action"
+                                    class="group relative text-left w-full pl-5 py-0.5"
+                                    type="button"
+                                    @click="handleSuggestedAction(action)"
+                                >
+                                    <span class="absolute left-0 top-1/2 -translate-y-1/2 text-xs text-grimoire-accent/60 group-hover:text-grimoire-accent transition-colors duration-150 select-none">✦</span>
+
+                                    <span class="font-['IM_Fell_English',serif] italic text-[1.05rem] text-grimoire-text/70 group-hover:text-grimoire-text transition-colors duration-150 leading-snug">{{ action }}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -153,6 +154,7 @@
                         <div class="max-w-2xl mx-auto px-8">
                             <textarea
                                 v-model="playerInput"
+                                aria-label="Player action"
                                 class="w-full bg-transparent text-grimoire-text text-[1.125rem]
                                        font-['IM_Fell_English',serif] resize-none outline-none
                                        border-l-2 border-transparent pl-5
@@ -564,10 +566,30 @@ function getEventNodes(connection: GameEventsConnection | null | undefined): Per
     return (connection?.edges ?? []).map((edge) => edge.node as PersistedGameEvent);
 }
 
+function rehydrateSuggestedActions(events: PersistedGameEvent[]): void {
+    for (let i = events.length - 1; i >= 0; i--) {
+        const event = events[i];
+        if (event.eventType === 'PLAYER_INPUT') break;
+        if (event.eventType === 'TOOL_CALL') {
+            const content = event.content as { toolName?: string; toolInput?: { actions?: unknown }; toolResult?: { success?: boolean } };
+            if (
+                content.toolName === 'suggest_actions'
+                && content.toolResult?.success === true
+                && Array.isArray(content.toolInput?.actions)
+            ) {
+                suggestedActions.value = (content.toolInput.actions as unknown[])
+                    .filter((a): a is string => typeof a === 'string');
+                break;
+            }
+        }
+    }
+}
+
 function applyEventConnection(connection: GameEventsConnection | null | undefined): void {
     persistedEvents.value = getEventNodes(connection);
     earliestCursor.value = connection?.pageInfo.startCursor ?? null;
     hasPreviousPage.value = connection?.pageInfo.hasPreviousPage ?? false;
+    rehydrateSuggestedActions(persistedEvents.value);
 }
 
 const visibleMechanicalEvents = computed(() =>
