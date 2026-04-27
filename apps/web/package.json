@@ -2,13 +2,15 @@
   "name": "web",
   "version": "0.0.1",
   "private": true,
-  "scripts": {
-    "dev": "nuxt dev",
-    "build": "nuxt build",
-    "start": "node .output/server/index.mjs",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "scripts": {
+        "dev": "nuxt dev",
+        "build": "nuxt build",
+        "start": "node .output/server/index.mjs",
+        "storybook": "STORYBOOK_NUXT_MODULE=false storybook dev -p 6006",
+        "build:storybook": "STORYBOOK_NUXT_MODULE=false storybook build",
+        "lint": "eslint .",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.2.8",
@@ -28,12 +30,14 @@
     "@0no-co/graphqlsp": "^1.15.4",
     "@gql.tada/vue-support": "^1.0.2",
     "@juuso.piikkila/eslint-config-typescript": "^4.5.0",
+    "@nuxtjs/storybook": "9.0.1",
     "@types/dompurify": "^3.2.0",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/test-utils": "^2.4.6",
     "eslint": "~9.39.0",
     "gql.tada": "^1.9.2",
     "happy-dom": "^20.9.0",
+    "storybook": "~9.0.5",
     "typescript": "^5.8.3",
     "vitest": "^4.1.4"
   }

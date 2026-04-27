@@ -2,7 +2,7 @@ import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    modules: ['@nuxt/ui'],
+    modules: ['@nuxt/ui', '@nuxtjs/storybook'],
     css: [
         '@fontsource/im-fell-english/400.css',
         '@fontsource/im-fell-english/400-italic.css',
@@ -17,5 +17,10 @@ export default defineNuxtConfig({
     },
     devServer: {
         port: Number(process.env.NUXT_PORT ?? 4000),
+    },
+    storybook: {
+        enabled: process.env.STORYBOOK_NUXT_MODULE !== 'false',
+        host: 'http://localhost',
+        port: 6006,
     },
 });
