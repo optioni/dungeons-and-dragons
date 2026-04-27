@@ -36,6 +36,21 @@ const SKILL_TO_ABILITY = {
 
 type EligibleSkill = keyof typeof SKILL_TO_ABILITY;
 
+const ELIGIBLE_TO_SKILL_NAME: Record<EligibleSkill, SkillName> = {
+    perception: 'Perception',
+    insight: 'Insight',
+    investigation: 'Investigation',
+    history: 'History',
+    arcana: 'Arcana',
+    survival: 'Survival',
+};
+
+const DC_RANGES: Record<'easy' | 'medium' | 'hard', [number, number]> = {
+    easy: [8, 10],
+    medium: [12, 14],
+    hard: [16, 18],
+};
+
 interface AnthropicClientLike {
     messages: {
         create: (parameters: Anthropic.Messages.MessageCreateParamsNonStreaming) => Promise<Anthropic.Message>
@@ -130,6 +145,11 @@ export class InnerMonologueService {
                             type: 'string',
                             enum: ['perception', 'insight', 'investigation', 'history', 'arcana', 'survival'],
                         },
+                        difficulty: {
+                            type: 'string',
+                            enum: ['easy', 'medium', 'hard'],
+                            description: 'Narrative difficulty of the check. easy = routine or low-stakes (DC 8–10); medium = moderately unclear situations (DC 12–14, default); hard = deceptive, obscure, or high-stakes assessments (DC 16–18).',
+                        },
                     },
                     required: ['skill'],
                 },
@@ -166,8 +186,10 @@ export class InnerMonologueService {
                     const toolResults: Anthropic.ToolResultBlockParam[] = [];
 
                     for (const block of toolUses) {
-                        const skill = String((block.input as Record<string, unknown>)['skill'] ?? '').toLowerCase();
-                        const result = this.rollSkillCheck(character, skill);
+                        const input = block.input as Record<string, unknown>;
+                        const skill = String(input['skill'] ?? '').toLowerCase();
+                        const difficulty = input['difficulty'] as string | undefined;
+                        const result = this.rollSkillCheck(character, skill, difficulty);
                         toolCalls += 1;
 
                         /* eslint-disable @typescript-eslint/naming-convention */
@@ -227,17 +249,37 @@ export class InnerMonologueService {
             : 'No explicit traits were recorded. Ground the voice in the character race and class background instead.';
 
         return [
-            `You are writing the private inner monologue of ${character.name}, a ${character.race.name} ${character.srdClass.name}.`,
+            `You ARE ${character.name}, a ${character.race.name} ${character.srdClass.name}. Write only what passes through your mind — pure cognition.`,
             personalityInstruction,
-            'Write 2-3 sentences of pure internal thought — what the character notices, feels, or silently concludes. This is NOT a response to the DM, NOT spoken dialogue, and NOT a description of the character taking action.',
-            'Do NOT include any quoted speech, action descriptions, or anything the character says out loud. Only what crosses their mind in the moment.',
-            'Output prose directly. No headers, no labels, no "Inner Monologue:" prefix — just the thoughts themselves.',
+            'Write exactly 2–3 sentences (hard limit: 50 words total) of silent internal thought: observations, feelings, suspicions, or silent conclusions. Nothing else.',
+            'FORBIDDEN — do not write any of these:',
+            '  • Physical actions or movements ("I lean forward", "my eyes track", "I reach for")',
+            '  • Descriptions of what you are doing with your body',
+            '  • Spoken or whispered words',
+            '  • Third-person narration ("she notices", "he wonders")',
+            '  • Plans stated as actions ("I will...", "I need to...")',
+            'ALLOWED — only these kinds of content:',
+            '  • What you notice or sense ("Something feels wrong here")',
+            '  • What you feel emotionally ("Dread settles in my chest")',
+            '  • Silent deductions or suspicions ("That timing is too convenient")',
+            '  • Instincts or gut reactions ("I don\'t trust this")',
+            'Output prose directly. No headers, no labels, no prefix — just the thoughts themselves.',
             'You may call roll_skill_check up to 2 times for narratively relevant insight, perception, investigation, history, arcana, or survival checks.',
-            'Use the rolled result exactly as returned. Failed insight means a confident wrong read. Failed perception means the character notices nothing unusual.',
+            'Before each call, assess how hard the situation is narratively and set the difficulty field:',
+            '  • easy — routine, low-stakes observations (noticing a lit torch, recalling common lore)',
+            '  • medium — moderately unclear situations (reading a crowd, investigating ordinary clues)',
+            '  • hard — deceptive, obscure, or high-stakes assessments (seeing through a skilled liar, recalling rare arcane history)',
+            'Omitting difficulty defaults to medium. Use the rolled result exactly as returned. Failed insight means a confident wrong read. Failed perception means the character notices nothing unusual.',
         ].join('\n');
     }
 
-    private rollSkillCheck(character: Character, skill: string): { error: string } | {
+    private selectDc(difficulty?: string): number {
+        const range = DC_RANGES[difficulty as keyof typeof DC_RANGES] ?? DC_RANGES.medium;
+        const [min, max] = range;
+        return min + Math.floor(Math.random() * (max - min + 1));
+    }
+
+    private rollSkillCheck(character: Character, skill: string, difficulty?: string): { error: string } | {
         skill: string
         rolled: number
         modifier: number
@@ -253,8 +295,17 @@ export class InnerMonologueService {
         const abilityKey = SKILL_TO_ABILITY[eligibleSkill];
         const rolled = this.diceService.d20();
         const modifier = Math.floor((character.abilityScores[abilityKey] - 10) / 2);
-        const total = rolled + modifier;
-        const dc = 12;
+        const dc = this.selectDc(difficulty);
+
+        const skillName = ELIGIBLE_TO_SKILL_NAME[eligibleSkill];
+        const proficiency = character.skillProficiencies[skillName];
+        const proficiencyContribution = proficiency === 'expert'
+            ? 2 * character.proficiencyBonus
+            : proficiency === 'proficient'
+                ? character.proficiencyBonus
+                : 0;
+
+        const total = rolled + modifier + proficiencyContribution;
 
         return {
             skill,

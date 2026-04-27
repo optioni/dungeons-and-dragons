@@ -246,4 +246,146 @@ describe('InnerMonologueService', () => {
 
         expect(loggerErrorSpy).toHaveBeenCalled();
     });
+
+    describe('selectDc', () => {
+        const selectDc = (difficulty?: string) =>
+            (service as unknown as { selectDc: (d?: string) => number }).selectDc(difficulty);
+
+        it('returns a value in 8–10 for easy', () => {
+            for (let i = 0; i < 20; i++) {
+                const dc = selectDc('easy');
+                expect(dc).toBeGreaterThanOrEqual(8);
+                expect(dc).toBeLessThanOrEqual(10);
+            }
+        });
+
+        it('returns a value in 12–14 for medium', () => {
+            for (let i = 0; i < 20; i++) {
+                const dc = selectDc('medium');
+                expect(dc).toBeGreaterThanOrEqual(12);
+                expect(dc).toBeLessThanOrEqual(14);
+            }
+        });
+
+        it('returns a value in 16–18 for hard', () => {
+            for (let i = 0; i < 20; i++) {
+                const dc = selectDc('hard');
+                expect(dc).toBeGreaterThanOrEqual(16);
+                expect(dc).toBeLessThanOrEqual(18);
+            }
+        });
+
+        it('defaults to medium when difficulty is omitted', () => {
+            for (let i = 0; i < 20; i++) {
+                const dc = selectDc();
+                expect(dc).toBeGreaterThanOrEqual(12);
+                expect(dc).toBeLessThanOrEqual(14);
+            }
+        });
+
+        it('defaults to medium for an unrecognised value', () => {
+            for (let i = 0; i < 20; i++) {
+                const dc = selectDc('legendary');
+                expect(dc).toBeGreaterThanOrEqual(12);
+                expect(dc).toBeLessThanOrEqual(14);
+            }
+        });
+    });
+
+    describe('rollSkillCheck proficiency application', () => {
+        const rollSkillCheck = (skill: string, difficulty?: string) =>
+            (service as unknown as {
+                rollSkillCheck: (
+                    character: unknown,
+                    skill: string,
+                    difficulty?: string,
+                ) => Record<string, unknown>
+            }).rollSkillCheck(
+                {
+                    abilityScores: { STR: 8, DEX: 14, CON: 12, INT: 16, WIS: 13, CHA: 10 },
+                    skillProficiencies: {
+                        Acrobatics: 'none', 'Animal Handling': 'none', Arcana: 'expert',
+                        Athletics: 'none', Deception: 'none', History: 'proficient',
+                        Insight: 'proficient', Intimidation: 'none', Investigation: 'proficient',
+                        Medicine: 'none', Nature: 'none', Perception: 'none',
+                        Performance: 'none', Persuasion: 'none', Religion: 'none',
+                        'Sleight of Hand': 'none', Stealth: 'none', Survival: 'none',
+                    },
+                    level: 4,
+                    proficiencyBonus: 3,
+                },
+                skill,
+                difficulty,
+            );
+
+        beforeEach(() => {
+            diceService.d20.mockReturnValue(10);
+        });
+
+        it('adds no proficiency bonus for a none-proficiency skill', () => {
+            // perception is 'none', WIS modifier for 13 = +1, rolled = 10 → total = 11
+            const result = rollSkillCheck('perception', 'medium');
+            expect(result['total']).toBe(11);
+            expect(result['modifier']).toBe(1);
+        });
+
+        it('adds proficiencyBonus once for a proficient skill', () => {
+            // insight is 'proficient', WIS mod = +1, proficiency = 3, rolled = 10 → total = 14
+            const result = rollSkillCheck('insight', 'medium');
+            expect(result['total']).toBe(14);
+            expect(result['modifier']).toBe(1);
+        });
+
+        it('adds 2× proficiencyBonus for an expert skill', () => {
+            // arcana is 'expert', INT mod for 16 = +3, proficiency = 3×2 = 6, rolled = 10 → total = 19
+            const result = rollSkillCheck('arcana', 'easy');
+            expect(result['total']).toBe(19);
+            expect(result['modifier']).toBe(3);
+        });
+
+        it('dc is within the expected range for each difficulty', () => {
+            for (let i = 0; i < 10; i++) {
+                const easy = rollSkillCheck('perception', 'easy');
+                expect(easy['dc']).toBeGreaterThanOrEqual(8);
+                expect(easy['dc']).toBeLessThanOrEqual(10);
+
+                const medium = rollSkillCheck('perception', 'medium');
+                expect(medium['dc']).toBeGreaterThanOrEqual(12);
+                expect(medium['dc']).toBeLessThanOrEqual(14);
+
+                const hard = rollSkillCheck('perception', 'hard');
+                expect(hard['dc']).toBeGreaterThanOrEqual(16);
+                expect(hard['dc']).toBeLessThanOrEqual(18);
+            }
+        });
+    });
+
+    it('passes difficulty from tool input to rollSkillCheck', async () => {
+        anthropicMessages.create
+            .mockResolvedValueOnce({
+                content: [{
+                    type: 'tool_use',
+                    id: 'toolu_hard',
+                    name: 'roll_skill_check',
+                    input: { skill: 'insight', difficulty: 'hard' },
+                }],
+                stop_reason: 'tool_use',
+            })
+            .mockResolvedValueOnce({
+                content: [{ type: 'text', text: 'Something dangerous is close.' }],
+                stop_reason: 'end_turn',
+            });
+
+        await service.runIfApplicable(5, SceneType.SOCIAL, 'The envoy smiles, but her eyes are calculating.');
+
+        const secondCall = anthropicMessages.create.mock.calls[1]?.[0] as {
+            messages: Array<{ role: string; content: unknown }>
+        };
+        const toolResult = (secondCall.messages.at(-1) as { content: Array<{ content: string }> })
+            .content[0].content;
+        const parsed = JSON.parse(toolResult) as { dc: number; skill: string };
+        expect(parsed.skill).toBe('insight');
+        expect(parsed.dc).toBeGreaterThanOrEqual(16);
+        expect(parsed.dc).toBeLessThanOrEqual(18);
+    });
 });
