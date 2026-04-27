@@ -1,41 +1,22 @@
 <template>
     <div
-        class="border-l-2 border-grimoire-accent-dim/40 pl-5 py-1 my-3"
+        class="relative pl-7 my-2"
         :class="{ 'grimoire-entry': mounted }"
         data-testid="mechanical-event-annotation"
     >
-        <p class="font-['Cinzel',serif] text-xs uppercase tracking-widest text-grimoire-muted">
-            {{ label }}
-        </p>
+        <session-message-border-glyph type="event"
+            class="absolute left-0 top-0 text-grimoire-accent-dim/50" />
 
-        <p class="font-['IM_Fell_English',serif] text-base leading-snug text-grimoire-muted/80">
-            {{ content.title }}
-            <span v-if="content.summary"
-                class="text-grimoire-muted/70">
-                · {{ content.summary }}
-            </span>
+        <p class="font-['IM_Fell_English',serif] text-base italic text-grimoire-muted/70 leading-snug">
+            {{ narrativeLine }}
         </p>
-
-        <dl v-if="valueEntries.length"
-            class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-grimoire-muted/70">
-            <div
-                v-for="[key, value] in valueEntries"
-                :key="key"
-                class="flex gap-1.5"
-            >
-                <dt class="font-['Cinzel',serif] uppercase tracking-widest">{{ formatKey(key) }}</dt>
-                <dd :class="typeof value === 'number' ? 'font-mono text-grimoire-text/80' : ''">
-                    {{ formatValue(value) }}
-                </dd>
-            </div>
-        </dl>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 
-import { type PlayerVisibleEventPayload, type PlayerVisibleEventValue } from '~/types/player-visible-event';
+import { type PlayerVisibleEventPayload } from '~/types/player-visible-event';
 
 const props = defineProps<{
     content: PlayerVisibleEventPayload
@@ -44,23 +25,68 @@ const props = defineProps<{
 const mounted = ref(false);
 onMounted(() => { mounted.value = true; });
 
-const label = computed(() => `${props.content.category} ${props.content.kind.replaceAll('_', ' ')}`);
-
-const valueEntries = computed(() =>
-    Object.entries(props.content.values ?? {}).filter(([, value]) =>
-        ['string', 'number', 'boolean'].includes(typeof value),
-    ),
-);
-
-function formatKey(key: string): string {
-    return key.replaceAll(/([A-Z])/g, ' $1').replaceAll('_', ' ').trim();
+function article(name: string): string {
+    return /^[aeiou]/i.test(name) ? 'an' : 'a';
 }
 
-function formatValue(value: PlayerVisibleEventValue): string {
-    if (typeof value === 'boolean') {
-        return value ? 'yes' : 'no';
+const GENERIC_PLACEHOLDERS = new Set(['Item', 'Location', 'Quest', 'Objective', 'Character', 'Combatant', 'Dungeon', 'Room']);
+
+const narrativeLine = computed((): string => {
+    const {
+        category, kind, title, summary, entities, values, 
+    } = props.content;
+    const rawName = entities?.[0]?.name;
+    const primaryName = rawName && !GENERIC_PLACEHOLDERS.has(rawName) ? rawName : undefined;
+    const quantity = typeof values?.quantity === 'number' ? values.quantity : 1;
+
+    if (category === 'INVENTORY') {
+        if (kind === 'ITEM_GAINED') {
+            if (!primaryName) return quantity > 1 ? `You received ${quantity} items.` : 'You received an item.';
+            return quantity > 1
+                ? `You received ${quantity} ${primaryName}.`
+                : `You received ${article(primaryName)} ${primaryName}.`;
+        }
+        if (kind === 'ITEM_LOST' || kind === 'ITEM_REMOVED' || kind === 'ITEM_USED') {
+            const verb = kind === 'ITEM_USED' ? 'used' : 'lost';
+            if (!primaryName) return quantity > 1 ? `You ${verb} ${quantity} items.` : `You ${verb} an item.`;
+            return quantity > 1
+                ? `You ${verb} ${quantity} ${primaryName}.`
+                : `You ${verb} ${article(primaryName)} ${primaryName}.`;
+        }
     }
 
-    return String(value);
-}
+    if (category === 'QUEST') {
+        const name = primaryName ?? title;
+        if (kind === 'QUEST_STARTED') return `New quest: ${name}.`;
+        if (kind === 'QUEST_COMPLETED') return `Quest completed — ${name}.`;
+        if (kind === 'OBJECTIVE_COMPLETED') return `${name} — objective complete.`;
+    }
+
+    if (category === 'DISCOVERY') {
+        const name = primaryName ?? title;
+        return `You discovered ${name}.`;
+    }
+
+    if (category === 'TRAVEL') {
+        const name = primaryName ?? title;
+        if (/ENTER/i.test(kind)) return `You entered ${name}.`;
+        if (/LEAVE|EXIT|LEFT/i.test(kind)) return `You left ${name}.`;
+    }
+
+    if (category === 'RESOURCE') {
+        const amount = typeof values?.amount === 'number' ? Math.abs(values.amount) : null;
+        const isLoss = typeof values?.amount === 'number' && values.amount < 0;
+        if (kind === 'HP_CHANGED' && amount !== null) {
+            return isLoss
+                ? `You took ${amount} damage.`
+                : `You recovered ${amount} hit points.`;
+        }
+        if (kind === 'SPELL_SLOT_USED') {
+            const level = values?.level ?? '';
+            return `You expended ${level ? `a level ${level}` : 'a'} spell slot.`;
+        }
+    }
+
+    return summary ? `${title} — ${summary}` : title;
+});
 </script>

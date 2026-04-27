@@ -32,6 +32,7 @@
                 class="flex items-center gap-2"
             >
                 <span class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted hidden sm:block">HP</span>
+
                 <div class="h-1.5 w-20 bg-grimoire-raised rounded-full overflow-hidden">
                     <div
                         class="h-1.5 rounded-full transition-all duration-500"
@@ -39,6 +40,7 @@
                         :style="{ width: `${hpPercent}%` }"
                     />
                 </div>
+
                 <span class="font-mono text-xs text-grimoire-text/60 hidden sm:block">
                     {{ props.hp }}<span class="text-grimoire-muted">/{{ props.maxHp }}</span>
                 </span>
@@ -51,7 +53,8 @@
                     class="text-grimoire-muted hover:text-grimoire-text transition-colors"
                     title="Character sheet"
                 >
-                    <u-icon name="i-lucide-user" class="text-base" />
+                    <u-icon name="i-lucide-user"
+                        class="text-base" />
                 </nuxt-link>
 
                 <nuxt-link
@@ -59,7 +62,8 @@
                     class="text-grimoire-muted hover:text-grimoire-text transition-colors"
                     title="Quest log"
                 >
-                    <u-icon name="i-lucide-scroll-text" class="text-base" />
+                    <u-icon name="i-lucide-scroll-text"
+                        class="text-base" />
                 </nuxt-link>
             </nav>
         </div>
@@ -67,14 +71,14 @@
 </template>
 
 <script setup lang="ts">
-type Props = {
+interface Props {
     locationName?: string | null
     sceneType?: string | null
     inGameDate?: string | null
     hp?: number | null
     maxHp?: number | null
     campaignId: string
-};
+}
 
 const props = withDefaults(defineProps<Props>(), {
     locationName: null,

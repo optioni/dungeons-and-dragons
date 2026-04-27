@@ -24,12 +24,46 @@
                 style="animation: grimoire-reveal 0.5s 1.2s ease-out both;"
                 aria-hidden="true"
             >
-                <svg width="240" height="14" viewBox="0 0 240 14" fill="none" xmlns="http://www.w3.org/2000/svg" class="opacity-30">
-                    <line x1="0" y1="7" x2="100" y2="7" stroke="#c8922a" stroke-width="0.75" />
-                    <rect x="103" y="3" width="8" height="8" transform="rotate(45 107 7)" fill="none" stroke="#c8922a" stroke-width="0.75" />
-                    <path d="M120 2 L121.8 6.3 L126.5 7 L121.8 7.7 L120 12 L118.2 7.7 L113.5 7 L118.2 6.3 Z" fill="#c8922a" />
-                    <rect x="129" y="3" width="8" height="8" transform="rotate(45 133 7)" fill="none" stroke="#c8922a" stroke-width="0.75" />
-                    <line x1="136" y1="7" x2="240" y2="7" stroke="#c8922a" stroke-width="0.75" />
+                <svg width="240"
+                    height="14"
+                    viewBox="0 0 240 14"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="opacity-30">
+                    <line x1="0"
+                        y1="7"
+                        x2="100"
+                        y2="7"
+                        stroke="#c8922a"
+                        stroke-width="0.75" />
+
+                    <rect x="103"
+                        y="3"
+                        width="8"
+                        height="8"
+                        transform="rotate(45 107 7)"
+                        fill="none"
+                        stroke="#c8922a"
+                        stroke-width="0.75" />
+
+                    <path d="M120 2 L121.8 6.3 L126.5 7 L121.8 7.7 L120 12 L118.2 7.7 L113.5 7 L118.2 6.3 Z"
+                        fill="#c8922a" />
+
+                    <rect x="129"
+                        y="3"
+                        width="8"
+                        height="8"
+                        transform="rotate(45 133 7)"
+                        fill="none"
+                        stroke="#c8922a"
+                        stroke-width="0.75" />
+
+                    <line x1="136"
+                        y1="7"
+                        x2="240"
+                        y2="7"
+                        stroke="#c8922a"
+                        stroke-width="0.75" />
                 </svg>
             </div>
 
@@ -57,6 +91,7 @@
             >
                 <div class="text-center">
                     <p class="font-mono text-5xl text-grimoire-accent">{{ displayedDays }}</p>
+
                     <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mt-2">Days Adventured</p>
                 </div>
 
@@ -64,6 +99,7 @@
 
                 <div class="text-center">
                     <p class="font-mono text-5xl text-grimoire-accent">{{ displayedQuests }}</p>
+
                     <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted mt-2">Quests Completed</p>
                 </div>
             </div>
@@ -75,7 +111,9 @@
                 aria-hidden="true"
             >
                 <div class="h-px w-32 bg-grimoire-accent-dim/25" />
+
                 <div class="w-1 h-1 rounded-full bg-grimoire-accent-dim/40 mx-3" />
+
                 <div class="h-px w-32 bg-grimoire-accent-dim/25" />
             </div>
 

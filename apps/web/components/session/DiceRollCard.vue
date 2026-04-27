@@ -1,8 +1,13 @@
 <template>
     <div
-        class="border-l-2 border-grimoire-accent-dim/40 pl-5 py-1 my-3"
+        class="relative pl-7 py-1 my-3"
         :class="{ 'grimoire-entry': mounted }"
     >
+        <div class="absolute left-0 top-0 bottom-0 w-5 flex flex-col items-center text-grimoire-accent-dim/60">
+            <session-message-border-glyph type="dice" class="flex-none" />
+            <div class="flex-1 w-px bg-grimoire-accent-dim/20" />
+        </div>
+
         <!-- Skill/ability check variant -->
         <template v-if="content.tool === 'check_skill' || content.tool === 'check_ability'">
             <p class="font-['Cinzel',serif] text-xs tracking-widest uppercase text-grimoire-muted">
@@ -16,6 +21,7 @@
                 <span class="text-grimoire-muted/50"> = </span>
                 {{ content.total }}
                 <span class="mx-2 text-grimoire-muted/40">·</span>
+
                 <span :class="content.passed ? 'text-grimoire-accent' : 'text-grimoire-muted/70'">
                     {{ content.passed ? '✦ Passed' : '✕ Failed' }}
                 </span>
@@ -29,13 +35,18 @@
             </p>
 
             <p class="font-mono text-sm text-grimoire-muted/80 mt-0.5">
-                <template v-for="(roll, i) in content.rolls" :key="i">
-                    <span class="text-grimoire-muted/60">{{ roll }}</span><span
+                <template v-for="(roll, i) in content.rolls"
+                    :key="i">
+                    <span class="text-grimoire-muted/60">{{ roll }}</span>
+
+                    <span
                         v-if="i < (content.rolls?.length ?? 0) - 1"
                         class="text-grimoire-muted/40 mx-1"
                     >·</span>
                 </template>
-                <span v-if="(content.rolls?.length ?? 0) > 0" class="text-grimoire-muted/50 mx-1"> = </span>
+
+                <span v-if="(content.rolls?.length ?? 0) > 0"
+                    class="text-grimoire-muted/50 mx-1"> = </span>
                 {{ content.total }}
             </p>
         </template>
