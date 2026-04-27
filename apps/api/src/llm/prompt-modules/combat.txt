@@ -34,9 +34,32 @@ Before narrating the first round:
 ---
 
 ### EXIT CHECKLIST
-Before your response ends:
-☐ Did the player use spells or abilities that consume resources? Verify you called `use_spell_slot`, `apply_condition`, etc.
-☐ Are NPC enemies defeated/stable? Verify deaths and healing were applied correctly.
+
+**MECHANICS — Did you resolve all actions correctly?**
+☐ Player **cast a spell**? Verify `use_spell_slot` was called with correct level
+☐ Player or NPC **took damage**? Verify `apply_damage` was called with correct damage type
+☐ Player or NPC **took damage while unconscious**? Verify `instant_death` was called if damage exceeded max HP
+☐ Character **went to 0 HP**? Verify `roll_death_save` or `stabilise` was called appropriately
+☐ Any **conditions applied** (Poisoned, Stunned, etc.)? Verify `apply_condition` was called
+☐ Any **conditions removed** (spell ended, save succeeded)? Verify `remove_condition` was called
+☐ **Healing spell or ability used**? Verify `heal` was called
+☐ **Initiative needs to advance**? Verify `advance_initiative` was called after current combatant's turn
+
+**NPC MANAGEMENT — Did any NPC status change?**
+☐ Did an **NPC enemy die**? Verify `apply_damage` was called and NPC marked as defeated
+☐ Did an **NPC ally join combat** alongside player? Verify they were included in `start_combat` and are in initiative
+☐ Did an **NPC ally die or flee**? Did you narrate their exit and update their status?
+
+**WORLD STATE CHANGES — Did combat change the world?**
+☐ Did combat cause **environmental damage** (building on fire, ground shaking, water flooding)? Should you call `update_location_state`?
+☐ Did combat expose **important information** the player should know? Should you call `record_lore`?
+
+**QUESTS — Were quest objectives progressed?**
+☐ Was this combat part of a **quest** (quest giver said "defeat these enemies")? Did you check if quest objectives should be marked complete? Call `update_quest_objective` if so
+
+**PLAYER GUIDANCE — Combat still ongoing?**
+☐ Is it **currently a specific combatant's turn**? Did you telegraph what they're doing?
+☐ Are there **multiple tactical options** the player could consider? Should you call `suggest_actions`?
 
 ### SCENE TRANSITION TRIGGERS
 **MUST transition OUT of COMBAT when:**

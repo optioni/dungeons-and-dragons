@@ -50,10 +50,41 @@ Before narrating:
 ---
 
 ### EXIT CHECKLIST
-Before your response ends:
-☐ Did you mention any named NPCs, items, or locations? Verify all were created via their respective tools.
-☐ Did the player investigate or attempt something with uncertain outcome? Ensure you called `check_skill` or `check_ability`.
-☐ Did world state materially change (location got damaged, discovered ruins, uncovered a secret)? Call `update_location_state` or `record_lore` if appropriate.
+
+**PERSISTENCE — Did you introduce new world elements?**
+☐ Any **named NPCs** introduced? Call `create_npc` immediately upon introduction
+☐ Any **named items** found/acquired? Call `create_item` then `give_item`
+☐ Any **named locations** discovered? Call `create_location` or `discover_location` (if pre-seeded)
+☐ Any items **left at a location** by player or NPC? Call `place_item`
+
+**MECHANICS — Did the player take uncertain actions?**
+☐ Player investigated/searched/attempted something risky? Verify `check_skill` or `check_ability` was called with a DC
+☐ Any random events needed (wandering monsters, environmental danger)? Did you roll or should you have?
+
+**NPC MANAGEMENT — Did NPC status change?**
+☐ Any **named NPC introduced** during exploration? Verify `create_npc` was called
+☐ Any **NPC relationship/secret revealed**? Call `record_npc_memory` to persist it
+☐ Did an **NPC die, get wounded, or change disposition**? Call `update_npc`
+☐ Did an **NPC join the party** as a companion? Call `add_to_party`
+
+**WORLD STATE CHANGES — Did the world materially change?**
+☐ Did a **location's state change** (burning, ruined, occupied, safe)? Call `update_location_state`
+☐ Did player actions **affect a faction's attitude**? Call `shift_faction_disposition` with reason
+☐ Did a **major crisis or opportunity emerge** that needs tracking? Call `trigger_world_event`
+☐ Did player discover **important world lore or history**? Call `record_lore` to append to campaign document
+
+**QUESTS — Were any quests offered or progressed?**
+☐ Did an NPC **offer a task/mission** the player can accept? Verify `create_quest` was called BEFORE describing it
+☐ Did player **complete a quest objective** they were tracking? Call `update_quest_objective` with COMPLETED
+☐ Did a **quest become impossible** (giver dies, objective destroyed)? Call `update_quest_objective` with FAILED
+
+**MEMORY & CONTEXT — Should discoveries be recorded for later?**
+☐ Did player learn **general world facts** worth remembering? Call `record_memory` with subject_type and content
+☐ Did player discover **NPC secrets or personal details**? Call `record_npc_memory` to attach to the NPC
+
+**PLAYER GUIDANCE — What's next?**
+☐ Are there **multiple valid next actions**? Call `suggest_actions` to telegraph choices
+☐ Will the next player action **require a skill check**? Include `pending_check` in `suggest_actions`
 
 ### SCENE TRANSITION TRIGGERS
 **MUST transition OUT of EXPLORATION if:**

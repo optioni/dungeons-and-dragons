@@ -54,12 +54,47 @@ Before narrating:
 ---
 
 ### EXIT CHECKLIST
-Before your response ends:
-☐ Did you mention any named NPCs? Verify all new ones were created via `create_npc`.
-☐ Did any NPC reveal a new location? Verify it was created via `create_location` or discovered via `discover_location`.
-☐ Did the player acquire any named items? Verify they were created and given via `create_item` + `give_item`.
-☐ Did the player learn important NPC secrets? Call `record_npc_memory` to persist them.
-☐ Did an NPC offer a quest? Verify it was created via `create_quest` before you described it.
+
+**PERSISTENCE — Did you introduce new world elements?**
+☐ Any **named NPCs** introduced? Call `create_npc` immediately upon introduction
+☐ Any **named items** given/traded/left behind? Call `create_item` then `give_item` or `place_item`
+☐ Any **new named locations** revealed by NPC? Call `create_location` (invented) or `discover_location` (pre-seeded)
+
+**MECHANICS — Did social interaction involve uncertainty?**
+☐ Player attempted **Persuasion, Deception, Intimidation, or Insight** checks? Verify `check_skill` was called with DC
+☐ Player made a **contested check** against NPC? Verify roll was called
+
+**NPC MANAGEMENT — Did NPC state or relationships change?**
+☐ Any **named NPC introduced**? Verify `create_npc` was called
+☐ Any **NPC revealed important secrets, motivations, or backstory**? Call `record_npc_memory` to persist
+☐ Did NPC's **disposition toward player shift** (friendly → hostile, suspicious → trusting)? Call `update_npc` with new disposition
+☐ Did **NPC agree to join the party** as a companion? Call `add_to_party`
+☐ Did NPC **conflict with another NPC** or reveal a relationship? Call `record_npc_memory` on both NPCs
+
+**WORLD STATE CHANGES — Did the social encounter change the world?**
+☐ Did player's actions **affect a faction's attitude** (earned favor, incurred wrath)? Call `shift_faction_disposition` with reason
+☐ Did conversation reveal a **major crisis or plot hook** needing tracking? Call `trigger_world_event`
+☐ Did NPC reveal **important world history or lore**? Call `record_lore` to append to campaign document
+☐ Did NPC **move to a different location** or change their agenda? Call `update_npc` with new location/agenda
+
+**QUESTS — Were any quests offered or progressed?**
+☐ Did NPC **offer a task/mission/request** the player can accept? Verify `create_quest` was called BEFORE describing it
+☐ Did player **complete a quest objective** they were already tracking? Call `update_quest_objective` with COMPLETED
+☐ Did a **quest become impossible or failed** (NPC changes mind, condition destroyed)? Call `update_quest_objective` with FAILED or `fail_quest`
+
+**MEMORY & CONTEXT — Should discoveries be recorded?**
+☐ Did player learn **NPC secrets or personal details** (hidden past, motivations, relationships)? Call `record_npc_memory`
+☐ Did player learn **general lore or world facts** from this NPC? Call `record_memory` with subject_type and content
+☐ Did player **discover a rumor or plot hook** worth recording? Call `record_memory` with subject_type GENERAL
+
+**COMMERCE — Did the NPC offer goods or services?**
+☐ Did player **buy items** from a merchant NPC? Verify `buy_item` was called (not `create_item` + `give_item`)
+☐ Did player **sell items** to an NPC? Verify `sell_item` was called
+☐ Is this NPC a **merchant**? Did you establish their stock with `restock_merchant`?
+
+**PLAYER GUIDANCE — What's next?**
+☐ Are there **multiple valid next actions**? Call `suggest_actions` to telegraph choices
+☐ Will conversation continue or end? Signal closure clearly
 
 ### SCENE TRANSITION TRIGGERS
 **MUST transition OUT of SOCIAL if:**

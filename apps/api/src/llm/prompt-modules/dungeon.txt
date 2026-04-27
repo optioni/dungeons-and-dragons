@@ -57,13 +57,48 @@ Before narrating the first room:
 ---
 
 ### EXIT CHECKLIST
-Before your response ends:
-☐ Did the player move to a new room? Verify you called `move_to_room`.
-☐ Did a wandering monster trigger? Verify you called `spawn_encounter`.
-☐ Did the player find treasure in a room? Verify you called `loot_room` (not `create_item` + `give_item`).
-☐ Did the player acquire items outside rooms? Verify they were created via `create_item` + `give_item`.
-☐ Did the room's state change materially? Call `update_room_state` if needed.
-☐ Did you introduce any named dungeon NPCs? Verify they were created via `create_npc`.
+
+**NAVIGATION — Did player movement get tracked?**
+☐ Player **moved to an adjacent room**? Verify `move_to_room` was called to update state
+☐ Player **moved to a new unexplored room** for the first time? Did you describe it as newly surveyed territory?
+☐ Was a **wandering monster triggered** when entering a room? Verify you called `spawn_encounter` and transitioned to COMBAT
+
+**PERSISTENCE — Did you introduce new world elements?**
+☐ Any **named NPCs** in the dungeon (ally, captive, guardian, inhabitant)? Call `create_npc` upon introduction
+☐ Any **named items** found in dungeon rooms? Call `loot_room` when player picks them up (not `create_item` + `give_item`)
+☐ Any **items placed by NPC** or outside normal room loot? Call `create_item` then `give_item`
+☐ Any items the **DM added to a room** for player to find? Did you call `add_room_item`?
+
+**MECHANICS — Did the player take actions with uncertainty?**
+☐ Player **investigated a room** (searching for traps, secret doors, clues)? Verify `check_skill` was called with DC
+☐ Player **attempted to disarm/bypass a trap**? Verify `check_ability` was called
+☐ Player **rolled for random events** (sounds, tremors, mysterious noises)? Did you use `roll_dice` if appropriate?
+
+**ROOM STATE — Did rooms change after player action?**
+☐ Did a **room's state materially change** (collapsed, flooded, fire spread, enemies cleared)? Call `update_room_state` to persist change
+☐ Did player **trigger a trap or hazard**? Narrate effects and update room state
+
+**ENCOUNTERS — Did combat trigger?**
+☐ Did a **keyed encounter** trigger in a room? Verify `spawn_encounter` was called and `set_scene_type` transitioned to COMBAT
+☐ Did **combat end in this room**? Did you call `end_combat` and return to DUNGEON scene?
+☐ Did player **loot a defeated enemy**? Verify items were transferred correctly via `loot_room` or `create_item` + `give_item`
+
+**NPC MANAGEMENT — Did dungeon NPCs interact?**
+☐ Any **named dungeon NPCs** introduced? Verify `create_npc` was called
+☐ Did player **recruit a companion** from the dungeon? Call `add_to_party`
+☐ Did **NPC reveal important information** about dungeon? Call `record_npc_memory`
+
+**WORLD STATE & LORE — Did discoveries change the campaign?**
+☐ Did player discover **important lore or history** in the dungeon? Call `record_lore` to append to campaign document
+☐ Did player uncover a **major secret or conspiracy**? Should you call `trigger_world_event` if it has campaign-wide implications?
+☐ Did dungeon contents **reveal anything about NPCs or factions**? Call `record_memory` if worth persisting
+
+**QUESTS — Were dungeon quests progressed?**
+☐ Is this dungeon part of a **quest** (quest giver said "clear this dungeon")? Did you check if objectives should be marked complete? Call `update_quest_objective` if objective complete (e.g., "clear the dungeon", "find the artifact")
+
+**PLAYER GUIDANCE — What's next in dungeon?**
+☐ Are there **multiple room exits** the player could take? Telegraph them clearly
+☐ Is player **still exploring or ready to exit**? Prepare for potential scene transition
 
 ### SCENE TRANSITION TRIGGERS
 **MUST transition OUT of DUNGEON if:**

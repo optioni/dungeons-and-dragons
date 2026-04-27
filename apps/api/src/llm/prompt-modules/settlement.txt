@@ -59,14 +59,47 @@ Before narrating:
 ---
 
 ### EXIT CHECKLIST
-Before your response ends:
-☐ Did you mention any named NPCs? Verify all new ones were created via `create_npc`.
-☐ Did you describe any named establishments or places? Verify they were created via `create_location`.
-☐ Did the player buy anything? Verify you called `buy_item` (not `create_item` + `give_item`).
-☐ Did the player acquire or receive anything else? Verify it was persisted correctly.
-☐ Did you reveal important NPC secrets or rumors? Call `record_npc_memory` to persist them.
-☐ Did an NPC offer a quest? Verify it was created via `create_quest`.
-☐ Did the player's actions shift a faction's attitude? Call `shift_faction_disposition`.
+
+**PERSISTENCE — Did you introduce new world elements?**
+☐ Any **named NPCs** (innkeeper, merchant, guard, quest giver)? Call `create_npc` immediately upon introduction
+☐ Any **named establishments** (inn, shop, temple, guild, notice board)? Call `create_location` with current settlement as parent
+☐ Any **named items** received/bought/found? Call `create_item` then `give_item` or `buy_item`
+☐ Any items **left at a location** by player? Call `place_item`
+
+**MECHANICS — Did social interaction involve checks?**
+☐ Player attempted **Persuasion, Deception, or Insight** checks (negotiating, gathering information)? Verify `check_skill` was called with DC
+
+**NPC MANAGEMENT — Did NPC state change?**
+☐ Any **named NPC introduced**? Verify `create_npc` was called
+☐ Any **NPC revealed secrets or motivations**? Call `record_npc_memory` to persist
+☐ Did NPC's **disposition shift** (friendly, hostile, wary)? Call `update_npc` with new disposition
+☐ Did **NPC agree to join the party**? Call `add_to_party`
+☐ Did **NPC reveal a relationship** with another NPC/faction? Call `record_npc_memory` on relevant NPCs
+
+**WORLD STATE CHANGES — Did player actions affect the settlement?**
+☐ Did player **help or harm a faction**? Call `shift_faction_disposition` with reason (Thieves Guild favor earned, City Guard wrath incurred, etc.)
+☐ Did player's actions expose a **major crisis or plot hook**? Call `trigger_world_event` if it needs tracking
+☐ Did player discover **important settlement lore or history**? Call `record_lore` to append to campaign document
+☐ Did an **NPC move to a different location** or change their position? Call `update_npc`
+
+**COMMERCE — Did trading occur?**
+☐ Player **purchased items** from a merchant? Verify `buy_item` was called (not `create_item` + `give_item`)
+☐ Player **sold items** to a merchant? Verify `sell_item` was called
+☐ Is a merchant NPC **restocking or changing inventory**? Did you establish stock with `restock_merchant`?
+
+**QUESTS — Were quests offered or progressed?**
+☐ Did NPC **offer a task/mission/request**? Verify `create_quest` was called BEFORE describing it
+☐ Did player **complete a quest objective** already tracked? Call `update_quest_objective` with COMPLETED
+☐ Did a **quest become impossible** (NPC leaves, objective destroyed)? Call `update_quest_objective` with FAILED or `fail_quest`
+
+**MEMORY & CONTEXT — Should discoveries be recorded?**
+☐ Did player learn **NPC secrets or personal details**? Call `record_npc_memory` to attach to NPC
+☐ Did player learn **settlement lore or faction information**? Call `record_memory` with appropriate subject_type
+☐ Did player discover a **rumor or plot hook**? Call `record_memory` with subject_type GENERAL
+
+**PLAYER GUIDANCE — What's next?**
+☐ Are there **multiple valid next actions** in settlement? Call `suggest_actions`
+☐ Does player want to **leave the settlement**? Prepare for scene transition
 
 ### SCENE TRANSITION TRIGGERS
 **MUST transition OUT of SETTLEMENT if:**

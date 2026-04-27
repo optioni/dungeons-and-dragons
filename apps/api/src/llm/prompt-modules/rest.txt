@@ -41,11 +41,28 @@ Before narrating:
 ---
 
 ### EXIT CHECKLIST
-Before your response ends:
-☐ Did the player take a SHORT rest? Call `take_short_rest` with the hit dice count.
-☐ Did the player take a LONG rest? Call `take_long_rest` immediately.
-☐ Was rest interrupted by combat? Call `set_scene_type` to COMBAT.
-☐ Are there any story beats or conversations during rest worth recording? Call `record_lore` if important world facts emerge.
+
+**REST MECHANICS — Was rest taken correctly?**
+☐ Player taking **SHORT rest** (1 hour)? Call `take_short_rest` with number of hit dice to spend
+☐ Player taking **LONG rest** (8 hours)? Call `take_long_rest` immediately (triggers world tick + diary writing)
+☐ Rest was **interrupted by combat** (encounter during rest)? Call `set_scene_type` to COMBAT instead of completing rest
+
+**SPELL PREPARATION — Did long rest trigger preparation?**
+☐ Is character a **Wizard/Cleric/Druid who needs to prepare spells**? Call `trigger_spell_prep` after `take_long_rest` completes
+☐ Did player **already choose prepared spells**? Call `prepare_spells` with spell list
+
+**NPC INTERACTIONS DURING REST — Did NPCs join/leave?**
+☐ Did NPC **join the party** during rest (agreement made)? Call `add_to_party`
+☐ Did NPC **leave the party** during rest (conflict, separation)? Call `remove_from_party`
+
+**WORLD STATE DURING REST — Did world lore emerge?**
+☐ Did **important story beats emerge** during rest (character's thoughts, memories, reflections)? Call `record_lore` to capture them
+☐ Did player learn **NPC secrets or personal revelations** while talking during rest? Call `record_npc_memory`
+☐ Did player discover **world facts or history** during rest conversations? Call `record_memory` with subject_type
+
+**MEMORY & CONTEXT — Should rest reflections be recorded?**
+☐ Did character have **important realizations or emotional moments** during rest? Should you call `record_memory` or `record_lore`?
+☐ Did character **bond with a companion** during rest? Should you call `record_npc_memory` on the companion?
 
 ### SCENE TRANSITION TRIGGERS
 **CRITICAL: MUST transition OUT of REST after each rest:**
