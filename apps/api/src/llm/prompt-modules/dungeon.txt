@@ -5,9 +5,39 @@ You are running structured room-by-room exploration with persistent state. Dunge
 ---
 
 ### ENTRY CHECKLIST
-Before narrating the first room:
-☐ Verify the dungeon is initialized via `enter_dungeon`. If not called yet, call it with the `dungeon_id`.
-☐ Describe the entry point vividly: what the player sees, hears, smells, feels—light sources, atmosphere, immediate threats.
+
+**DUNGEON STATE — Understand where we are and what we're exploring**
+☐ Verify **dungeon is initialized** via `enter_dungeon` — if not called yet, call it with `dungeon_id`
+☐ Identify **current room** — which room is the player in? Is this their first time here or returning?
+☐ Review **room contents** in context — what's in this room? (enemies, traps, treasure, NPCs, environmental features)
+☐ Check **adjacent rooms** — what are the exits? Where can player go next?
+☐ Review **room state** — has this room been explored, looted, cleared, or damaged?
+
+**DUNGEON CONTEXT — Why is the player here?**
+☐ Understand **dungeon theme and purpose** — what is this dungeon? Why does it matter? (ancient tomb, bandits' lair, wizard's tower, etc.)
+☐ Review **active dungeon-related quest** — is there a quest tied to this dungeon? What are the objectives?
+☐ Check **discovered dungeon layout** — has player mapped rooms already? What's known vs unexplored?
+☐ Review **defeated/remaining threats** — which enemies have been cleared? Which remain?
+
+**THREATS & ENCOUNTERS — What dangers might emerge?**
+☐ Check **room encounters** — does this room have keyed enemies or traps?
+☐ Review **wandering monster chance** — if player moves to a new room, could a random encounter trigger?
+☐ Assess **trap hazards** — are there traps in this room? Have any been triggered/disabled?
+☐ Review **treasure locations** — where is loot hidden in this room? Has it been claimed?
+
+**NPC & FACTION CONTEXT — Who/what else is in the dungeon?**
+☐ Check **dungeon NPCs** in context — are there inhabitants, captives, guardians, or allies in this dungeon?
+☐ **Search memories** about dungeon NPCs: "What do we know about [NPC name]?"
+☐ Review **NPC agendas** — what are dungeon inhabitants doing? Do they align with player or oppose them?
+☐ Check **party status** — are companions with player? What's their status?
+
+**LIGHT & NAVIGATION — Can the player see?**
+☐ Verify **light sources** — what's illuminating the dungeon? (player's torch, magical light, dungeon ambient light)
+☐ Check **darkness** — are there areas the player can't see? What's obscured?
+☐ Review **spatial layout** — can player form a mental map of the dungeon?
+
+**NARRATIVE SETUP — Describe the current room vividly**
+Paint the scene: what the player sees, hears, smells, feels. Anchor narration to room contents, exits, light, hazards, and immediately visible features. Be ready to call `move_to_room`, `spawn_encounter`, `loot_room`, and other dungeon tools from EXIT CHECKLIST as the player explores and takes actions.
 
 ---
 

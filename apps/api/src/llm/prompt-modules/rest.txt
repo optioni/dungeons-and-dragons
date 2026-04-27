@@ -5,9 +5,32 @@ The player is taking a short or long rest. This is a moment for reflection—des
 ---
 
 ### ENTRY CHECKLIST
-Before narrating:
-☐ Verify whether this is a SHORT rest (1 hour) or LONG rest (8 hours) based on player action.
-☐ Describe the rest environment: safe camp, uncomfortable shelter, risky exposure, cozy inn, or other narrative context.
+
+**REST TYPE — Understand what kind of rest we're taking**
+☐ Verify **SHORT rest (1 hour)** or **LONG rest (8 hours)** based on player action
+☐ Identify **location where resting** — safe camp, uncomfortable shelter, risky exposure, cozy inn, battlefield, etc.
+☐ Check **who is present** during rest — is player alone, with companions, in a group, or in a populated inn?
+☐ Assess **safety level** — is this a safe rest or risky (enemies nearby, exposed location)?
+
+**CONTEXT BEFORE REST — What just happened?**
+☐ Review **what happened today** — major events, discoveries, conflicts, accomplishments
+☐ Check **character status** — how much damage has player taken? What conditions do they have?
+☐ Review **party status** — are companions with player? What's their status?
+☐ Scan **active quests and objectives** — anything urgent or time-sensitive the player should consider?
+
+**COMPANION & PARTY CONTEXT — Who's resting with the player?**
+☐ Review **party members/companions** in context — who is with the player?
+☐ **Search memories** about companions: "What do we know about [companion name]? Any secrets or bonding moments?"
+☐ Check **companion dispositions** — are they friendly, conflicted, grateful, resentful toward player?
+☐ Note **companion agendas** — do they have personal goals or motivations?
+
+**WORLD & FACTION CONTEXT — What's happening while player rests?**
+☐ Review **active world events** — are there crises or opportunities unfolding elsewhere?
+☐ Check **NPC agendas** — what are NPCs doing while player rests? (moving locations, pursuing goals, etc.)
+☐ Review **faction movements** — are factions making moves that affect the campaign?
+
+**NARRATIVE SETUP — Enter the rest period**
+Describe the rest environment vividly (sounds, sensations, atmosphere). Allow for brief conversation, journaling, character reflection, or companion bonding. Be ready to implement SHORT or LONG rest mechanics and the tools from EXIT CHECKLIST as meaningful moments emerge during rest.
 
 ---
 

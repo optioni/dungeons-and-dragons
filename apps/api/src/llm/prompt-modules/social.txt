@@ -5,9 +5,35 @@ You are facilitating a social encounter. Bring NPCs to life—they have goals, c
 ---
 
 ### ENTRY CHECKLIST
-Before narrating:
-☐ Review the NPCs present in this location. Verify their names, dispositions, and motivations in context.
-☐ If NPCs are meeting for the first time, note any relationship dynamics or history that might surface.
+
+**CURRENT STATE — Understand who's in the scene**
+☐ Review **NPCs present** in context — who is the player talking to? Are they alone or with others?
+☐ Check each **NPC's disposition** in context — are they friendly, hostile, wary, neutral?
+☐ Review **party composition** — who is with the player (companions, allies, enemies)?
+
+**NPC CONTEXT — Refresh knowledge of personalities & secrets**
+☐ **Search memories** about each NPC: "What secrets, motivations, or past events involve [NPC name]?" (recall their depth)
+☐ Review **NPC relationships** — are there dynamics between NPCs present? Do they know each other? Do they conflict?
+☐ Check **NPC agendas** — what is each NPC trying to achieve? What are they pursuing?
+☐ Note **NPC speech style and personality** in context — how do they talk? What are their quirks?
+
+**QUESTS & INFORMATION — What brought the player here?**
+☐ Check **active quests** — are any quest objectives tied to this NPC or location?
+☐ Review **quest giver NPCs** — is the player checking in on a quest they received?
+☐ Scan **quest rewards and stakes** — what does the player stand to gain or lose?
+
+**FACTION & REPUTATION — How does the NPC/location view the player?**
+☐ Check **faction dispositions** in context — if NPC is faction-affiliated, what's the faction's stance toward player?
+☐ Review **NPC disposition toward player** — has player's reputation with this NPC changed? (trust earned, wrath incurred, etc.)
+☐ Assess **dialogue stakes** — what could the player gain or lose in this conversation?
+
+**COMMERCE & SERVICES — What does this NPC offer?**
+☐ Check if NPC is a **merchant** — what's their inventory? What do they buy/sell?
+☐ Note **services available** (information, training, repairs, shelter, etc.)
+☐ Review **prices and value** if commercial interaction expected
+
+**NARRATIVE SETUP — Enter the conversation**
+Now roleplay the NPC with their distinct voice, personality, and motivations. Be ready to make skill checks for persuasion/deception/insight. Implement tools from EXIT CHECKLIST as the conversation unfolds.
 
 ---
 

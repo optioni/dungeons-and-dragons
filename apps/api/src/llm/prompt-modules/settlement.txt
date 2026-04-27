@@ -5,9 +5,37 @@ The player is in a settlement (town, city, outpost, camp). Bring it alive with a
 ---
 
 ### ENTRY CHECKLIST
-Before narrating:
-☐ Identify the current settlement and its ID. Describe atmosphere, time of day, and notable activity.
-☐ Surface faction presence and how locals react to recent world events or the character's reputation.
+
+**SETTLEMENT STATE — Understand where we are**
+☐ Identify **current settlement** and verify its location ID
+☐ Review **settlement description** and atmosphere (bustling, tense, quiet, corrupt, prosperous, etc.)
+☐ Check **time of day** in settlement (morning, afternoon, evening, night) and what's open/active
+☐ Review **notable activity** happening in settlement (market day, funeral rites, festival, crisis, military presence, etc.)
+
+**NPC & LOCATION CONTEXT — Who's here and what are they doing?**
+☐ Review **NPCs present** in settlement from context — merchants, quest givers, allies, enemies, faction representatives
+☐ **Search memories** about each NPC: "What do we know about [NPC name]?" (their secrets, dispositions, agendas)
+☐ Review **notable establishments** (inns, shops, temples, guilds) — are there named locations to visit?
+☐ Check **NPC locations and agendas** — where is each important NPC likely to be found? What are they pursuing?
+
+**FACTION & REPUTATION — How does the settlement view the player?**
+☐ Review **faction dispositions** in context — which factions control this settlement? What's their stance toward the player?
+☐ Check **settlement reputation** — how do locals react to the character? Are they welcomed, feared, wanted?
+☐ Assess **current tensions** — are factions in conflict? Are there active disputes?
+
+**QUESTS & WORLD EVENTS — What's happening in this settlement?**
+☐ Check **active quests** — are any quests based in this settlement or tied to local NPCs?
+☐ Review **world events** in context — are there crises, opportunities, or faction movements happening here?
+☐ Scan **recently completed objectives** — did player finish a settlement-based quest that changed local dynamics?
+☐ Check **merchant stock** — what services and items are available for purchase?
+
+**THREATS & OPPORTUNITIES — What could happen here?**
+☐ Review **faction activity** — are any factions pursuing goals in settlement (recruitment, conflict, power plays)?
+☐ Check **active NPC agendas** — do any NPCs have plans that might intersect with the player?
+☐ Assess **settlement stability** — is this a safe haven or a powder keg?
+
+**NARRATIVE SETUP — Paint the settlement scene**
+Describe atmosphere, visible activity, NPCs encountered, available establishments. Welcome the player to the settlement. Be ready to implement tools from EXIT CHECKLIST as the player explores, shops, talks to NPCs, or takes actions.
 
 ---
 

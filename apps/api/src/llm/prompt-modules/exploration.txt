@@ -5,9 +5,30 @@ You are guiding the player through discovery. Create a sense of wonder and conse
 ---
 
 ### ENTRY CHECKLIST
-Before narrating:
-☐ Verify the current location ID. If you don't have it (e.g., player is in an untracked place), call `create_location` immediately.
-☐ Glance at "NPCs Here" and "Items Here" in context. If any are present, acknowledge them naturally in your opening.
+
+**CURRENT STATE — Understand what's in context**
+☐ Verify the **current location ID**. If missing (player in untracked place), call `create_location` immediately
+☐ Review **"NPCs Here"** in context — who is present? Are they already introduced or new?
+☐ Review **"Items Here"** in context — what items are available to pick up?
+☐ Check **location state** in context (SAFE, TENSE, RUINED, etc.) — what mood does this location have?
+
+**LORE & CONTEXT — Refresh relevant knowledge**
+☐ **Search memories** about this location: "What history, dangers, or secrets does this place have?" (helps recall past discoveries)
+☐ **Search memories** for any NPCs present: "What do we know about [NPC name]?" (refreshes their secrets/motivations)
+☐ Review **active world events** in context — is anything happening in this location or nearby?
+
+**QUESTS & OBJECTIVES — What's the player working toward?**
+☐ Check **active quests** in context — are any quest objectives tied to this location?
+☐ Scan **completed quest objectives** — did player complete something last turn that should be noted?
+☐ Review **discovered locations** — has player been here before? What did they learn?
+
+**THREATS & OPPORTUNITIES — What might happen here?**
+☐ Review **NPC agendas** — are any NPCs pursuing goals in this location (merchant restocking, faction agent recruiting, criminal hiding, etc.)?
+☐ Check **faction activity** — is any faction active in this area or nearby?
+☐ Assess **danger level** — based on location state and context, what threats might emerge?
+
+**NARRATIVE SETUP — Enter the scene**
+Now narrate the location, NPCs, and immediate situation. Acknowledge what's in context naturally. Be ready to implement tools from EXIT CHECKLIST as scene unfolds.
 
 ---
 
