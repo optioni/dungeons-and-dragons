@@ -51,8 +51,12 @@ describe('SessionResolver.sendPlayerInput', () => {
 
     it('flushes before calling dmOrchestrator.runTurn', async () => {
         const callOrder: string[] = [];
-        em.flush.mockImplementation(async () => { callOrder.push('flush'); });
-        dmOrchestrator.runTurn.mockImplementation(async () => { callOrder.push('runTurn'); });
+        em.flush.mockImplementation(async () => {
+            callOrder.push('flush');
+        });
+        dmOrchestrator.runTurn.mockImplementation(async () => {
+            callOrder.push('runTurn');
+        });
 
         await resolver.sendPlayerInput('5', 'Go north', { id: 1 } as never);
 

@@ -7,13 +7,14 @@
  */
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { type Constructor, MikroORM } from '@mikro-orm/core';
 import { type Migration, Migrator } from '@mikro-orm/migrations';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { RedisContainer, type StartedRedisContainer } from '@testcontainers/redis';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { require as tsxRequire } from 'tsx/cjs/api';
 
 import { SrdClass } from './srd/entities/srd-class.entity.js';
@@ -23,10 +24,7 @@ import { SrdMonster } from './srd/entities/srd-monster.entity.js';
 import { SrdRace } from './srd/entities/srd-race.entity.js';
 import { SrdSpell } from './srd/entities/srd-spell.entity.js';
 import { SrdSeeder } from './srd/srd.seeder.js';
-import {
-    removeIntegrationTestEnvironment,
-    writeIntegrationTestEnvironment,
-} from './test-integration-environment.js';
+import { removeIntegrationTestEnvironment, writeIntegrationTestEnvironment } from './test-integration-environment.js';
 
 const PGVECTOR_POSTGRES_IMAGE = 'pgvector/pgvector:pg17';
 const REDIS_IMAGE = 'redis:7-alpine';
@@ -99,9 +97,9 @@ function loadMigrations(): Array<Constructor<Migration>> {
     const migrationsPath = join(API_ROOT, 'src/migrations');
 
     return readdirSync(migrationsPath)
-        .filter(fileName => /^Migration.*\.ts$/.test(fileName))
+        .filter((fileName) => /^Migration.*\.ts$/u.test(fileName))
         .sort()
-        .map(fileName => {
+        .map((fileName) => {
             const modulePath = join(migrationsPath, fileName);
             const migrationModule = tsxRequire(modulePath, join(API_ROOT, 'src/test-global-setup.ts')) as Record<
                 string,
@@ -125,10 +123,7 @@ async function stopContainers(
     postgres: StartedPostgreSqlContainer | undefined,
     redis: StartedRedisContainer | undefined,
 ): Promise<void> {
-    await Promise.allSettled([
-        redis?.stop(),
-        postgres?.stop(),
-    ]);
+    await Promise.allSettled([redis?.stop(), postgres?.stop()]);
     removeIntegrationTestEnvironment();
 }
 

@@ -10,6 +10,7 @@ vi.mock('@nestjs/common', () => ({
     Inject: () => () => {},
     Logger: class {
         log = vi.fn();
+
         error = vi.fn();
     },
 }));

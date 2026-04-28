@@ -321,7 +321,7 @@ describe('WorldService', () => {
                 createQueryBuilder: vi.fn(),
                 getEntityManager: vi.fn().mockReturnValue(emMock),
             }) as never;
-            // eslint-disable-next-line max-len
+             
             return new WorldService(makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo(), makeEmRepo());
         };
 

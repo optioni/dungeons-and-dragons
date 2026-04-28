@@ -59,7 +59,7 @@ describe('StreamPublisher', () => {
             await iterator.return?.();
 
             const unsubLogs = (logSpy.mock.calls as string[][]).filter(
-                ([msg]) => msg.includes('unsubscribed'),
+                ([message]) => message.includes('unsubscribed'),
             );
             expect(unsubLogs.length).toBeGreaterThan(0);
             expect(unsubLogs[0][0]).toContain('sessionId=5');
