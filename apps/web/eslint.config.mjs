@@ -1,4 +1,6 @@
 import createConfig from '@juuso.piikkila/eslint-config-typescript';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 export default createConfig({
     vue: true,
@@ -40,4 +42,4 @@ export default createConfig({
         'max-len': 'off',
         'no-inline-comments': 'off',
     },
-});
+}, eslintConfigPrettier);

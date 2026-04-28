@@ -20,7 +20,5 @@ export default defineNuxtConfig({
     },
     storybook: {
         enabled: process.env.STORYBOOK_NUXT_MODULE !== 'false',
-        host: 'http://localhost',
-        port: 6006,
     },
 });
