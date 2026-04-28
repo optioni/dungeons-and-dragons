@@ -1,5 +1,5 @@
 <template>
-    <div class="w-72 flex-shrink-0 flex flex-col bg-grimoire-combat border-r border-grimoire-accent-dim/20 overflow-y-auto grimoire-combat-panel">
+    <div class="w-72 shrink-0 flex flex-col bg-grimoire-combat border-r border-grimoire-accent-dim/20 overflow-y-auto grimoire-combat-panel">
         <!-- Header -->
         <div class="px-4 py-3 border-b border-grimoire-accent-dim/20 relative z-10">
             <div class="flex items-center justify-between">

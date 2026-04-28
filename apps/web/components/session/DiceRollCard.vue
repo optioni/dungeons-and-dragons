@@ -1,10 +1,12 @@
 <template>
     <div
-        class="relative pl-7 py-1 my-3"
+        class="relative pl-8 py-1 my-3"
         :class="{ 'grimoire-entry': mounted }"
     >
-        <div class="absolute left-0 top-0 bottom-0 w-5 flex flex-col items-center text-grimoire-accent-dim/60">
-            <session-message-border-glyph type="dice" class="flex-none" />
+        <div class="absolute left-0 top-0 bottom-0 w-6 flex flex-col items-center text-grimoire-accent-dim/60">
+            <session-message-border-glyph type="dice"
+                class="flex-none" />
+
             <div class="flex-1 w-px bg-grimoire-accent-dim/20" />
         </div>
 

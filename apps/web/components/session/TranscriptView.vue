@@ -1,4 +1,5 @@
 <template>
+    <!-- eslint-disable vue/no-v-html -->
     <div class="space-y-0">
         <template v-for="(event, eventIndex) in props.events"
             :key="event.id">
@@ -11,14 +12,16 @@
             <!-- DM narrative block -->
             <div
                 v-if="event.eventType === 'DM_NARRATIVE'"
-                class="relative pl-7 py-0.5 my-5"
+                class="relative pl-8 py-0.5 my-5"
                 :class="{
                     'first-dm-narrative': firstDmEventId === event.id,
                     'grimoire-entry': mounted,
                 }"
             >
-                <div class="absolute left-0 top-0 bottom-0 w-5 flex flex-col items-center text-grimoire-accent-dim">
-                    <session-message-border-glyph type="dm" class="flex-none" />
+                <div class="absolute left-0 top-0 bottom-0 w-6 flex flex-col items-center text-grimoire-accent-dim">
+                    <session-message-border-glyph type="dm"
+                        class="flex-none" />
+
                     <div class="flex-1 w-px bg-grimoire-accent-dim/50" />
                 </div>
 
@@ -43,11 +46,13 @@
             <!-- Player input annotation -->
             <div
                 v-else-if="event.eventType === 'PLAYER_INPUT'"
-                class="relative mb-6 pl-7"
+                class="relative mb-6 pl-8"
                 :class="{ 'grimoire-entry': mounted }"
             >
-                <div class="absolute left-0 top-0 bottom-0 w-5 flex flex-col items-center text-grimoire-accent-dim/70">
-                    <session-message-border-glyph type="player" class="flex-none" />
+                <div class="absolute left-0 top-0 bottom-0 w-6 flex flex-col items-center text-grimoire-accent-dim/70">
+                    <session-message-border-glyph type="player"
+                        class="flex-none" />
+
                     <div class="flex-1 w-px bg-grimoire-accent-dim/30" />
                 </div>
 
@@ -67,23 +72,27 @@
 
         <!-- Inner monologue annotation -->
         <div v-if="props.innerVoiceText"
-            class="inner-monologue relative my-4 pl-7 py-2 bg-grimoire-surface/40 rounded-r">
-            <div class="absolute left-0 top-1 bottom-0 w-5 flex flex-col items-center text-grimoire-accent-dim/60">
-                <session-message-border-glyph type="inner-voice" class="flex-none" />
+            class="inner-monologue relative my-4 pl-8 py-2 bg-grimoire-surface/40 rounded-r">
+            <div class="absolute left-0 top-1 bottom-0 w-6 flex flex-col items-center text-grimoire-accent-dim/60">
+                <session-message-border-glyph type="inner-voice"
+                    class="flex-none" />
+
                 <div class="flex-1 w-px bg-grimoire-accent-dim/20" />
             </div>
 
             <div
-                class="prose prose-grimoire text-lg italic text-grimoire-muted leading-relaxed font-['IM_Fell_English',serif]"
+                class="prose prose-grimoire italic text-grimoire-muted leading-relaxed font-['IM_Fell_English',serif] [&_p]:text-[1.125rem]"
                 v-html="parseMarkdown(props.innerVoiceText ?? '')"
             />
         </div>
 
         <!-- In-progress DM message (streaming) -->
         <div v-if="props.inProgressText"
-            class="relative pl-7 py-0.5 my-5">
-            <div class="absolute left-0 top-0 bottom-0 w-5 flex flex-col items-center text-grimoire-accent-dim">
-                <session-message-border-glyph type="dm" class="flex-none" />
+            class="relative pl-8 py-0.5 my-5">
+            <div class="absolute left-0 top-0 bottom-0 w-6 flex flex-col items-center text-grimoire-accent-dim">
+                <session-message-border-glyph type="dm"
+                    class="flex-none" />
+
                 <div class="flex-1 w-px bg-grimoire-accent-dim/50" />
             </div>
 

@@ -25,7 +25,7 @@ const meta = {
     render: (args) => ({
         components: { CombatPanel },
         setup: () => ({ args }),
-        template: '<div class="h-[720px]"><CombatPanel v-bind="args" /></div>',
+        template: '<div class="h-180"><CombatPanel v-bind="args" /></div>',
     }),
 } satisfies Meta<typeof CombatPanel>;
 

@@ -239,20 +239,6 @@
     line-height: 1.8;
 }
 
-/* ── Inner monologue brackets ────────────────────────────────────────────────── */
-
-.inner-monologue .prose > p:first-child::before {
-    content: '⟨ ';
-    color: var(--color-grimoire-accent-dim);
-    font-style: normal;
-}
-
-.inner-monologue .prose > p:last-child::after {
-    content: ' ⟩';
-    color: var(--color-grimoire-accent-dim);
-    font-style: normal;
-}
-
 /* Keep default prose override for non-grimoire contexts */
 .prose {
     --tw-prose-body: theme(--color-gray-200);
