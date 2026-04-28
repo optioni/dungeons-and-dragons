@@ -37,16 +37,15 @@ import { WorldModule } from './world/world.module';
         }),
         MikroOrmModule.forRootAsync({
             driver: PostgreSqlDriver,
-            useFactory: (configService: ConfigService) =>
-                defineConfig({
-                    clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
-                    entities: ['./dist/**/*.entity.js'],
-                    entitiesTs: ['./src/**/*.entity.ts'],
-                    migrations: {
-                        path: './migrations',
-                        pathTs: './src/migrations',
-                    },
-                }),
+            useFactory: (configService: ConfigService) => defineConfig({
+                clientUrl: configService.getOrThrow<string>('DATABASE_URL'),
+                entities: ['./dist/**/*.entity.js'],
+                entitiesTs: ['./src/**/*.entity.ts'],
+                migrations: {
+                    path: './migrations',
+                    pathTs: './src/migrations',
+                },
+            }),
             inject: [ConfigService],
         }),
         BullModule.forRootAsync({
