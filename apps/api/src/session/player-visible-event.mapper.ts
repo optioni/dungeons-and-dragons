@@ -7,15 +7,15 @@ import {
     type PlayerVisibleEventValue,
 } from './player-visible-event.types.js';
 
-export type PlayerVisibleEventMappingInput = {
-    toolName: string
-    toolInput: Record<string, unknown>
-    toolResult: ToolResult
-};
+export interface PlayerVisibleEventMappingInput {
+    toolName: string;
+    toolInput: Record<string, unknown>;
+    toolResult: ToolResult;
+}
 
 function asRecord(value: unknown): Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value)
-        ? value as Record<string, unknown>
+        ? (value as Record<string, unknown>)
         : {};
 }
 
@@ -32,8 +32,12 @@ function entity(type: string, id: unknown, fallbackName: string) {
     return { type, ...(idValue === undefined ? {} : { id: idValue }), name: fallbackName };
 }
 
-function compactValues(values: Record<string, PlayerVisibleEventValue | undefined>): Record<string, PlayerVisibleEventValue> | undefined {
-    const entries = Object.entries(values).filter((entry): entry is [string, PlayerVisibleEventValue] => entry[1] !== undefined);
+function compactValues(
+    values: Record<string, PlayerVisibleEventValue | undefined>,
+): Record<string, PlayerVisibleEventValue> | undefined {
+    const entries = Object.entries(values).filter(
+        (entry): entry is [string, PlayerVisibleEventValue] => entry[1] !== undefined,
+    );
     return entries.length === 0 ? undefined : Object.fromEntries(entries);
 }
 
@@ -59,6 +63,7 @@ export class PlayerVisibleEventMapper {
         return isPlayerVisibleEventPayload(payload) ? [payload] : [];
     }
 
+    // eslint-disable-next-line complexity
     private mapSuccessfulTool(
         toolName: string,
         toolInput: Record<string, unknown>,
@@ -128,14 +133,25 @@ export class PlayerVisibleEventMapper {
                     }),
                 });
             case 'take_short_rest':
-                return this.event('RESOURCE', 'SHORT_REST_TAKEN', 'Short rest completed', 'Hit dice and wounds are resolved.', {
-                    values: compactValues({
-                        hitDiceSpent: numberValue(data.hitDiceSpent),
-                        hpRestored: numberValue(data.hpRestored),
-                    }),
-                });
+                return this.event(
+                    'RESOURCE',
+                    'SHORT_REST_TAKEN',
+                    'Short rest completed',
+                    'Hit dice and wounds are resolved.',
+                    {
+                        values: compactValues({
+                            hitDiceSpent: numberValue(data.hitDiceSpent),
+                            hpRestored: numberValue(data.hpRestored),
+                        }),
+                    },
+                );
             case 'take_long_rest':
-                return this.event('RESOURCE', 'LONG_REST_TAKEN', 'Long rest completed', 'The party rests and recovers.');
+                return this.event(
+                    'RESOURCE',
+                    'LONG_REST_TAKEN',
+                    'Long rest completed',
+                    'The party rests and recovers.',
+                );
             case 'apply_level_up':
                 return this.event('RESOURCE', 'LEVEL_UP_APPLIED', 'Level up applied', 'The character grows stronger.', {
                     values: compactValues({
@@ -144,14 +160,24 @@ export class PlayerVisibleEventMapper {
                     }),
                 });
             case 'create_quest':
-                return this.event('QUEST', 'QUEST_CREATED', `Quest started: ${stringValue(toolInput.title) ?? 'New quest'}`);
+                return this.event(
+                    'QUEST',
+                    'QUEST_CREATED',
+                    `Quest started: ${stringValue(toolInput.title) ?? 'New quest'}`,
+                );
             case 'update_quest_objective':
                 return this.event('QUEST', 'QUEST_OBJECTIVE_UPDATED', 'Quest objective updated', undefined, {
                     entities: [entity('QUEST_OBJECTIVE', data.objectiveId ?? toolInput.objective_id, 'Objective')],
                     values: compactValues({ status: stringValue(data.status) ?? stringValue(toolInput.status) }),
                 });
             case 'complete_quest':
-                return this.questStatusEvent('QUEST_COMPLETED', 'Quest completed', data, toolInput, toolResult.questCompleted?.questTitle);
+                return this.questStatusEvent(
+                    'QUEST_COMPLETED',
+                    'Quest completed',
+                    data,
+                    toolInput,
+                    toolResult.questCompleted?.questTitle,
+                );
             case 'fail_quest':
                 return this.questStatusEvent('QUEST_FAILED', 'Quest failed', data, toolInput);
             case 'travel_to':
@@ -159,10 +185,19 @@ export class PlayerVisibleEventMapper {
                     entities: [entity('LOCATION', data.locationId ?? toolInput.location_id, 'Location')],
                 });
             case 'discover_location':
-                return this.event('DISCOVERY', 'LOCATION_DISCOVERED', 'Location discovered', 'A new place is added to the map.', {
-                    entities: [entity('LOCATION', toolInput.location_id, 'Location')],
-                    values: compactValues({ alreadyDiscovered: typeof data.alreadyDiscovered === 'boolean' ? data.alreadyDiscovered : undefined }),
-                });
+                return this.event(
+                    'DISCOVERY',
+                    'LOCATION_DISCOVERED',
+                    'Location discovered',
+                    'A new place is added to the map.',
+                    {
+                        entities: [entity('LOCATION', toolInput.location_id, 'Location')],
+                        values: compactValues({
+                            alreadyDiscovered:
+                                typeof data.alreadyDiscovered === 'boolean' ? data.alreadyDiscovered : undefined,
+                        }),
+                    },
+                );
             case 'create_location':
                 return this.createdLocationEvent(data);
             case 'enter_dungeon':
@@ -176,9 +211,10 @@ export class PlayerVisibleEventMapper {
                     entities: [entity('ROOM', data.roomId ?? toolInput.room_id, 'Room')],
                     values: compactValues({
                         roomState: stringValue(data.roomState),
-                        wanderingMonsterTriggered: typeof data.wanderingMonsterTriggered === 'boolean'
-                            ? data.wanderingMonsterTriggered
-                            : undefined,
+                        wanderingMonsterTriggered:
+                            typeof data.wanderingMonsterTriggered === 'boolean'
+                                ? data.wanderingMonsterTriggered
+                                : undefined,
                     }),
                 });
             default:

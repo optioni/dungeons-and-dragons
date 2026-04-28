@@ -43,8 +43,8 @@ import { TravelService } from './travel.service.js';
 import { WorldMutationService } from './world-mutation.service.js';
 
 interface SessionContext {
-    campaignId: number
-    characterId: number
+    campaignId: number;
+    characterId: number;
 }
 
 /** Registers all GameEngine tool handlers with the shared ToolRegistry in onModuleInit. */
@@ -103,7 +103,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         }
 
         const campaignId = session.campaign.id;
-        const character = await this.em.findOne(Character, { campaign: { id: campaignId } } as never);
+        const character = await this.em.findOne(Character, {
+            campaign: { id: campaignId },
+        } as never);
         if (!character) {
             return null;
         }
@@ -132,23 +134,25 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
                 return {
                     success: true,
-                    data: { total: result.total, rolls: result.rolls, expression: result.expression },
+                    data: {
+                        total: result.total,
+                        rolls: result.rolls,
+                        expression: result.expression,
+                    },
                 };
             },
         });
 
         toolRegistry.register({
             toolName: 'check_skill',
-            execute: async (_sessionId, input): Promise<ToolResult> => dice.checkSkill(
-                this.num(input.character_id), this.str(input.skill), this.num(input.dc),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                dice.checkSkill(this.num(input.character_id), this.str(input.skill), this.num(input.dc)),
         });
 
         toolRegistry.register({
             toolName: 'check_ability',
-            execute: async (_sessionId, input): Promise<ToolResult> => dice.checkAbility(
-                this.num(input.character_id), this.str(input.ability) as never, this.num(input.dc),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                dice.checkAbility(this.num(input.character_id), this.str(input.ability) as never, this.num(input.dc)),
         });
     }
 
@@ -157,9 +161,8 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'start_combat',
-            execute: async (sessionId, input): Promise<ToolResult> => combat.startCombat(
-                sessionId, (input.participants as never[]) ?? [],
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                combat.startCombat(sessionId, (input.participants as never[]) ?? []),
         });
 
         toolRegistry.register({
@@ -171,7 +174,10 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             toolName: 'apply_damage',
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const result = await combat.applyDamage(
-                    sessionId, this.str(input.target_id), this.num(input.amount), this.str(input.damage_type),
+                    sessionId,
+                    this.str(input.target_id),
+                    this.num(input.amount),
+                    this.str(input.damage_type),
                 );
                 if (!result.success) {
                     return result;
@@ -188,23 +194,20 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'heal',
-            execute: async (sessionId, input): Promise<ToolResult> => combat.heal(
-                sessionId, this.str(input.target_id), this.num(input.amount),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                combat.heal(sessionId, this.str(input.target_id), this.num(input.amount)),
         });
 
         toolRegistry.register({
             toolName: 'apply_condition',
-            execute: async (sessionId, input): Promise<ToolResult> => combat.applyCondition(
-                sessionId, this.str(input.target_id), this.str(input.condition),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                combat.applyCondition(sessionId, this.str(input.target_id), this.str(input.condition)),
         });
 
         toolRegistry.register({
             toolName: 'remove_condition',
-            execute: async (sessionId, input): Promise<ToolResult> => combat.removeCondition(
-                sessionId, this.str(input.target_id), this.str(input.condition),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                combat.removeCondition(sessionId, this.str(input.target_id), this.str(input.condition)),
         });
 
         toolRegistry.register({
@@ -213,7 +216,10 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                 const result = await combat.rollDeathSave(this.num(input.character_id));
                 if (result.success && result.data.outcome === 'DEAD') {
                     const campaignEnded = await this.runPermadeathSequenceIfNeeded(sessionId, result.data);
-                    return { ...result, data: { ...result.data, ...(campaignEnded ? { campaignEnded: true } : {}) } };
+                    return {
+                        ...result,
+                        data: { ...result.data, ...(campaignEnded ? { campaignEnded: true } : {}) },
+                    };
                 }
 
                 return result;
@@ -234,7 +240,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                     return {
                         ...result,
                         data: {
-                            ...result.data as object,
+                            ...(result.data as object),
                             ...(campaignEnded ? { campaignEnded: true } : {}),
                         },
                     };
@@ -258,7 +264,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return rest.takeShortRest(context.characterId, this.num(input.hit_dice_to_spend ?? 1));
@@ -270,7 +280,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 // Capture inGameDate before the rest advances it
@@ -297,7 +311,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 const result = await travel.travelTo(context.campaignId, this.num(input.location_id), sessionId);
@@ -314,7 +332,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 const settings: { travelEncounterEnabled?: boolean } = {};
@@ -331,7 +353,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return travel.discoverLocation(
@@ -348,7 +374,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return travel.createLocation(context.campaignId, {
@@ -358,9 +388,8 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                     connectedLocationIds: Array.isArray(input.connected_location_ids)
                         ? (input.connected_location_ids as number[])
                         : [],
-                    parentLocationId: input.parent_location_id === undefined
-                        ? null
-                        : this.num(input.parent_location_id),
+                    parentLocationId:
+                        input.parent_location_id === undefined ? null : this.num(input.parent_location_id),
                 });
             },
         });
@@ -374,7 +403,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return items.createItem(context.campaignId, {
@@ -413,30 +446,36 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'equip_item',
-            execute: async (_sessionId, input): Promise<ToolResult> => items.equipItem(
-                this.num(input.character_item_id), this.str(input.slot),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                items.equipItem(this.num(input.character_item_id), this.str(input.slot)),
         });
 
         toolRegistry.register({
             toolName: 'unequip_item',
-            execute: async (_sessionId, input): Promise<ToolResult> => items.unequipItem(
-                this.num(input.character_item_id),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                items.unequipItem(this.num(input.character_item_id)),
         });
 
         toolRegistry.register({
             toolName: 'buy_item',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return items.buyItem(
-                    characterId, this.num(input.npc_id), this.num(input.item_id), this.num(input.quantity ?? 1),
+                    characterId,
+                    this.num(input.npc_id),
+                    this.num(input.item_id),
+                    this.num(input.quantity ?? 1),
                 );
             },
         });
@@ -444,27 +483,40 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         toolRegistry.register({
             toolName: 'sell_item',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return items.sellItem(
-                    characterId, this.num(input.npc_id), this.num(input.item_id), this.num(input.quantity ?? 1),
+                    characterId,
+                    this.num(input.npc_id),
+                    this.num(input.item_id),
+                    this.num(input.quantity ?? 1),
                 );
             },
         });
 
         toolRegistry.register({
             toolName: 'restock_merchant',
-            execute: async (_sessionId, input): Promise<ToolResult> => items.restockMerchant(
-                this.num(input.npc_id),
-                Array.isArray(input.items)
-                    ? input.items as Array<{ itemId: number; quantity: number; priceInGold: number }>
-                    : [],
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                items.restockMerchant(
+                    this.num(input.npc_id),
+                    Array.isArray(input.items)
+                        ? (input.items as Array<{
+                              itemId: number;
+                              quantity: number;
+                              priceInGold: number;
+                          }>)
+                        : [],
+                ),
         });
     }
 
@@ -474,11 +526,16 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         toolRegistry.register({
             toolName: 'trigger_level_up',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return leveling.triggerLevelUp(sessionId, characterId);
@@ -488,11 +545,16 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         toolRegistry.register({
             toolName: 'apply_level_up',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return leveling.applyLevelUp(
@@ -510,11 +572,16 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         toolRegistry.register({
             toolName: 'use_spell_slot',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return leveling.useSpellSlot(characterId, this.num(input.level));
@@ -524,25 +591,38 @@ export class GameEngineToolRegistrar implements OnModuleInit {
         toolRegistry.register({
             toolName: 'prepare_spells',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
-                return leveling.prepareSpells(characterId, Array.isArray(input.spells) ? input.spells as string[] : []);
+                return leveling.prepareSpells(
+                    characterId,
+                    Array.isArray(input.spells) ? (input.spells as string[]) : [],
+                );
             },
         });
 
         toolRegistry.register({
             toolName: 'trigger_spell_prep',
             execute: async (sessionId, input): Promise<ToolResult> => {
-                const characterId = input.character_id === undefined
-                    ? (await this.loadCtx(sessionId))?.characterId
-                    : this.num(input.character_id);
+                const characterId =
+                    input.character_id === undefined
+                        ? (await this.loadCtx(sessionId))?.characterId
+                        : this.num(input.character_id);
                 if (!characterId) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return this.triggerSpellPrepHandler.execute(sessionId, { characterId });
@@ -585,16 +665,14 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'update_location_state',
-            execute: async (_sessionId, input): Promise<ToolResult> => world.updateLocationState(
-                this.num(input.location_id), this.str(input.state),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                world.updateLocationState(this.num(input.location_id), this.str(input.state)),
         });
 
         toolRegistry.register({
             toolName: 'shift_faction_disposition',
-            execute: async (_sessionId, input): Promise<ToolResult> => world.shiftFactionDisposition(
-                this.num(input.faction_id), this.str(input.disposition),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                world.shiftFactionDisposition(this.num(input.faction_id), this.str(input.disposition)),
         });
 
         toolRegistry.register({
@@ -602,7 +680,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return world.triggerWorldEvent(
@@ -617,9 +699,8 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'resolve_world_event',
-            execute: async (_sessionId, input): Promise<ToolResult> => world.resolveWorldEvent(
-                this.num(input.world_event_id), this.str(input.outcome),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                world.resolveWorldEvent(this.num(input.world_event_id), this.str(input.outcome)),
         });
 
         toolRegistry.register({
@@ -627,7 +708,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return world.advanceAntagonistStage(context.campaignId);
@@ -639,7 +724,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 return world.recordLore(context.campaignId, this.str(input.fact));
@@ -651,7 +740,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 const result = await this.createNpcHandler.execute(context.campaignId, input as never);
@@ -659,6 +752,7 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                 if (result.success) {
                     await this.questService.runAutoChecker(context.campaignId);
                 }
+
                 return result;
             },
         });
@@ -668,24 +762,33 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
+
                 return this.placeItemHandler.execute(context.campaignId, {
                     locationId: this.num(input.location_id),
                     itemId: this.num(input.item_id),
                     quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
-                    note: input.note == null ? input.note as null | undefined : this.str(input.note),
+                    note:
+                        input.note === null || input.note === undefined
+                            ? (input.note as null | undefined)
+                            : this.str(input.note),
                 });
             },
         });
 
         toolRegistry.register({
             toolName: 'take_item',
-            execute: async (sessionId, input): Promise<ToolResult> => this.takeItemHandler.execute(sessionId, {
-                locationId: this.num(input.location_id),
-                itemId: this.num(input.item_id),
-                quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
-            }),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                this.takeItemHandler.execute(sessionId, {
+                    locationId: this.num(input.location_id),
+                    itemId: this.num(input.item_id),
+                    quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
+                }),
         });
     }
 
@@ -703,16 +806,14 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'enter_dungeon',
-            execute: async (_sessionId, input): Promise<ToolResult> => enterDungeonHandler.execute(
-                this.num(_sessionId), this.num(input.dungeon_id),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                enterDungeonHandler.execute(this.num(_sessionId), this.num(input.dungeon_id)),
         });
 
         toolRegistry.register({
             toolName: 'move_to_room',
-            execute: async (_sessionId, input): Promise<ToolResult> => moveToRoomHandler.execute(
-                this.num(_sessionId), this.num(input.room_id),
-            ),
+            execute: async (_sessionId, input): Promise<ToolResult> =>
+                moveToRoomHandler.execute(this.num(_sessionId), this.num(input.room_id)),
         });
 
         toolRegistry.register({
@@ -722,40 +823,40 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
         toolRegistry.register({
             toolName: 'spawn_encounter',
-            execute: async (sessionId, input): Promise<ToolResult> => spawnEncounterHandler.execute(sessionId, {
-                roomId: input.room_id === undefined ? undefined : this.num(input.room_id),
-                dungeonId: input.dungeon_id === undefined ? undefined : this.num(input.dungeon_id),
-                fromTable: input.from_table === undefined ? undefined : Boolean(input.from_table),
-            }),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                spawnEncounterHandler.execute(sessionId, {
+                    roomId: input.room_id === undefined ? undefined : this.num(input.room_id),
+                    dungeonId: input.dungeon_id === undefined ? undefined : this.num(input.dungeon_id),
+                    fromTable: input.from_table === undefined ? undefined : Boolean(input.from_table),
+                }),
         });
 
         toolRegistry.register({
             toolName: 'update_room_state',
-            execute: async (sessionId, input): Promise<ToolResult> => updateRoomStateHandler.execute(
-                sessionId,
-                this.num(input.room_id),
-                this.str(input.state),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                updateRoomStateHandler.execute(sessionId, this.num(input.room_id), this.str(input.state)),
         });
 
         toolRegistry.register({
             toolName: 'add_room_item',
-            execute: async (sessionId, input): Promise<ToolResult> => addRoomItemHandler.execute(sessionId, {
-                roomId: this.num(input.room_id),
-                itemId: this.num(input.item_id),
-                quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
-                containerName: input.container_name === undefined ? undefined : this.str(input.container_name),
-            }),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                addRoomItemHandler.execute(sessionId, {
+                    roomId: this.num(input.room_id),
+                    itemId: this.num(input.item_id),
+                    quantity: input.quantity === undefined ? undefined : this.num(input.quantity),
+                    containerName: input.container_name === undefined ? undefined : this.str(input.container_name),
+                }),
         });
 
         toolRegistry.register({
             toolName: 'loot_room',
-            execute: async (sessionId, input): Promise<ToolResult> => lootRoomHandler.execute(
-                sessionId,
-                this.num(input.room_id),
-                this.num(input.item_id),
-                this.num(input.quantity ?? 1),
-            ),
+            execute: async (sessionId, input): Promise<ToolResult> =>
+                lootRoomHandler.execute(
+                    sessionId,
+                    this.num(input.room_id),
+                    this.num(input.item_id),
+                    this.num(input.quantity ?? 1),
+                ),
         });
     }
 
@@ -767,7 +868,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 const dto: CreateQuestDto = {
@@ -780,68 +885,80 @@ export class GameEngineToolRegistrar implements OnModuleInit {
                     rewardXp: input.reward_xp === undefined ? null : this.num(input.reward_xp),
                     rewardGold: input.reward_gold === undefined ? null : this.num(input.reward_gold),
                     objectives: Array.isArray(input.objectives)
-                        ? (input.objectives as Array<Record<string, unknown>>).map((objective, index) => ({
-                            description: this.str(objective.description),
-                            type: this.str(objective.type) as QuestObjectiveType,
-                            entityRef: objective.entity_ref === undefined ? null : this.str(objective.entity_ref),
-                            entityId: objective.entity_id === undefined ? null : this.num(objective.entity_id),
-                            order: objective.order === undefined ? index : this.num(objective.order),
-                        } satisfies ObjectiveSpec))
+                        ? (input.objectives as Array<Record<string, unknown>>).map(
+                              (objective, index) =>
+                                  ({
+                                      description: this.str(objective.description),
+                                      type: this.str(objective.type) as QuestObjectiveType,
+                                      entityRef:
+                                          objective.entity_ref === undefined ? null : this.str(objective.entity_ref),
+                                      entityId:
+                                          objective.entity_id === undefined ? null : this.num(objective.entity_id),
+                                      order: objective.order === undefined ? index : this.num(objective.order),
+                                  }) satisfies ObjectiveSpec,
+                          )
                         : [],
                     npcs: Array.isArray(input.npcs)
                         ? (input.npcs as Array<Record<string, unknown>>).map((npc) => ({
-                            ref: this.str(npc.ref),
-                            name: this.str(npc.name),
-                            description: npc.description === undefined ? null : this.str(npc.description),
-                            profession: npc.profession === undefined ? null : this.str(npc.profession),
-                            disposition: npc.disposition === undefined ? null : this.str(npc.disposition),
-                            agenda: npc.agenda === undefined ? null : this.str(npc.agenda),
-                            currentLocationId: npc.current_location_id === undefined
-                                ? null
-                                : this.num(npc.current_location_id),
-                        }))
+                              ref: this.str(npc.ref),
+                              name: this.str(npc.name),
+                              description: npc.description === undefined ? null : this.str(npc.description),
+                              profession: npc.profession === undefined ? null : this.str(npc.profession),
+                              disposition: npc.disposition === undefined ? null : this.str(npc.disposition),
+                              agenda: npc.agenda === undefined ? null : this.str(npc.agenda),
+                              currentLocationId:
+                                  npc.current_location_id === undefined ? null : this.num(npc.current_location_id),
+                          }))
                         : undefined,
                     locations: Array.isArray(input.locations)
                         ? (input.locations as Array<Record<string, unknown>>).map((location) => ({
-                            ref: this.str(location.ref),
-                            name: this.str(location.name),
-                            description: this.str(location.description),
-                            currentState: location.current_state === undefined
-                                ? null
-                                : this.str(location.current_state),
-                            connectedLocationIds: Array.isArray(location.connected_location_ids)
-                                ? location.connected_location_ids as number[]
-                                : [],
-                        }))
+                              ref: this.str(location.ref),
+                              name: this.str(location.name),
+                              description: this.str(location.description),
+                              currentState:
+                                  location.current_state === undefined ? null : this.str(location.current_state),
+                              connectedLocationIds: Array.isArray(location.connected_location_ids)
+                                  ? (location.connected_location_ids as number[])
+                                  : [],
+                          }))
                         : undefined,
                     items: Array.isArray(input.items)
                         ? (input.items as Array<Record<string, unknown>>).map((item) => ({
-                            ref: this.str(item.ref),
-                            name: this.str(item.name),
-                            description: this.str(item.description),
-                            itemType: item.item_type === undefined ? null : this.str(item.item_type),
-                            weight: item.weight === undefined ? null : this.num(item.weight),
-                            value: item.value === undefined ? null : this.num(item.value),
-                        }))
+                              ref: this.str(item.ref),
+                              name: this.str(item.name),
+                              description: this.str(item.description),
+                              itemType: item.item_type === undefined ? null : this.str(item.item_type),
+                              weight: item.weight === undefined ? null : this.num(item.weight),
+                              value: item.value === undefined ? null : this.num(item.value),
+                          }))
                         : undefined,
                     worldEvents: Array.isArray(input.world_events)
                         ? (input.world_events as Array<Record<string, unknown>>).map((worldEvent) => ({
-                            ref: this.str(worldEvent.ref),
-                            description: this.str(worldEvent.description),
-                            locationId: worldEvent.location_id === undefined ? null : this.num(worldEvent.location_id),
-                            deadlineInGameDate: worldEvent.deadline_in_game_date === undefined
-                                ? null
-                                : this.str(worldEvent.deadline_in_game_date),
-                        }))
+                              ref: this.str(worldEvent.ref),
+                              description: this.str(worldEvent.description),
+                              locationId:
+                                  worldEvent.location_id === undefined ? null : this.num(worldEvent.location_id),
+                              deadlineInGameDate:
+                                  worldEvent.deadline_in_game_date === undefined
+                                      ? null
+                                      : this.str(worldEvent.deadline_in_game_date),
+                          }))
                         : undefined,
                 };
 
                 const result = await questService.createQuest(dto);
                 if (!result.success) {
-                    return { success: false, errorCode: 'QUEST_CREATE_FAILED', message: result.reason };
+                    return {
+                        success: false,
+                        errorCode: 'QUEST_CREATE_FAILED',
+                        message: result.reason,
+                    };
                 }
 
-                return { success: true, data: { questId: (result.quest as unknown as { id: number }).id } };
+                return {
+                    success: true,
+                    data: { questId: (result.quest as unknown as { id: number }).id },
+                };
             },
         });
 
@@ -855,7 +972,10 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
                 return {
                     success: true,
-                    data: { questId: (result.quest as unknown as { id: number }).id, status: 'COMPLETED' },
+                    data: {
+                        questId: (result.quest as unknown as { id: number }).id,
+                        status: 'COMPLETED',
+                    },
                 };
             },
         });
@@ -870,7 +990,10 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
                 return {
                     success: true,
-                    data: { questId: (result.quest as unknown as { id: number }).id, status: 'FAILED' },
+                    data: {
+                        questId: (result.quest as unknown as { id: number }).id,
+                        status: 'FAILED',
+                    },
                 };
             },
         });
@@ -909,7 +1032,11 @@ export class GameEngineToolRegistrar implements OnModuleInit {
 
                 const campaign = await this.em.findOne(Campaign, { id: campaignId });
                 if (!campaign) {
-                    return { success: false, errorCode: 'CAMPAIGN_NOT_FOUND', message: `Campaign ${campaignId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'CAMPAIGN_NOT_FOUND',
+                        message: `Campaign ${campaignId} not found`,
+                    };
                 }
 
                 if (campaign.status === CampaignStatus.ENDED) {
@@ -1010,7 +1137,9 @@ export class GameEngineToolRegistrar implements OnModuleInit {
      * Writes the memorial diary entry, ends the campaign, and emits the CAMPAIGN_ENDED chunk.
      */
     private async executePermadeathSequence(sessionId: number, campaign: Campaign): Promise<void> {
-        const character = await this.em.findOne(Character, { campaign: { id: campaign.id } } as never);
+        const character = await this.em.findOne(Character, {
+            campaign: { id: campaign.id },
+        } as never);
         // eslint-disable-next-line unicorn/no-array-method-this-argument
         const events = await this.em.find(GameEvent, { session: sessionId });
 
@@ -1044,16 +1173,18 @@ export class GameEngineToolRegistrar implements OnModuleInit {
     }
 
     private registerMemoryTools(): void {
-        const {
-            toolRegistry, memory, npcMemory,
-        } = this;
+        const { toolRegistry, memory, npcMemory } = this;
 
         toolRegistry.register({
             toolName: 'record_memory',
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 try {
@@ -1080,21 +1211,22 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 try {
-                    const results = await memory.searchMemories(
-                        context.campaignId,
-                        this.str(input.query),
-                        {
-                            subjectType: input.subject_type === undefined
+                    const results = await memory.searchMemories(context.campaignId, this.str(input.query), {
+                        subjectType:
+                            input.subject_type === undefined
                                 ? undefined
-                                : this.str(input.subject_type) as SubjectType,
-                            subjectId: input.subject_id === undefined ? undefined : this.str(input.subject_id),
-                            limit: input.limit === undefined ? undefined : this.num(input.limit),
-                        },
-                    );
+                                : (this.str(input.subject_type) as SubjectType),
+                        subjectId: input.subject_id === undefined ? undefined : this.str(input.subject_id),
+                        limit: input.limit === undefined ? undefined : this.num(input.limit),
+                    });
                     return { success: true, data: { results } };
                 } catch (error) {
                     return {
@@ -1111,11 +1243,18 @@ export class GameEngineToolRegistrar implements OnModuleInit {
             execute: async (sessionId, input): Promise<ToolResult> => {
                 const context = await this.loadCtx(sessionId);
                 if (!context) {
-                    return { success: false, errorCode: 'SESSION_NOT_FOUND', message: `Session ${sessionId} not found` };
+                    return {
+                        success: false,
+                        errorCode: 'SESSION_NOT_FOUND',
+                        message: `Session ${sessionId} not found`,
+                    };
                 }
 
                 const npcId = this.num(input.npc_id);
-                const npc = await this.em.findOne(Npc, { id: npcId, campaignId: context.campaignId });
+                const npc = await this.em.findOne(Npc, {
+                    id: npcId,
+                    campaignId: context.campaignId,
+                });
                 if (!npc) {
                     return {
                         success: false,
