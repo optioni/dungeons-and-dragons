@@ -9,39 +9,39 @@ export const PLAYER_VISIBLE_EVENT_CATEGORIES = [
 
 export type PlayerVisibleEventCategory = typeof PLAYER_VISIBLE_EVENT_CATEGORIES[number];
 
-export type PlayerVisibleEventEntity = {
+export interface PlayerVisibleEventEntity {
     type: string
     id?: string
     name: string
-};
+}
 
 export type PlayerVisibleEventValue = string | number | boolean;
 
-export type PlayerVisibleEventPayload = {
+export interface PlayerVisibleEventPayload {
     category: PlayerVisibleEventCategory
     kind: string
     title: string
     summary?: string
     entities?: PlayerVisibleEventEntity[]
     values?: Record<string, PlayerVisibleEventValue>
-};
+}
 
 const FORBIDDEN_PAYLOAD_KEYS = new Set([
-    'toolInput',
-    'toolResult',
+    'armorClass',
+    'dc',
     'input',
-    'result',
+    'memories',
+    'memorySearchText',
+    'model',
+    'passiveScore',
+    'prompt',
     'raw',
     'rawInput',
     'rawResult',
-    'dc',
-    'armorClass',
-    'passiveScore',
+    'result',
     'statBlock',
-    'prompt',
-    'model',
-    'memories',
-    'memorySearchText',
+    'toolInput',
+    'toolResult',
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,9 +57,7 @@ function hasForbiddenKey(value: unknown): boolean {
         return false;
     }
 
-    return Object.entries(value).some(([key, child]) =>
-        FORBIDDEN_PAYLOAD_KEYS.has(key) || hasForbiddenKey(child),
-    );
+    return Object.entries(value).some(([key, child]) => FORBIDDEN_PAYLOAD_KEYS.has(key) || hasForbiddenKey(child));
 }
 
 function isCategory(value: unknown): value is PlayerVisibleEventCategory {
@@ -68,7 +66,7 @@ function isCategory(value: unknown): value is PlayerVisibleEventCategory {
 }
 
 function isVisibleValue(value: unknown): value is PlayerVisibleEventValue {
-    return ['string', 'number', 'boolean'].includes(typeof value);
+    return ['boolean', 'number', 'string'].includes(typeof value);
 }
 
 function isEntity(value: unknown): value is PlayerVisibleEventEntity {

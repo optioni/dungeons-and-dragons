@@ -12,9 +12,9 @@ import { GameEvent } from '../session/entities/game-event.entity.js';
 import { GameSession } from '../session/entities/game-session.entity.js';
 import { EventType, SceneType } from '../session/session.enums.js';
 import { LocationItem } from '../world/entities/location-item.entity.js';
+import { Location } from '../world/entities/location.entity.js';
 import { NpcItem } from '../world/entities/npc-item.entity.js';
 import { Npc } from '../world/entities/npc.entity.js';
-import { Location } from '../world/entities/location.entity.js';
 import { PromptModuleRegistry } from './prompt-module-registry.service.js';
 
 export type AnthropicMessage = Anthropic.MessageParam;
@@ -175,12 +175,11 @@ export class ContextLoader {
             const em = this.npcItemRepository.getEntityManager();
 
             // Current Location section (with optional parent name for sub-locations)
-            // eslint-disable-next-line unicorn/no-array-method-this-argument
+
             const currentLocation = await em.findOne(Location, { id: campaign.currentLocationId });
             if (currentLocation) {
                 let locationName = currentLocation.name;
                 if (currentLocation.parentLocationId) {
-                    // eslint-disable-next-line unicorn/no-array-method-this-argument
                     const parentLocation = await em.findOne(Location, { id: currentLocation.parentLocationId });
                     if (parentLocation) {
                         locationName = `${currentLocation.name} (inside ${parentLocation.name})`;

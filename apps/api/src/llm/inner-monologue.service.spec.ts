@@ -248,11 +248,10 @@ describe('InnerMonologueService', () => {
     });
 
     describe('selectDc', () => {
-        const selectDc = (difficulty?: string) =>
-            (service as unknown as { selectDc: (d?: string) => number }).selectDc(difficulty);
+        const selectDc = (difficulty?: string) => (service as unknown as { selectDc: (d?: string) => number }).selectDc(difficulty);
 
         it('returns a value in 8–10 for easy', () => {
-            for (let i = 0; i < 20; i++) {
+            for (let index = 0; index < 20; index++) {
                 const dc = selectDc('easy');
                 expect(dc).toBeGreaterThanOrEqual(8);
                 expect(dc).toBeLessThanOrEqual(10);
@@ -260,7 +259,7 @@ describe('InnerMonologueService', () => {
         });
 
         it('returns a value in 12–14 for medium', () => {
-            for (let i = 0; i < 20; i++) {
+            for (let index = 0; index < 20; index++) {
                 const dc = selectDc('medium');
                 expect(dc).toBeGreaterThanOrEqual(12);
                 expect(dc).toBeLessThanOrEqual(14);
@@ -268,7 +267,7 @@ describe('InnerMonologueService', () => {
         });
 
         it('returns a value in 16–18 for hard', () => {
-            for (let i = 0; i < 20; i++) {
+            for (let index = 0; index < 20; index++) {
                 const dc = selectDc('hard');
                 expect(dc).toBeGreaterThanOrEqual(16);
                 expect(dc).toBeLessThanOrEqual(18);
@@ -276,7 +275,7 @@ describe('InnerMonologueService', () => {
         });
 
         it('defaults to medium when difficulty is omitted', () => {
-            for (let i = 0; i < 20; i++) {
+            for (let index = 0; index < 20; index++) {
                 const dc = selectDc();
                 expect(dc).toBeGreaterThanOrEqual(12);
                 expect(dc).toBeLessThanOrEqual(14);
@@ -284,7 +283,7 @@ describe('InnerMonologueService', () => {
         });
 
         it('defaults to medium for an unrecognised value', () => {
-            for (let i = 0; i < 20; i++) {
+            for (let index = 0; index < 20; index++) {
                 const dc = selectDc('legendary');
                 expect(dc).toBeGreaterThanOrEqual(12);
                 expect(dc).toBeLessThanOrEqual(14);
@@ -293,30 +292,43 @@ describe('InnerMonologueService', () => {
     });
 
     describe('rollSkillCheck proficiency application', () => {
-        const rollSkillCheck = (skill: string, difficulty?: string) =>
-            (service as unknown as {
-                rollSkillCheck: (
-                    character: unknown,
-                    skill: string,
-                    difficulty?: string,
-                ) => Record<string, unknown>
-            }).rollSkillCheck(
-                {
-                    abilityScores: { STR: 8, DEX: 14, CON: 12, INT: 16, WIS: 13, CHA: 10 },
-                    skillProficiencies: {
-                        Acrobatics: 'none', 'Animal Handling': 'none', Arcana: 'expert',
-                        Athletics: 'none', Deception: 'none', History: 'proficient',
-                        Insight: 'proficient', Intimidation: 'none', Investigation: 'proficient',
-                        Medicine: 'none', Nature: 'none', Perception: 'none',
-                        Performance: 'none', Persuasion: 'none', Religion: 'none',
-                        'Sleight of Hand': 'none', Stealth: 'none', Survival: 'none',
-                    },
-                    level: 4,
-                    proficiencyBonus: 3,
+        const rollSkillCheck = (skill: string, difficulty?: string) => (service as unknown as {
+            rollSkillCheck: (
+                character: unknown,
+                skill: string,
+                difficulty?: string,
+            ) => Record<string, unknown>
+        }).rollSkillCheck(
+            {
+                abilityScores: {
+                    STR: 8, DEX: 14, CON: 12, INT: 16, WIS: 13, CHA: 10,
                 },
-                skill,
-                difficulty,
-            );
+                skillProficiencies: {
+                    Acrobatics: 'none',
+                    'Animal Handling': 'none',
+                    Arcana: 'expert',
+                    Athletics: 'none',
+                    Deception: 'none',
+                    History: 'proficient',
+                    Insight: 'proficient',
+                    Intimidation: 'none',
+                    Investigation: 'proficient',
+                    Medicine: 'none',
+                    Nature: 'none',
+                    Perception: 'none',
+                    Performance: 'none',
+                    Persuasion: 'none',
+                    Religion: 'none',
+                    'Sleight of Hand': 'none',
+                    Stealth: 'none',
+                    Survival: 'none',
+                },
+                level: 4,
+                proficiencyBonus: 3,
+            },
+            skill,
+            difficulty,
+        );
 
         beforeEach(() => {
             diceService.d20.mockReturnValue(10);
@@ -344,7 +356,7 @@ describe('InnerMonologueService', () => {
         });
 
         it('dc is within the expected range for each difficulty', () => {
-            for (let i = 0; i < 10; i++) {
+            for (let index = 0; index < 10; index++) {
                 const easy = rollSkillCheck('perception', 'easy');
                 expect(easy['dc']).toBeGreaterThanOrEqual(8);
                 expect(easy['dc']).toBeLessThanOrEqual(10);

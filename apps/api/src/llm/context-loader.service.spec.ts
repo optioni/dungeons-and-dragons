@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // eslint-disable-next-line import/no-unassigned-import
 import 'reflect-metadata';
-import {
-    beforeEach, describe, expect, it, vi,
-} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GameEvent } from '../session/entities/game-event.entity';
 import { GameSession } from '../session/entities/game-session.entity';
@@ -30,7 +28,12 @@ function makeEvent(overrides: Partial<GameEvent>): GameEvent {
     const event = new GameEvent();
     const session = Object.assign(new GameSession(), { id: 1 });
     Object.assign(event, {
-        id: 1, session, eventType: EventType.PLAYER_INPUT, content: {}, createdAt: new Date(), ...overrides,
+        id: 1,
+        session,
+        eventType: EventType.PLAYER_INPUT,
+        content: {},
+        createdAt: new Date(),
+        ...overrides,
     });
     return event;
 }
@@ -97,7 +100,10 @@ describe('ContextLoader', () => {
 
         it('returns placeholder when no lore exists', async () => {
             em.findOneOrFail.mockResolvedValue({
-                id: 1, loreDocument: null, antagonistPlanState: null, inGameDate: null,
+                id: 1,
+                loreDocument: null,
+                antagonistPlanState: null,
+                inGameDate: null,
             });
 
             const result = await service.loadCampaignBlock(1);
@@ -149,7 +155,11 @@ describe('ContextLoader', () => {
             expect(messages).toHaveLength(2);
             expect(messages[0].role).toBe('assistant');
             expect(Array.isArray(messages[0].content)).toBe(true);
-            const assistantContent = messages[0].content as Array<{ type: string; id: string; name: string }>;
+            const assistantContent = messages[0].content as Array<{
+                type: string;
+                id: string;
+                name: string;
+            }>;
             expect(assistantContent[0].type).toBe('tool_use');
             expect(assistantContent[0].id).toBe('tool_abc123');
             expect(assistantContent[0].name).toBe('set_scene_type');
@@ -162,9 +172,21 @@ describe('ContextLoader', () => {
 
         it('preserves chronological order of mixed event types', () => {
             const events = [
-                makeEvent({ id: 1, eventType: EventType.PLAYER_INPUT, content: { text: 'Input 1' } }),
-                makeEvent({ id: 2, eventType: EventType.DM_NARRATIVE, content: { narrative: 'Narrative 1' } }),
-                makeEvent({ id: 3, eventType: EventType.PLAYER_INPUT, content: { text: 'Input 2' } }),
+                makeEvent({
+                    id: 1,
+                    eventType: EventType.PLAYER_INPUT,
+                    content: { text: 'Input 1' },
+                }),
+                makeEvent({
+                    id: 2,
+                    eventType: EventType.DM_NARRATIVE,
+                    content: { narrative: 'Narrative 1' },
+                }),
+                makeEvent({
+                    id: 3,
+                    eventType: EventType.PLAYER_INPUT,
+                    content: { text: 'Input 2' },
+                }),
             ];
 
             const messages = service.formatEventsAsMessages(events);
@@ -186,7 +208,12 @@ describe('ContextLoader', () => {
                 maxHp: 27,
                 ac: 15,
                 abilityScores: {
-                    STR: 8, DEX: 14, CON: 12, INT: 16, WIS: 13, CHA: 10,
+                    STR: 8,
+                    DEX: 14,
+                    CON: 12,
+                    INT: 16,
+                    WIS: 13,
+                    CHA: 10,
                 },
                 conditions: ['poisoned'],
                 spellSlots: [{ level: 1, total: 4, used: 1 }],
@@ -226,7 +253,9 @@ describe('ContextLoader', () => {
             expect(result).toContain('Class: Wizard');
             expect(result).toContain('STR: 8 (-1)');
             expect(result).toContain('INT: 16 (+3)');
-            expect(result).toContain('Skill Proficiencies: Arcana (expert), History (proficient), Investigation (proficient)');
+            expect(result).toContain(
+                'Skill Proficiencies: Arcana (expert), History (proficient), Investigation (proficient)',
+            );
             expect(result).toContain('## Personality');
             expect(result).toContain('Traits: I notice the details others miss.');
             expect(result).toContain('Ideals: Truth matters more than comfort.');
@@ -243,7 +272,12 @@ describe('ContextLoader', () => {
                 maxHp: 14,
                 ac: 13,
                 abilityScores: {
-                    STR: 15, DEX: 12, CON: 14, INT: 10, WIS: 8, CHA: 13,
+                    STR: 15,
+                    DEX: 12,
+                    CON: 14,
+                    INT: 10,
+                    WIS: 8,
+                    CHA: 13,
                 },
                 conditions: [],
                 spellSlots: [],
@@ -279,7 +313,9 @@ describe('ContextLoader', () => {
             const result = await service.loadWorldBlock(1, 7);
 
             expect(result).not.toContain('## Personality');
-            expect(result).toContain('Skill Proficiencies: Athletics (proficient), Intimidation (proficient), Survival (proficient)');
+            expect(result).toContain(
+                'Skill Proficiencies: Athletics (proficient), Intimidation (proficient), Survival (proficient)',
+            );
         });
 
         it('includes diary entries in the world block when present', async () => {
@@ -386,9 +422,23 @@ describe('ContextLoader', () => {
     describe('loadWorldBlock — merchant inventory at current location', () => {
         it('includes inventory block when an NPC with items is at currentLocationId', async () => {
             em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
-            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.findOne.mockResolvedValueOnce({
+                id: 42,
+                name: 'Market District',
+                description: 'A bustling market.',
+                parentLocationId: null,
+            }); // currentLocation
             em.find.mockResolvedValueOnce([]); // subLocations
-            em.find.mockResolvedValueOnce([{ id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42, alive: true, disposition: null }]);
+            em.find.mockResolvedValueOnce([
+                {
+                    id: 10,
+                    name: 'Aldric',
+                    profession: 'merchant',
+                    currentLocationId: 42,
+                    alive: true,
+                    disposition: null,
+                },
+            ]);
             em.find.mockResolvedValueOnce([{ npcId: 10, name: 'Iron Dagger', quantity: 2, merchantPrice: 5 }]);
             em.find.mockResolvedValueOnce([]); // locationItems
 
@@ -402,9 +452,23 @@ describe('ContextLoader', () => {
 
         it('omits inventory block for an NPC at currentLocationId with zero items', async () => {
             em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
-            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.findOne.mockResolvedValueOnce({
+                id: 42,
+                name: 'Market District',
+                description: 'A bustling market.',
+                parentLocationId: null,
+            }); // currentLocation
             em.find.mockResolvedValueOnce([]); // subLocations
-            em.find.mockResolvedValueOnce([{ id: 10, name: 'Guard Bob', profession: null, currentLocationId: 42, alive: true, disposition: null }]);
+            em.find.mockResolvedValueOnce([
+                {
+                    id: 10,
+                    name: 'Guard Bob',
+                    profession: null,
+                    currentLocationId: 42,
+                    alive: true,
+                    disposition: null,
+                },
+            ]);
             // no NpcItems
             em.find.mockResolvedValueOnce([]);
             em.find.mockResolvedValueOnce([]); // locationItems
@@ -416,7 +480,12 @@ describe('ContextLoader', () => {
 
         it('produces no merchant inventory section when no NPCs at currentLocationId have items', async () => {
             em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
-            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.findOne.mockResolvedValueOnce({
+                id: 42,
+                name: 'Market District',
+                description: 'A bustling market.',
+                parentLocationId: null,
+            }); // currentLocation
             em.find.mockResolvedValueOnce([]); // subLocations
             // no NPCs at location
             em.find.mockResolvedValueOnce([]);
@@ -429,11 +498,30 @@ describe('ContextLoader', () => {
 
         it('includes a separate inventory block for each merchant when multiple NPCs have items', async () => {
             em.findOne.mockResolvedValueOnce({ id: 1, currentLocationId: 42 }); // campaign
-            em.findOne.mockResolvedValueOnce({ id: 42, name: 'Market District', description: 'A bustling market.', parentLocationId: null }); // currentLocation
+            em.findOne.mockResolvedValueOnce({
+                id: 42,
+                name: 'Market District',
+                description: 'A bustling market.',
+                parentLocationId: null,
+            }); // currentLocation
             em.find.mockResolvedValueOnce([]); // subLocations
             em.find.mockResolvedValueOnce([
-                { id: 10, name: 'Aldric', profession: 'merchant', currentLocationId: 42, alive: true, disposition: null },
-                { id: 11, name: 'Mira', profession: 'alchemist', currentLocationId: 42, alive: true, disposition: null },
+                {
+                    id: 10,
+                    name: 'Aldric',
+                    profession: 'merchant',
+                    currentLocationId: 42,
+                    alive: true,
+                    disposition: null,
+                },
+                {
+                    id: 11,
+                    name: 'Mira',
+                    profession: 'alchemist',
+                    currentLocationId: 42,
+                    alive: true,
+                    disposition: null,
+                },
             ]);
             em.find.mockResolvedValueOnce([
                 { npcId: 10, name: 'Iron Dagger', quantity: 2, merchantPrice: 5 },

@@ -301,9 +301,9 @@ export class InnerMonologueService {
         const proficiency = character.skillProficiencies[skillName];
         const proficiencyContribution = proficiency === 'expert'
             ? 2 * character.proficiencyBonus
-            : proficiency === 'proficient'
+            : (proficiency === 'proficient'
                 ? character.proficiencyBonus
-                : 0;
+                : 0);
 
         const total = rolled + modifier + proficiencyContribution;
 
