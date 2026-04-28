@@ -11,15 +11,17 @@ export class CreateNpcHandler {
     async execute(
         campaignId: number,
         input: {
-            name: string
-            description?: string | null
-            profession?: string | null
-            disposition?: string | null
-            personality_traits?: string[]
-            speech_style?: string | null
-            core_motivation?: string | null
-            agenda?: string | null
-            current_location_id?: number | null
+            /* eslint-disable @typescript-eslint/naming-convention */
+            name: string;
+            description?: string | null;
+            profession?: string | null;
+            disposition?: string | null;
+            personality_traits?: string[];
+            speech_style?: string | null;
+            core_motivation?: string | null;
+            agenda?: string | null;
+            current_location_id?: number | null;
+            /* eslint-enable @typescript-eslint/naming-convention */
         },
     ): Promise<ToolResult> {
         return this.world.createNpc(campaignId, {

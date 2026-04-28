@@ -1,6 +1,8 @@
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/postgresql';
-import { Args, ID, Mutation, Query, ResolveField, Resolver, Root } from '@nestjs/graphql';
+import {
+    Args, ID, Mutation, Query, ResolveField, Resolver, Root,
+} from '@nestjs/graphql';
 import { type Connection } from 'graphql-relay';
 
 import { type User } from '../auth/entities/user.entity.js';

@@ -5,8 +5,8 @@ import { Character } from '../../character/entities/character.entity.js';
 import { type ToolResult } from '../../llm/tool-registry.js';
 import { QuestService } from '../../quest/quest.service.js';
 import { GameSession } from '../../session/entities/game-session.entity.js';
-import { Location } from '../../world/entities/location.entity.js';
 import { LocationItem } from '../../world/entities/location-item.entity.js';
+import { Location } from '../../world/entities/location.entity.js';
 import { ItemService } from '../item.service.js';
 
 /** Transfers an item from an overworld location into the active character's inventory. */

@@ -351,7 +351,7 @@ export class CampaignSetupService {
         /* eslint-disable @typescript-eslint/naming-convention */
         const response = await this.anthropic.messages.create({
             model,
-            max_tokens: 16384,
+            max_tokens: 16_384,
             tools: [{
                 name: 'set_world_seed',
                 description: 'Set the complete world seed for the campaign',
