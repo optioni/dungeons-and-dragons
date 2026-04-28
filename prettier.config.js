@@ -1,8 +1,9 @@
 /** @type {import('prettier').Config} */
 export default {
-  semi: true,
-  singleQuote: true,
-  printWidth: 100,
-  trailingComma: 'all',
-  tabWidth: 4,
+    tabWidth: 4,
+    singleQuote: true,
+    trailingComma: 'all',
+    semi: true,
+    experimentalOperatorPosition: 'start',
+    printWidth: 120,
 };
