@@ -29,6 +29,21 @@ services:
     volumes:
       - redis_data:/data
 
+  ollama:
+    build: ./docker/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_MODEL=mxbai-embed-large
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
 volumes:
   postgres_data:
   redis_data:
+  ollama_data:
