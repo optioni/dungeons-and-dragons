@@ -40,7 +40,7 @@
     "cache-manager-ioredis-yet": "^2.1.2",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.0.0",
     "eventemitter2": "^6.4.9",
     "graphql": "^16.13.2",
     "graphql-relay": "^0.10.2",
