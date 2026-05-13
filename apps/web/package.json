@@ -39,7 +39,7 @@
     "gql.tada": "^1.9.2",
     "happy-dom": "^20.9.0",
     "storybook": "~9.0.5",
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.0",
     "vitest": "^4.1.4"
   }
 }
