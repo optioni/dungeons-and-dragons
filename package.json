@@ -5,7 +5,7 @@
     "apps/api",
     "apps/web"
   ],
-  "packageManager": "yarn@4.13.0",
+  "packageManager": "yarn@4.17.0",
   "scripts": {
     "lint": "yarn workspaces foreach -A run lint",
     "lint:fix": "yarn workspaces foreach -A run lint:fix",
