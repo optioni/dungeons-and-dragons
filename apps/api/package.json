@@ -15,7 +15,7 @@
     "mikro-orm": "MIKRO_ORM_CLI_TS_LOADER=tsx mikro-orm"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.88.0",
+    "@anthropic-ai/sdk": "^0.106.0",
     "@graphql-yoga/nestjs": "^3.19.0",
     "@keyv/redis": "^5.1.6",
     "@mikro-orm/core": "^7.0.10",
@@ -52,7 +52,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "uuid": "^13.0.0",
-    "voyageai": "^0.2.1",
+    "voyageai": "^0.4.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

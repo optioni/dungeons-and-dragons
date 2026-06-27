@@ -102,11 +102,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.88.0":
-  version: 0.88.0
-  resolution: "@anthropic-ai/sdk@npm:0.88.0"
+"@anthropic-ai/sdk@npm:^0.106.0":
+  version: 0.106.0
+  resolution: "@anthropic-ai/sdk@npm:0.106.0"
   dependencies:
     json-schema-to-ts: "npm:^3.1.1"
+    standardwebhooks: "npm:^1.0.0"
   peerDependencies:
     zod: ^3.25.0 || ^4.0.0
   peerDependenciesMeta:
@@ -114,7 +115,7 @@ __metadata:
       optional: true
   bin:
     anthropic-ai-sdk: bin/cli
-  checksum: 10c0/e956097345e9bf718eeaf579ad3c1a3f964353f8080f95f5e2f137dc2991984dc850c1eca7d381d7ade3746f3db3fbc7f45a0fc18dce72627656a4ee81707c82
+  checksum: 10c0/65961f0f86a0c263e4ebb5b754d3abbae432ec742946dfbaba33cde22679334aff097afb04c5c6d8d1a794e046a560e6e68f564f4357592b4aa0bd7be0a17d80
   languageName: node
   linkType: hard
 
@@ -4476,6 +4477,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@stablelib/base64@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "@stablelib/base64@npm:1.0.1"
+  checksum: 10c0/6330720f021819d19cecfe274111b79a256caa81df478d6b0ae7effc8842b96915b6aeed85926ff05b4d48ec1fc78ad043d928b730ee4e6cc6e8cba6aa097bed
+  languageName: node
+  linkType: hard
+
 "@standard-schema/spec@npm:^1.1.0":
   version: 1.1.0
   resolution: "@standard-schema/spec@npm:1.1.0"
@@ -7054,7 +7062,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "api@workspace:apps/api"
   dependencies:
-    "@anthropic-ai/sdk": "npm:^0.88.0"
+    "@anthropic-ai/sdk": "npm:^0.106.0"
     "@graphql-yoga/nestjs": "npm:^3.19.0"
     "@juuso.piikkila/eslint-config-typescript": "npm:^4.5.0"
     "@keyv/redis": "npm:^5.1.6"
@@ -7107,7 +7115,7 @@ __metadata:
     typescript: "npm:^5.8.3"
     uuid: "npm:^13.0.0"
     vitest: "npm:^4.1.4"
-    voyageai: "npm:^0.2.1"
+    voyageai: "npm:^0.4.0"
     zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
@@ -10832,6 +10840,13 @@ __metadata:
   version: 2.1.1
   resolution: "fast-safe-stringify@npm:2.1.1"
   checksum: 10c0/d90ec1c963394919828872f21edaa3ad6f1dddd288d2bd4e977027afff09f5db40f94e39536d4646f7e01761d704d72d51dce5af1b93717f3489ef808f5f4e4d
+  languageName: node
+  linkType: hard
+
+"fast-sha256@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "fast-sha256@npm:1.3.0"
+  checksum: 10c0/87f9e4baa7639576cf60a2b6235c9f436e1a1c52323abbd8a705b5bea8355500acf176f2aed0c14f2ecd6d6007e26151461bab2f27b8953bcca8d9d6b76a86e4
   languageName: node
   linkType: hard
 
@@ -17052,6 +17067,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"standardwebhooks@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "standardwebhooks@npm:1.0.0"
+  dependencies:
+    "@stablelib/base64": "npm:^1.0.0"
+    fast-sha256: "npm:^1.3.0"
+  checksum: 10c0/aee097d0f3c05172c19b80df1ed9596a2ce92f8956957650d0bbe47c2ca6d36515796b51d523333cb4a48c889b2ab130d789e7879e14975c4381bc7a61274327
+  languageName: node
+  linkType: hard
+
 "statuses@npm:^2.0.1, statuses@npm:^2.0.2, statuses@npm:~2.0.2":
   version: 2.0.2
   resolution: "statuses@npm:2.0.2"
@@ -18938,9 +18963,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"voyageai@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "voyageai@npm:0.2.1"
+"voyageai@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "voyageai@npm:0.4.0"
   dependencies:
     node-fetch: "npm:^2.7.0"
   peerDependencies:
@@ -18951,7 +18976,7 @@ __metadata:
       optional: true
     onnxruntime-node:
       optional: true
-  checksum: 10c0/c02821131a0b4c0e5efab6f2ad2595bae203c1736b28be7bda729a9bce480a43da8cdcc4f825a93f45c81ad7d89f69ef4d8a3a42b21584b0f77ea68d7a83d3e8
+  checksum: 10c0/7966446e6bb6724c568b9b94173776f5f127ee9da5e5fe5b8696414840b36a82a9568ef6103380fe9b6574e66b9e2d88dc923121ec758e53121da552989f851a
   languageName: node
   linkType: hard
 
