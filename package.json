@@ -16,7 +16,7 @@
   "devDependencies": {
     "@juuso.piikkila/eslint-config-typescript": "^4.5.0",
     "concurrently": "^9.2.1",
-    "eslint": "~9.39.0",
+    "eslint": "~10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.2",
     "tsx": "^4.21.0"

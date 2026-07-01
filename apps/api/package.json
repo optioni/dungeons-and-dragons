@@ -68,7 +68,7 @@
     "@types/node": "^22.15.2",
     "@types/passport-jwt": "^4.0.1",
     "@types/uuid": "^11.0.0",
-    "eslint": "~9.39.0",
+    "eslint": "~10.6.0",
     "testcontainers": "^11.14.0",
     "typescript": "^5.8.3",
     "vitest": "^4.1.4"
