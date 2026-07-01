@@ -1,5 +1,5 @@
 # Node LTS base image (pinned to Node 22 LTS — bump intentionally)
-FROM node:22-alpine AS builder
+FROM node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2 AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY apps/web/ ./apps/web/
 RUN yarn workspace web build
 
 # --- Production image ---
-FROM node:22-alpine AS runner
+FROM node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2 AS runner
 
 WORKDIR /app
 
