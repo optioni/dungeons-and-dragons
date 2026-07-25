@@ -7,7 +7,7 @@
 
 services:
   postgres:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:pg17@sha256:dd467f03ca5c5581222490e5217e48a262864ccb659be559f8491bbafdc97da0
     environment:
       POSTGRES_USER: dnd
       POSTGRES_PASSWORD: dnd
@@ -23,7 +23,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
     ports:
       - "6379:6379"
     volumes:
